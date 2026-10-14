@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { RefreshCw, ChevronRight, Search, Filter } from 'lucide-react';
 import { MOCK_ORDERS } from '../../lib/mockData';
 import { formatAUD, formatDate, orderStatusStyles } from '../../lib/utils';
+import { useUser } from '../../lib/userContext';
 import type { OrderStatus } from '../../lib/types';
 
 const ALL_STATUSES: OrderStatus[] = [
@@ -17,6 +18,7 @@ const ALL_STATUSES: OrderStatus[] = [
 ];
 
 export default function OrderHistoryPage() {
+  const { companyName } = useUser();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<OrderStatus | 'All'>('All');
 
@@ -41,7 +43,7 @@ export default function OrderHistoryPage() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-zinc-200 gap-3">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Order History</h1>
-          <p className="text-xs text-zinc-500">{MOCK_ORDERS.length} total orders · Acme Packaging Pty Ltd</p>
+          <p className="text-xs text-zinc-500">{MOCK_ORDERS.length} total orders · {companyName}</p>
         </div>
         <Link
           href="/catalog"

@@ -4,14 +4,15 @@ import { Package, RefreshCw, FileCheck, DollarSign, ArrowRight, TrendingUp, Cloc
 import Link from 'next/link';
 import { MOCK_ORDERS } from '../lib/mockData';
 import { formatAUD, formatDate, orderStatusStyles } from '../lib/utils';
+import { useUser } from '../lib/userContext';
 
 const RECENT = MOCK_ORDERS.slice(0, 4);
 
 export default function OverviewPage() {
-  const ytdSpend = 84910;
+  const { companyName, creditLimit, paymentTerms } = useUser();
+  const ytdSpend   = 84910;
   const creditUsed = 14250;
-  const creditLimit = 35000;
-  const creditPct = Math.round((creditUsed / creditLimit) * 100);
+  const creditPct  = creditLimit > 0 ? Math.round((creditUsed / creditLimit) * 100) : 0;
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
@@ -19,7 +20,7 @@ export default function OverviewPage() {
       <div className="flex justify-between items-center pb-4 border-b border-zinc-200">
         <div>
           <h1 className="text-xl font-bold text-zinc-900 tracking-tight">Customer Account Portal</h1>
-          <p className="text-xs text-zinc-500">Welcome back, <span className="font-semibold text-zinc-700">Acme Packaging Pty Ltd</span></p>
+          <p className="text-xs text-zinc-500">Welcome back, <span className="font-semibold text-zinc-700">{companyName}</span></p>
         </div>
         <Link
           href="/catalog"
@@ -61,7 +62,7 @@ export default function OverviewPage() {
 
         <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
           <div className="flex justify-between items-center text-zinc-500 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Net 30 Credit</span>
+            <span className="text-[10px] font-bold uppercase tracking-wider">{paymentTerms} Credit</span>
             <DollarSign className="w-4 h-4 text-amber-500" />
           </div>
           <div className="text-2xl font-black text-zinc-900">{formatAUD(creditUsed)}</div>

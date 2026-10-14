@@ -2,10 +2,12 @@
 
 import { useState } from 'react';
 import { UserCheck, Lock, Bell, Shield, CheckCircle2, Eye, EyeOff } from 'lucide-react';
+import { useUser } from '../../lib/userContext';
 
 type Tab = 'profile' | 'security' | 'notifications';
 
 export default function AccountPage() {
+  const { displayName, firstName, lastName, email, role, companyName } = useUser();
   const [tab, setTab] = useState<Tab>('profile');
   const [saved, setSaved] = useState(false);
   const [showCurrent, setShowCurrent] = useState(false);
@@ -35,16 +37,16 @@ export default function AccountPage() {
       <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex items-center space-x-4">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="https://i.pravatar.cc/150?img=5"
-          alt="Sarah Jenkins"
+          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=18181b&color=fbbf24&bold=true&size=150`}
+          alt={displayName}
           className="w-16 h-16 rounded-full object-cover border-2 border-amber-400"
         />
         <div className="flex-1">
-          <div className="font-bold text-zinc-900 text-base">Sarah Jenkins</div>
-          <div className="text-xs text-zinc-500 font-mono">sarah.jenkins@acmepackaging.com.au</div>
+          <div className="font-bold text-zinc-900 text-base">{displayName}</div>
+          <div className="text-xs text-zinc-500 font-mono">{email}</div>
           <div className="flex items-center space-x-2 mt-1.5">
-            <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold">Admin</span>
-            <span className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 text-[10px] font-mono">Acme Packaging Pty Ltd</span>
+            <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold">{role}</span>
+            <span className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 text-[10px] font-mono">{companyName}</span>
           </div>
         </div>
         <button className="text-xs font-semibold text-amber-600 hover:text-amber-800 border border-amber-200 px-3 py-1.5 rounded-lg transition-colors">
@@ -75,23 +77,23 @@ export default function AccountPage() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1.5">First Name</label>
-              <input defaultValue="Sarah" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
+              <input defaultValue={firstName} className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1.5">Last Name</label>
-              <input defaultValue="Jenkins" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
+              <input defaultValue={lastName} className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div className="col-span-2">
               <label className="block text-xs font-semibold text-zinc-600 mb-1.5">Work Email</label>
-              <input type="email" defaultValue="sarah.jenkins@acmepackaging.com.au" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
+              <input type="email" defaultValue={email} className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1.5">Phone</label>
-              <input type="tel" defaultValue="+61 2 9055 7700" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
+              <input type="tel" placeholder="+61 2 9055 7700" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
             <div>
               <label className="block text-xs font-semibold text-zinc-600 mb-1.5">Job Title</label>
-              <input defaultValue="Procurement Manager" className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
+              <input defaultValue={role} className="w-full border border-zinc-300 rounded-lg px-3.5 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-amber-400" />
             </div>
           </div>
           <div className="flex items-center justify-between pt-2">

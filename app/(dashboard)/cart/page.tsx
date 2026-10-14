@@ -15,12 +15,14 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { useCart } from '../../lib/cartContext';
+import { useUser } from '../../lib/userContext';
 import { formatAUD } from '../../lib/utils';
 
 type Step = 'cart' | 'review' | 'confirmed';
 
 export default function CartPage() {
   const { items, removeItem, updateQty, clearCart } = useCart();
+  const { companyName, email, paymentTerms } = useUser();
   const [poRef, setPoRef] = useState('');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [step, setStep] = useState<Step>('cart');
@@ -55,7 +57,7 @@ export default function CartPage() {
           Your purchase order <span className="font-mono font-bold text-zinc-900">{orderRef}</span> has been received.
         </p>
         <p className="text-zinc-400 text-xs mb-8">
-          Our production team will review and confirm within 1 business day. A confirmation email has been sent to sarah.jenkins@acmepackaging.com.au
+          Our production team will review and confirm within 1 business day. A confirmation email has been sent to {email}
         </p>
         <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-left mb-6 space-y-2 text-xs font-mono">
           <div className="flex justify-between">
@@ -74,7 +76,7 @@ export default function CartPage() {
           </div>
           <div className="flex justify-between">
             <span className="text-zinc-400">Payment Terms</span>
-            <span className="font-bold text-zinc-900">Net 30</span>
+            <span className="font-bold text-zinc-900">{paymentTerms}</span>
           </div>
         </div>
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
@@ -107,7 +109,7 @@ export default function CartPage() {
             <span>{step === 'cart' ? 'Cart & Checkout' : 'Review Order'}</span>
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            {items.length} item{items.length !== 1 ? 's' : ''} · Acme Packaging Pty Ltd
+            {items.length} item{items.length !== 1 ? 's' : ''} · {companyName}
           </p>
         </div>
         <div className="flex items-center space-x-3 text-xs">

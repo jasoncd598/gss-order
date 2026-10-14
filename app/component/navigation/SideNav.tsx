@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '../../lib/cartContext';
+import { useUser } from '../../lib/userContext';
+import { formatAUD } from '../../lib/utils';
 import {
   LayoutDashboard,
   Package,
@@ -40,6 +42,7 @@ function NavContent({
 }) {
   const pathname = usePathname();
   const { count } = useCart();
+  const { companyName, paymentTerms, creditLimit } = useUser();
 
   return (
     <>
@@ -65,10 +68,10 @@ function NavContent({
             <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
             <span className="font-semibold uppercase tracking-wider text-[10px]">Active Corporate Account</span>
           </div>
-          <div className="text-xs font-semibold text-white truncate">Acme Packaging Pty Ltd</div>
+          <div className="text-xs font-semibold text-white truncate">{companyName}</div>
           <div className="text-[10px] text-amber-400/90 font-mono mt-1 flex justify-between">
-            <span>Net 30 Terms</span>
-            <span>Limit: $35k</span>
+            <span>{paymentTerms}</span>
+            {creditLimit > 0 && <span>Limit: {formatAUD(creditLimit)}</span>}
           </div>
         </div>
       )}

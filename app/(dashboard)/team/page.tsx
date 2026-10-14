@@ -5,6 +5,7 @@ import { UserPlus, MoreHorizontal, ShieldCheck, Users } from 'lucide-react';
 import { MOCK_TEAM } from '../../lib/mockData';
 import { formatDate } from '../../lib/utils';
 import InviteUserModal from '../../component/modals/InviteUserModal';
+import { useUser } from '../../lib/userContext';
 import type { UserRole } from '../../lib/types';
 
 const ROLE_COLORS: Record<UserRole, string> = {
@@ -21,6 +22,7 @@ const STATUS_COLORS = {
 };
 
 export default function TeamPage() {
+  const { companyName } = useUser();
   const [showMenu, setShowMenu] = useState<string | null>(null);
 
   return (
@@ -33,7 +35,7 @@ export default function TeamPage() {
             <span>Team &amp; Permissions</span>
           </h1>
           <p className="text-xs text-zinc-500 mt-0.5">
-            Manage users under your company account · Acme Packaging Pty Ltd
+            Manage users under your company account · {companyName}
           </p>
         </div>
         <InviteUserModal />

@@ -1,7 +1,6 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import { League_Spartan } from 'next/font/google';
-import { CartProvider } from './lib/cartContext';
 
 const spartan = League_Spartan({
   subsets: ['latin'],
@@ -18,7 +17,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={spartan.variable}>
       <body className="bg-zinc-100 text-zinc-900 antialiased font-sans">
-        <CartProvider>{children}</CartProvider>
+        {children}
       </body>
     </html>
   );
