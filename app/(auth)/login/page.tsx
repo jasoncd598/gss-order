@@ -2,14 +2,42 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { Eye, EyeOff, ShieldCheck, Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Eye, EyeOff, Lock, AlertCircle } from 'lucide-react';
+import { createClient } from '../../lib/supabase/client';
 
 export default function LoginPage() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
+  const [email, setEmail]               = useState('');
+  const [password, setPassword]         = useState('');
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState('');
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+
+    const supabase = createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+
+    setLoading(false);
+
+    if (signInError) {
+      setError(signInError.message);
+      return;
+    }
+
+    router.push('/');
+    router.refresh();
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex items-center justify-center p-4">
-      {/* Background grid pattern */}
       <div className="absolute inset-0 bg-[linear-gradient(rgba(251,191,36,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(251,191,36,0.03)_1px,transparent_1px)] bg-[size:48px_48px]" />
 
       <div className="relative w-full max-w-md">
@@ -31,14 +59,24 @@ export default function LoginPage() {
             <p className="text-zinc-400 text-xs">Enter your credentials to access your company portal.</p>
           </div>
 
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          {error && (
+            <div className="mb-4 flex items-start space-x-2.5 bg-red-950/50 border border-red-800 rounded-lg px-3.5 py-3">
+              <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+              <p className="text-red-300 text-xs">{error}</p>
+            </div>
+          )}
+
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
               <label className="block text-xs font-semibold text-zinc-300 mb-1.5">
                 Work Email Address
               </label>
               <input
                 type="email"
-                defaultValue="sarah.jenkins@acmepackaging.com.au"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                required
+                autoComplete="email"
                 className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent placeholder:text-zinc-500"
                 placeholder="you@company.com.au"
               />
@@ -51,9 +89,12 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   type={showPassword ? 'text' : 'password'}
-                  defaultValue="••••••••••"
-                  className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent pr-10"
-                  placeholder="Your secure password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  autoComplete="current-password"
+                  className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-transparent pr-10 placeholder:text-zinc-500"
+                  placeholder="Your password"
                 />
                 <button
                   type="button"
@@ -75,27 +116,15 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            <Link
-              href="/"
-              className="w-full flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors mt-2"
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 disabled:bg-amber-400/50 disabled:cursor-not-allowed text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors mt-2"
             >
               <Lock className="w-4 h-4" />
-              <span>Sign In Securely</span>
-            </Link>
+              <span>{loading ? 'Signing in…' : 'Sign In Securely'}</span>
+            </button>
           </form>
-
-          {/* Divider */}
-          <div className="my-6 flex items-center space-x-3">
-            <div className="flex-1 h-px bg-zinc-800" />
-            <span className="text-zinc-500 text-[10px] font-mono">OR</span>
-            <div className="flex-1 h-px bg-zinc-800" />
-          </div>
-
-          {/* PIN Login Hint */}
-          <button className="w-full flex items-center justify-center space-x-2 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white font-medium py-2.5 rounded-lg text-xs transition-colors">
-            <ShieldCheck className="w-4 h-4 text-amber-400" />
-            <span>Sign in with Access PIN</span>
-          </button>
 
           <p className="text-center text-zinc-500 text-[11px] mt-5">
             New to the portal?{' '}
@@ -105,9 +134,8 @@ export default function LoginPage() {
           </p>
         </div>
 
-        {/* Security notice */}
         <p className="text-center text-zinc-600 text-[10px] mt-5 font-mono">
-          🔒 256-bit TLS encrypted · Australian-hosted · SOC 2 compliant
+          🔒 256-bit TLS encrypted · Supabase hosted · Row-level security enabled
         </p>
       </div>
     </div>

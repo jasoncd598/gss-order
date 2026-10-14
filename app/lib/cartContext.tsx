@@ -44,7 +44,7 @@ const STORAGE_KEY = 'gss-cart';
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  // Hydrate from localStorage on mount
+  // Hydrate from localStorage on mount (client-only)
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
