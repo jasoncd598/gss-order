@@ -213,3 +213,85 @@ export async function placeOrder(
 
   return { success: true, ref };
 }
+
+// ─── Admin helpers (staff only) ───────────────────────────────────────────────
+
+export interface AdminCompany {
+  id: string;
+  name: string;
+  abn: string | null;
+  industry: string | null;
+  address: string | null;
+  contact_phone: string | null;
+  payment_terms: string;
+  credit_limit: number;
+  current_owing: number;
+  total_spend: number;
+  status: string;
+  created_at: string;
+}
+
+export async function getAllCompanies(supabase: SupabaseClient): Promise<AdminCompany[]> {
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at')
+    .order('created_at', { ascending: false });
+
+  if (error) { console.error('getAllCompanies:', error.message); return []; }
+  return (data ?? []) as AdminCompany[];
+}
+
+export async function getCompanyById(supabase: SupabaseClient, id: string): Promise<AdminCompany | null> {
+  const { data, error } = await supabase
+    .from('companies')
+    .select('id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at')
+    .eq('id', id)
+    .single();
+
+  if (error) { console.error('getCompanyById:', error.message); return null; }
+  return data as AdminCompany;
+}
+
+export async function getOrdersByCompanyAdmin(supabase: SupabaseClient, companyId: string) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id, ref, date, status, total,
+      order_items ( sku_id, product_name, dimensions, substrate, plate_ref, quantity, unit_price, line_total )
+    `)
+    .eq('company_id', companyId)
+    .order('date', { ascending: false })
+    .limit(5);
+
+  if (error) { console.error('getOrdersByCompanyAdmin:', error.message); return []; }
+  return ((data ?? []) as DbOrder[]).map(mapOrder);
+}
+
+export async function getAllOrdersAdmin(supabase: SupabaseClient) {
+  const { data, error } = await supabase
+    .from('orders')
+    .select(`
+      id, ref, date, status, total, company_id,
+      order_items ( sku_id, product_name, dimensions, substrate, plate_ref, quantity, unit_price, line_total ),
+      companies ( name )
+    `)
+    .order('date', { ascending: false });
+
+  if (error) { console.error('getAllOrdersAdmin:', error.message); return []; }
+  return (data ?? []) as unknown as (DbOrder & { company_id: string; companies: { name: string } | { name: string }[] | null })[];
+}
+
+export async function getUsersByCompany(
+  supabase: SupabaseClient,
+  companyId: string,
+) {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('id, first_name, last_name, role, status, created_at')
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: true })
+    .limit(5);
+
+  if (error) { console.error('getUsersByCompany:', error.message); return []; }
+  return ((data ?? []) as DbProfile[]).map((p) => mapTeamMember(p));
+}
