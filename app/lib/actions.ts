@@ -2,6 +2,7 @@
 
 import { createClient } from './supabase/server';
 import { placeOrder, type NewOrderItem } from './db';
+import { isDemoMode } from './demo';
 
 export interface PlaceOrderInput {
   items: NewOrderItem[];
@@ -20,6 +21,10 @@ export interface PlaceOrderResult {
  * Called from the cart page on "Place Order" click.
  */
 export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrderResult> {
+  if (isDemoMode) {
+    return { success: true, ref: `ORD-${new Date().getFullYear()}-${Math.floor(Math.random() * 9000 + 1000)}` };
+  }
+
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();

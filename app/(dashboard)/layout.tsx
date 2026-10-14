@@ -4,6 +4,7 @@ import SideNav from '../component/navigation/SideNav';
 import TopBar from '../component/navigation/TopBar';
 import { UserProvider, type UserSession } from '../lib/userContext';
 import { CartProvider } from '../lib/cartContext';
+import { isDemoMode } from '../lib/demo';
 
 // All dashboard routes render with live session data
 export const instant = false;
@@ -30,14 +31,14 @@ export default async function DashboardLayout({
     ? profile.companies[0]
     : profile?.companies;
 
-  const firstName   = profile?.first_name ?? user.user_metadata?.first_name ?? '';
-  const lastName    = profile?.last_name  ?? user.user_metadata?.last_name  ?? '';
+  const firstName   = profile?.first_name ?? user.user_metadata?.first_name ?? 'Sarah';
+  const lastName    = profile?.last_name  ?? user.user_metadata?.last_name  ?? 'Jenkins';
   const displayName = (`${firstName} ${lastName}`.trim() || user.email?.split('@')[0]) ?? 'User';
 
   // Fall back to signup metadata while company row is being linked
-  const companyName  = company?.name          ?? user.user_metadata?.company_name ?? 'Your Company';
+  const companyName  = company?.name          ?? user.user_metadata?.company_name ?? 'Acme Packaging Pty Ltd';
   const paymentTerms = company?.payment_terms ?? 'Net 30';
-  const creditLimit  = company?.credit_limit  ?? 0;
+  const creditLimit  = company?.credit_limit  ?? 35000;
 
   const session: UserSession = {
     id:          user.id,
@@ -45,8 +46,8 @@ export default async function DashboardLayout({
     firstName,
     lastName,
     email:       user.email ?? '',
-    role:        profile?.role    ?? user.user_metadata?.role ?? 'Viewer',
-    isStaff:     profile?.is_staff ?? false,
+    role:        profile?.role    ?? user.user_metadata?.role ?? 'Admin',
+    isStaff:     isDemoMode || (profile?.is_staff ?? false),
     companyId:   profile?.company_id ?? '',
     companyName,
     paymentTerms,

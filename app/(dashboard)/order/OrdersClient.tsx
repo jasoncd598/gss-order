@@ -90,7 +90,8 @@ export default function OrdersClient({
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-3 px-4">Order Ref</th>
@@ -137,6 +138,7 @@ export default function OrdersClient({
               )}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

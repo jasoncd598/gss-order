@@ -60,7 +60,8 @@ export default async function AdminOrdersPage() {
           <div className="py-16 text-center text-zinc-400 text-sm">No orders in the system yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
+            <div className="overflow-x-auto">
+            <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider bg-zinc-50/50">
                   <th className="py-3 px-4">Order Ref</th>
@@ -77,13 +78,17 @@ export default async function AdminOrdersPage() {
                   const companyName = Array.isArray(row.companies)
                     ? row.companies[0]?.name ?? '—'
                     : row.companies?.name ?? '—';
-                  const firstItem   = row.order_items?.[0];
+                  // Support both raw DB rows (order_items) and mock mapped rows (items)
+                  const rawRow = row as unknown as Record<string, unknown>;
+                  const orderItems = (rawRow.order_items as { product_name?: string }[] | undefined);
+                  const mappedItems = (rawRow.items as { productName?: string }[] | undefined);
+                  const firstProductName = orderItems?.[0]?.product_name ?? mappedItems?.[0]?.productName ?? '—';
                   return (
                     <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-[11px]">{row.ref}</td>
                       <td className="py-3.5 px-4 text-zinc-700 font-medium max-w-[160px] truncate">{companyName}</td>
                       <td className="py-3.5 px-4 text-zinc-600 max-w-[180px] truncate">
-                        {firstItem?.product_name ?? '—'}
+                        {firstProductName}
                       </td>
                       <td className="py-3.5 px-4 text-zinc-500 text-[11px]">{formatDate(row.date)}</td>
                       <td className="py-3.5 px-4">
@@ -104,6 +109,7 @@ export default async function AdminOrdersPage() {
                 })}
               </tbody>
             </table>
+            </div>
           </div>
         )}
       </div>

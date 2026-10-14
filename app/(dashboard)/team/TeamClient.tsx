@@ -69,7 +69,8 @@ export default function TeamClient({
             No team members yet. Invite someone to get started.
           </div>
         ) : (
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-3 px-4">Member</th>
@@ -130,6 +131,7 @@ export default function TeamClient({
               ))}
             </tbody>
           </table>
+          </div>
         )}
       </div>
 
@@ -139,7 +141,8 @@ export default function TeamClient({
           <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Permission Matrix</h2>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-3 px-4 text-left">Feature</th>
@@ -165,6 +168,7 @@ export default function TeamClient({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
     </div>

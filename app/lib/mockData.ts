@@ -237,7 +237,7 @@ export const MOCK_TEAM: TeamMember[] = [
   {
     id: 'usr-001',
     name: 'Sarah Jenkins',
-    email: 'sarah.jenkins@acmepackaging.com.au',
+    email: 's.jenkins@gss-demo.com.au',
     role: 'Admin',
     lastLogin: '2026-10-14',
     status: 'Active',
@@ -246,7 +246,7 @@ export const MOCK_TEAM: TeamMember[] = [
   {
     id: 'usr-002',
     name: 'James Wu',
-    email: 'james.wu@acmepackaging.com.au',
+    email: 'j.wu@gss-demo.com.au',
     role: 'Procurement Manager',
     lastLogin: '2026-10-13',
     status: 'Active',
@@ -255,7 +255,7 @@ export const MOCK_TEAM: TeamMember[] = [
   {
     id: 'usr-003',
     name: 'Priya Sharma',
-    email: 'priya.sharma@acmepackaging.com.au',
+    email: 'p.sharma@gss-demo.com.au',
     role: 'Finance',
     lastLogin: '2026-10-10',
     status: 'Active',
@@ -264,7 +264,7 @@ export const MOCK_TEAM: TeamMember[] = [
   {
     id: 'usr-004',
     name: 'Tom Bradley',
-    email: 'tom.bradley@acmepackaging.com.au',
+    email: 't.bradley@gss-demo.com.au',
     role: 'Viewer',
     lastLogin: '2026-09-30',
     status: 'Active',
@@ -273,7 +273,7 @@ export const MOCK_TEAM: TeamMember[] = [
   {
     id: 'usr-005',
     name: 'Mia Chen',
-    email: 'mia.chen@acmepackaging.com.au',
+    email: 'm.chen@gss-demo.com.au',
     role: 'Procurement Manager',
     lastLogin: 'Never',
     status: 'Invited',

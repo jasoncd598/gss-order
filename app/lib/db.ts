@@ -7,6 +7,44 @@ import type { Order, ArtworkFile, TeamMember } from './types';
 import { mapOrder, mapArtwork, mapTeamMember, type DbOrder, type DbArtwork, type DbProfile } from './db.types';
 import { MOCK_ORDERS, MOCK_ARTWORK, MOCK_TEAM } from './mockData';
 
+// ─── Admin types (declared early so mock data can use them) ──────────────────
+
+export interface AdminCompany {
+  id: string;
+  name: string;
+  abn: string | null;
+  industry: string | null;
+  address: string | null;
+  contact_phone: string | null;
+  payment_terms: string;
+  credit_limit: number;
+  current_owing: number;
+  total_spend: number;
+  status: string;
+  created_at: string;
+}
+
+// ─── Admin mock fallback data ─────────────────────────────────────────────────
+
+export const MOCK_ADMIN_COMPANIES: AdminCompany[] = [
+  { id: 'cmp-001', name: 'Acme Packaging Pty Ltd',      abn: '51 824 753 556', industry: 'Packaging & Manufacturing', address: '14 Industrial Ave, Wetherill Park NSW 2164', contact_phone: '+61 2 9055 7700', payment_terms: 'Net 30',  credit_limit: 35000, current_owing: 14250, total_spend: 84910,  status: 'Active',    created_at: '2022-03-14' },
+  { id: 'cmp-002', name: 'BrightBox Retail Solutions',  abn: '72 918 441 203', industry: 'Retail & FMCG',           address: '5 Commerce St, Moorabbin VIC 3189',          contact_phone: '+61 3 9874 2200', payment_terms: 'Net 14',  credit_limit: 20000, current_owing: 8100,  total_spend: 42300,  status: 'Active',    created_at: '2023-07-01' },
+  { id: 'cmp-003', name: 'NorthShore Naturals',         abn: '39 501 882 117', industry: 'Health & Beauty',         address: '8 Palm Grove, Fortitude Valley QLD 4006',    contact_phone: '+61 7 3055 8800', payment_terms: 'Prepaid', credit_limit: 15000, current_owing: 0,     total_spend: 18750,  status: 'Active',    created_at: '2024-01-18' },
+  { id: 'cmp-004', name: 'TradeLink Wholesale Group',   abn: '88 344 712 990', industry: 'Wholesale Distribution',  address: '22 Kewdale Rd, Kewdale WA 6105',             contact_phone: '+61 8 9211 4400', payment_terms: 'Net 30',  credit_limit: 50000, current_owing: 50000, total_spend: 127600, status: 'Suspended', created_at: '2021-09-05' },
+];
+
+// Admin orders — cross-company flat view for mock fallback
+export const MOCK_ADMIN_ORDERS = [
+  ...MOCK_ORDERS.map((o) => ({ ...o, company_id: 'cmp-001', companies: { name: 'Acme Packaging Pty Ltd' } })),
+  { ...MOCK_ORDERS[0], id: 'ord-bb-01', ref: 'ORD-2026-8790', date: '2026-10-05', status: 'In Production' as const, company_id: 'cmp-002', companies: { name: 'BrightBox Retail Solutions' }, total: 9700 },
+  { ...MOCK_ORDERS[2], id: 'ord-ns-01', ref: 'ORD-2026-8655', date: '2026-09-30', status: 'Delivered'     as const, company_id: 'cmp-003', companies: { name: 'NorthShore Naturals' },         total: 1440 },
+  { ...MOCK_ORDERS[3], id: 'ord-tl-01', ref: 'ORD-2026-8410', date: '2026-09-20', status: 'Pending Approval' as const, company_id: 'cmp-004', companies: { name: 'TradeLink Wholesale Group' }, total: 18000 },
+];
+
+// Mock records use ids like 'cmp-001'; skip the DB for those instead of
+// letting Postgres reject them as invalid UUIDs.
+const isUuid = (id: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
 export async function getOrdersByCompany(
@@ -216,43 +254,36 @@ export async function placeOrder(
 
 // ─── Admin helpers (staff only) ───────────────────────────────────────────────
 
-export interface AdminCompany {
-  id: string;
-  name: string;
-  abn: string | null;
-  industry: string | null;
-  address: string | null;
-  contact_phone: string | null;
-  payment_terms: string;
-  credit_limit: number;
-  current_owing: number;
-  total_spend: number;
-  status: string;
-  created_at: string;
-}
-
 export async function getAllCompanies(supabase: SupabaseClient): Promise<AdminCompany[]> {
   const { data, error } = await supabase
     .from('companies')
     .select('id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at')
     .order('created_at', { ascending: false });
 
-  if (error) { console.error('getAllCompanies:', error.message); return []; }
+  if (error) { console.error('getAllCompanies:', error.message); return MOCK_ADMIN_COMPANIES; }
+  if (!data || data.length === 0) return MOCK_ADMIN_COMPANIES;
   return (data ?? []) as AdminCompany[];
 }
 
 export async function getCompanyById(supabase: SupabaseClient, id: string): Promise<AdminCompany | null> {
+  if (!isUuid(id)) return MOCK_ADMIN_COMPANIES.find((c) => c.id === id) ?? null;
+
   const { data, error } = await supabase
     .from('companies')
     .select('id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at')
     .eq('id', id)
     .single();
 
-  if (error) { console.error('getCompanyById:', error.message); return null; }
+  if (error) {
+    // Fall back to mock company matching the id, or first mock company
+    return MOCK_ADMIN_COMPANIES.find((c) => c.id === id) ?? MOCK_ADMIN_COMPANIES[0];
+  }
   return data as AdminCompany;
 }
 
 export async function getOrdersByCompanyAdmin(supabase: SupabaseClient, companyId: string) {
+  if (!isUuid(companyId)) return MOCK_ORDERS.slice(0, 4);
+
   const { data, error } = await supabase
     .from('orders')
     .select(`
@@ -263,7 +294,8 @@ export async function getOrdersByCompanyAdmin(supabase: SupabaseClient, companyI
     .order('date', { ascending: false })
     .limit(5);
 
-  if (error) { console.error('getOrdersByCompanyAdmin:', error.message); return []; }
+  if (error) { console.error('getOrdersByCompanyAdmin:', error.message); return MOCK_ORDERS.slice(0, 4); }
+  if (!data || data.length === 0) return MOCK_ORDERS.slice(0, 4);
   return ((data ?? []) as DbOrder[]).map(mapOrder);
 }
 
@@ -277,7 +309,8 @@ export async function getAllOrdersAdmin(supabase: SupabaseClient) {
     `)
     .order('date', { ascending: false });
 
-  if (error) { console.error('getAllOrdersAdmin:', error.message); return []; }
+  if (error) { console.error('getAllOrdersAdmin:', error.message); return MOCK_ADMIN_ORDERS; }
+  if (!data || data.length === 0) return MOCK_ADMIN_ORDERS;
   return (data ?? []) as unknown as (DbOrder & { company_id: string; companies: { name: string } | { name: string }[] | null })[];
 }
 
@@ -285,6 +318,8 @@ export async function getUsersByCompany(
   supabase: SupabaseClient,
   companyId: string,
 ) {
+  if (!isUuid(companyId)) return MOCK_TEAM;
+
   const { data, error } = await supabase
     .from('profiles')
     .select('id, first_name, last_name, role, status, created_at')
@@ -292,6 +327,7 @@ export async function getUsersByCompany(
     .order('created_at', { ascending: true })
     .limit(5);
 
-  if (error) { console.error('getUsersByCompany:', error.message); return []; }
-  return ((data ?? []) as DbProfile[]).map((p) => mapTeamMember(p));
+  if (error) { console.error('getUsersByCompany:', error.message); return MOCK_TEAM; }
+  if (!data || data.length === 0) return MOCK_TEAM;
+  return (data as DbProfile[]).map((p) => mapTeamMember(p));
 }

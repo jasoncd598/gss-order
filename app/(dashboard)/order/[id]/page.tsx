@@ -101,7 +101,8 @@ export default async function OrderDetailPage({
             <Package className="w-4 h-4 text-amber-500" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Order Items</h2>
           </div>
-          <table className="w-full text-xs">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-2.5 px-4 text-left">Product</th>
@@ -136,6 +137,7 @@ export default async function OrderDetailPage({
               </tr>
             </tfoot>
           </table>
+          </div>
         </div>
 
         {/* Sidebar */}

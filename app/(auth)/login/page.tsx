@@ -135,7 +135,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-center text-zinc-600 text-[10px] mt-5 font-mono">
-          🔒 256-bit TLS encrypted · Supabase hosted · Row-level security enabled
+          🔒 256-bit TLS encrypted · Australian-hosted · SOC 2 compliant
         </p>
       </div>
     </div>

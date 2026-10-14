@@ -5,6 +5,8 @@ const nextConfig: NextConfig = {
   experimental: {
     agentFeedback: true,
   },
+  // Hide the dev-mode "N" badge so local screenshots are clean
+  devIndicators: false,
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {

@@ -64,7 +64,8 @@ export default async function AdminCompaniesPage() {
         {companies.length === 0 ? (
           <div className="py-16 text-center text-zinc-400 text-sm">No companies registered yet.</div>
         ) : (
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-3 px-4">Company</th>
@@ -117,6 +118,7 @@ export default async function AdminCompaniesPage() {
               })}
             </tbody>
           </table>
+          </div>
         )}
       </div>
     </div>

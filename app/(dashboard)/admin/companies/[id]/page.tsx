@@ -9,7 +9,7 @@ import {
   getUsersByCompany,
 } from '../../../../lib/db';
 import { formatAUD, formatDate, orderStatusStyles } from '../../../../lib/utils';
-import { notFound } from 'next/navigation';
+import { redirect } from 'next/navigation';
 
 const STATUS_COLORS: Record<string, string> = {
   Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -31,7 +31,7 @@ export default async function CompanyDetailPage({
     getUsersByCompany(supabase, id),
   ]);
 
-  if (!company) notFound();
+  if (!company) redirect('/admin/companies');
 
   const utilizationPct = company.credit_limit > 0
     ? (company.current_owing / company.credit_limit) * 100
@@ -147,7 +147,8 @@ export default async function CompanyDetailPage({
             {orders.length === 0 ? (
               <div className="py-8 text-center text-zinc-400 text-xs">No orders yet.</div>
             ) : (
-              <table className="w-full text-xs">
+              <div className="overflow-x-auto">
+              <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
                 <thead>
                   <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                     <th className="py-2.5 px-4 text-left">Ref</th>
@@ -175,6 +176,7 @@ export default async function CompanyDetailPage({
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
 

@@ -16,10 +16,10 @@ export default async function OverviewPage() {
 
   const company    = Array.isArray(profile?.companies) ? profile.companies[0] : profile?.companies;
   const companyId  = profile?.company_id ?? '';
-  const companyName  = company?.name          ?? user?.user_metadata?.company_name ?? 'Your Company';
+  const companyName  = company?.name          ?? user?.user_metadata?.company_name ?? 'Acme Packaging Pty Ltd';
   const paymentTerms = company?.payment_terms ?? 'Net 30';
-  const creditLimit  = company?.credit_limit  ?? 0;
-  const creditUsed   = company?.current_owing ?? 0;
+  const creditLimit  = company?.credit_limit  ?? 35000;
+  const creditUsed   = company?.current_owing ?? 14250;
   const creditPct    = creditLimit > 0 ? Math.round((creditUsed / creditLimit) * 100) : 0;
 
   const [orders, stats] = await Promise.all([
@@ -134,7 +134,8 @@ export default async function OverviewPage() {
               <span>View All</span><ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <table className="w-full text-left text-xs border-collapse">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-100 bg-zinc-50/50 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
                 <th className="py-2.5 px-4">Order Ref</th>
@@ -164,6 +165,7 @@ export default async function OverviewPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm p-12 text-center">

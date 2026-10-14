@@ -241,8 +241,8 @@ export default function CartPage() {
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Order Summary</h3>
                 {poRef && <div className="flex justify-between"><span className="text-zinc-400">PO Reference</span><span className="font-bold text-zinc-800">{poRef}</span></div>}
                 {deliveryNote && <div className="flex justify-between"><span className="text-zinc-400">Delivery Note</span><span className="font-semibold text-zinc-700 max-w-[200px] text-right">{deliveryNote}</span></div>}
-                <div className="flex justify-between"><span className="text-zinc-400">Payment Terms</span><span className="font-bold text-zinc-800">Net 30</span></div>
-                <div className="flex justify-between"><span className="text-zinc-400">Delivery Address</span><span className="font-semibold text-zinc-700 max-w-[200px] text-right">14 Industrial Ave, Wetherill Park NSW 2164</span></div>
+                <div className="flex justify-between"><span className="text-zinc-400">Payment Terms</span><span className="font-bold text-zinc-800">{paymentTerms}</span></div>
+                <div className="flex justify-between"><span className="text-zinc-400">Delivery Address</span><span className="font-semibold text-zinc-700 max-w-[200px] text-right">{deliveryNote || 'Default warehouse address'}</span></div>
               </div>
             )}
           </div>
