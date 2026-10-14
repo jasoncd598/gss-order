@@ -1,41 +1,50 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
-  Bell, Search, UserCheck, CheckCircle2, Package,
-  RefreshCw, AlertTriangle, X, Settings, LogOut,
-  ChevronDown, ShoppingCart,
+  Bell, Search, UserCheck, Settings, LogOut, ChevronDown, ShoppingCart,
 } from 'lucide-react';
 import { useCart } from '../../lib/cartContext';
 import { createClient } from '../../lib/supabase/client';
-
-const NOTIFICATIONS = [
-  { id: 'n1', icon: Package,       iconColor: 'text-emerald-500', iconBg: 'bg-emerald-50', title: 'Order Dispatched',         body: 'ORD-2026-8812 dispatched via TNT Express.',                   time: '2 hours ago', read: false, href: '/order/ord-8812' },
-  { id: 'n2', icon: RefreshCw,     iconColor: 'text-amber-500',   iconBg: 'bg-amber-50',   title: 'Reorder Confirmed',         body: 'PLT-5510-A Poly Mailer Bags reorder accepted.',               time: '1 day ago',   read: false, href: '/order/ord-8740' },
-  { id: 'n3', icon: AlertTriangle, iconColor: 'text-red-500',     iconBg: 'bg-red-50',     title: 'Artwork Revision Required', body: 'PLT-7720-F Tissue Wrap needs revisions before production.',    time: '2 days ago',  read: false, href: '/vault' },
-  { id: 'n4', icon: CheckCircle2,  iconColor: 'text-indigo-500',  iconBg: 'bg-indigo-50',  title: 'Proof Approved',            body: 'PLT-3301-E Premium Retail Swing Tag v2 approved.',            time: '3 days ago',  read: true,  href: '/vault' },
-  { id: 'n5', icon: Package,       iconColor: 'text-zinc-400',    iconBg: 'bg-zinc-100',   title: 'Order Delivered',           body: 'ORD-2026-8600 delivered to your warehouse.',                  time: '5 days ago',  read: true,  href: '/order/ord-8600' },
-];
+import { markNotificationsReadAction } from '../../lib/actions';
+import { NOTIFICATION_STYLE, timeAgo } from '../notificationMeta';
+import type { AppNotification } from '../../lib/types';
 
 interface TopBarProps {
   displayName: string;
   role: string;
   email: string;
+  notifications: AppNotification[];
 }
 
-export default function TopBar({ displayName, role, email }: TopBarProps) {
+export default function TopBar({ displayName, role, email, notifications: initialNotifications }: TopBarProps) {
   const router = useRouter();
   const { count } = useCart();
   const [notifOpen, setNotifOpen]     = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState(NOTIFICATIONS);
+  const [notifications, setNotifications] = useState(initialNotifications);
+  const [synced, setSynced] = useState(initialNotifications);
+  if (synced !== initialNotifications) { setSynced(initialNotifications); setNotifications(initialNotifications); }
+  const [query, setQuery] = useState('');
+  const [, startTransition] = useTransition();
   const [signingOut, setSigningOut]   = useState(false);
   const notifRef   = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
 
   const unreadCount = notifications.filter((n) => !n.read).length;
+
+  function markRead(ids?: string[]) {
+    setNotifications((ns) => ns.map((n) => (!ids || ids.includes(n.id) ? { ...n, read: true } : n)));
+    startTransition(async () => { await markNotificationsReadAction(ids); });
+  }
+
+  function submitSearch(e: React.FormEvent) {
+    e.preventDefault();
+    const q = query.trim();
+    if (q) router.push(`/search?q=${encodeURIComponent(q)}`);
+  }
 
   useEffect(() => {
     function handler(e: MouseEvent) {
@@ -65,16 +74,19 @@ export default function TopBar({ displayName, role, email }: TopBarProps) {
   return (
     <header className="bg-white border-b border-zinc-200 h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm lg:pl-6 pl-16">
       {/* Search */}
-      <div className="flex items-center flex-1 max-w-xs sm:max-w-md">
+      <form onSubmit={submitSearch} role="search" className="flex items-center flex-1 max-w-xs sm:max-w-md">
         <div className="relative w-full">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
           <input
-            type="text"
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
             placeholder="Search SKU, Order #, Plate Ref…"
+            aria-label="Search orders and artwork"
             className="w-full pl-9 pr-4 py-1.5 bg-zinc-50 border border-zinc-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 focus:bg-white text-zinc-800"
           />
         </div>
-      </div>
+      </form>
 
       <div className="flex items-center space-x-2 sm:space-x-3 ml-3">
         {/* Cart badge */}
@@ -110,31 +122,36 @@ export default function TopBar({ displayName, role, email }: TopBarProps) {
                   {unreadCount > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">{unreadCount} new</span>}
                 </div>
                 {unreadCount > 0 && (
-                  <button onClick={() => setNotifications((ns) => ns.map((n) => ({ ...n, read: true })))} className="text-[11px] text-amber-600 hover:text-amber-800 font-semibold">
+                  <button onClick={() => markRead()} className="text-[11px] text-amber-600 hover:text-amber-800 font-semibold">
                     Mark all read
                   </button>
                 )}
               </div>
               <div className="max-h-80 overflow-y-auto divide-y divide-zinc-50">
-                {notifications.map((n) => {
-                  const Icon = n.icon;
+                {notifications.length === 0 && (
+                  <div className="px-4 py-10 text-center text-xs text-zinc-400">You&apos;re all caught up.</div>
+                )}
+                {notifications.slice(0, 8).map((n) => {
+                  const { icon: Icon, color, bg } = NOTIFICATION_STYLE[n.type] ?? NOTIFICATION_STYLE.account;
                   return (
-                    <div key={n.id} className={`flex items-start space-x-3 px-4 py-3 hover:bg-zinc-50 transition-colors group ${!n.read ? 'bg-amber-50/30' : ''}`}>
-                      <div className={`w-8 h-8 rounded-full ${n.iconBg} flex items-center justify-center shrink-0 mt-0.5`}>
-                        <Icon className={`w-4 h-4 ${n.iconColor}`} />
+                    <Link
+                      key={n.id}
+                      href={n.link}
+                      onClick={() => { setNotifOpen(false); if (!n.read) markRead([n.id]); }}
+                      className={`flex items-start space-x-3 px-4 py-3 hover:bg-zinc-50 transition-colors ${!n.read ? 'bg-amber-50/40' : ''}`}
+                    >
+                      <div className={`w-8 h-8 rounded-full ${bg} flex items-center justify-center shrink-0 mt-0.5`}>
+                        <Icon className={`w-4 h-4 ${color}`} />
                       </div>
-                      <Link href={n.href} onClick={() => setNotifOpen(false)} className="flex-1 min-w-0">
+                      <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between">
                           <span className={`text-xs text-zinc-900 ${!n.read ? 'font-bold' : 'font-semibold'}`}>{n.title}</span>
                           {!n.read && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 mt-1 ml-2" />}
                         </div>
-                        <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed">{n.body}</p>
-                        <span className="text-[10px] text-zinc-400 font-mono">{n.time}</span>
-                      </Link>
-                      <button onClick={() => setNotifications((ns) => ns.filter((x) => x.id !== n.id))} className="opacity-0 group-hover:opacity-100 text-zinc-300 hover:text-zinc-500 transition-opacity shrink-0">
-                        <X className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                        {n.body && <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed line-clamp-2">{n.body}</p>}
+                        <span className="text-[10px] text-zinc-400 font-mono" suppressHydrationWarning>{timeAgo(n.createdAt)}</span>
+                      </div>
+                    </Link>
                   );
                 })}
               </div>

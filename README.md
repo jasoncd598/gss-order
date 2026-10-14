@@ -1,8 +1,147 @@
 # GSS Order Portal — Customer Ordering & Account Platform
 
-> **Interview Demo — UI MVP**  
-> A fully responsive B2B customer ordering portal built with Next.js 16, React 19, and Tailwind CSS v4.  
-> **Pure UI only** — no backend, no database, no API calls. All data is mocked locally.
+> A fully responsive B2B customer ordering portal built with Next.js 16, React 19, Tailwind CSS v4 and Supabase (Postgres + Auth).
+> Company data is isolated with Postgres Row Level Security; reorders are priced and approved server-side.
+
+---
+
+## Setup
+
+1. **Environment** — create `.env.local`:
+   ```
+   NEXT_PUBLIC_SUPABASE_URL=...
+   NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+   SUPABASE_SERVICE_ROLE_KEY=...     # server only — records Stripe payments on orders
+   STRIPE_SECRET_KEY=sk_test_...     # or a restricted key (rk_test_...) — see Payments below
+   STRIPE_WEBHOOK_SECRET=whsec_...
+   RESEND_API_KEY=re_...             # email notifications (off until set)
+   EMAIL_FROM="GSS Orders <orders@your-domain.com.au>"
+   # EMAIL_REPLY_TO=accounts@your-domain.com.au
+   CRON_SECRET=...                   # any long random string — protects /api/notifications/deliver
+   SITE_URL=https://portal.your-domain.com.au   # links in emails (Vercel production URL is used if unset)
+   BUSINESS_NAME="GSS Pty Ltd"       # supplier details printed on invoices
+   BUSINESS_ABN="12 345 678 901"
+   BUSINESS_ADDRESS="..."
+   BUSINESS_EMAIL=accounts@your-domain.com.au
+   BUSINESS_PHONE="..."
+   BUSINESS_BANK_DETAILS="BSB 000-000 · Acc 0000 0000"
+   # DEMO_MODE=true   # optional: skip login and show sample data (screenshots only — never in production)
+   ```
+2. **Database** — run the files in `supabase/migrations/` in order in the Supabase SQL editor
+   (`000` → `006`). They are idempotent. `003` is the core security layer; `004` adds invitations,
+   the private `artwork` storage bucket, proof approval, server-priced ordering and notifications.
+3. **First staff user** — sign up in the portal, then in the SQL editor:
+   ```sql
+   update public.profiles set is_staff = true where email = 'you@example.com';
+   ```
+4. `npm install && npm run dev`
+
+### How accounts work
+- Registering creates a **new company** (status `Pending`) and makes the registrant its **Admin**.
+  Roles and staff access are never taken from the signup form.
+- Company Admins (or staff) **invite colleagues** from the Team page. The invite link
+  (`/registration?invite=…`) only works for the invited email, expires after 14 days, and
+  joins that company with the chosen role. Admins can change roles and deactivate users.
+- Staff approve the company under **Admin → Companies**; until then the customer can browse but not order.
+- Only `Admin` and `Procurement Manager` users of an `Active` company can place orders or reorders.
+- Company Admins can change their own team's roles; nobody can change their own role, company or staff flag.
+
+### Reorder workflow
+Customer clicks **Reorder This** on a past order → adjusts quantities → `reorder_requests` row (`Pending`, priced from the
+original order lines in the database) → staff **Approve** (creates a real order, `In Production`) or **Reject** with a reason →
+customer sees the outcome under Order History.
+
+### Artwork & proofs
+Staff upload files from **Admin → Companies → (company) → Upload Artwork**. Files go to the private
+`artwork` bucket under `<company_id>/`; customers can only read their own company's folder, and
+downloads/previews use 5-minute signed URLs. Uploading as *Needs customer approval* notifies the
+company's Admins/Procurement Managers, who approve or request changes in the vault. Approving a new
+version supersedes the previous one.
+
+### Ordering & catalog
+The catalog is the company's approved artwork, priced from the most recent order of each plate.
+Cart orders send only plate + quantity; `place_order()` prices every line in the database.
+Products never ordered show *Price on request*.
+
+### Notifications
+Database triggers create in-portal notifications for: new orders and reorder requests (staff),
+order status changes (customer), reorder decisions (requester), proofs ready / reviewed, invitations
+accepted, account approval, and payments received / failed.
+
+**Email:** every notification is also emailed to its recipient (via [Resend](https://resend.com)), and
+team invitations email the sign-up link to the invitee. Emails go out right after the action that
+caused them (Next.js `after()`), so pages never wait on email. `/api/notifications/deliver` re-sends
+anything still pending — Vercel Cron calls it daily (`vercel.json`), and a Supabase Database Webhook on
+`notifications` INSERT can call it instantly. Undelivered rows are claimed atomically (no duplicate
+emails), retried up to 3 times, and failures are kept in `notifications.email_error`. Email is a no-op
+until `RESEND_API_KEY` and `EMAIL_FROM` are set.
+
+### Invoices
+Each order has a printable page at `/invoice/<order id>` (order page → *Download Invoice PDF*; the
+browser's *Save as PDF* produces the file). It's a **Tax Invoice** once staff set an invoice number,
+otherwise an **Order Confirmation**. Supplier details come from the `BUSINESS_*` variables.
+
+### Payments (Stripe)
+Orders can be paid by card through Stripe Checkout (hosted page, AUD, GST as its own line).
+- **Prepaid** companies are sent to Checkout straight after placing an order; everyone else can pay any
+  unpaid order from its order page (Admin, Procurement Manager and Finance roles).
+- The amount is always computed on the server from the order total in the database.
+- `POST /api/stripe/webhook` marks the order **Paid** (or **Processing** for delayed bank payments) and
+  notifies staff and the customer. The checkout return page runs the same idempotent sync so the
+  customer sees the result immediately. Customers can't change payment fields (no UPDATE on orders).
+- Register the webhook in the Stripe Dashboard → Developers → Webhooks for
+  `checkout.session.completed`, `checkout.session.async_payment_succeeded`,
+  `checkout.session.async_payment_failed`. Locally: `stripe listen --forward-to localhost:3000/api/stripe/webhook`
+  and use the `whsec_…` it prints.
+- Restricted key permissions needed: Checkout Sessions (write).
+- Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
+
+### Tests
+`npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
+escalation guards, reorders, invitations, storage access, proof approval, server pricing and
+notifications, payment state and email delivery (111 checks).
+
+---
+
+## Requirements Coverage (Phase 1 brief)
+
+| Requirement | Where |
+|---|---|
+| Secure customer login | Supabase Auth email/password + password reset; invite-only joining via expiring, email-bound links |
+| Company accounts, multiple users | `companies` ↔ `profiles`; Team page |
+| Roles; company admins manage their users | Admin / Procurement Manager / Finance / Viewer; invite, change role, deactivate (guarded in DB) |
+| Order history (products, qty, dates, artwork, specs, refs, status) | Order History + Order detail; plate refs link to proofs in the vault |
+| One-click reorder with new quantities | *Reorder This* → reorder request → staff approve → new order (priced in DB) |
+| Secure artwork / proofs / documents | Private storage bucket, per-company folders, signed URLs, proof approval + versioning |
+| Admin dashboard | Admin → overview, companies, orders, reorder requests, artwork upload |
+| Order status workflow | Staff status changes → customer notifications |
+| Email notifications | Every notification + invitations, via Resend (see Notifications) |
+| Responsive | Mobile drawer nav, scrollable tables, print-friendly invoices |
+| Data separation between companies | Postgres RLS; `npm run test:db` proves it (111 checks) |
+| Third-party integrations | Stripe card payments (Phase 2 item, done); Resend email |
+| Built for future integrations | `invoice_ref` / payment fields ready for Xero sync; per-order pages ready for QR codes |
+
+---
+
+## Owner Setup Checklist
+
+Everything in code is done. These steps need your accounts, data or decisions:
+
+1. **Supabase** — run migrations `000` → `006` in the SQL editor; promote the first staff user (see Setup).
+   Set **Authentication → SMTP** to your email provider so sign-up / password-reset emails come from your domain,
+   and set **Authentication → URL Configuration → Site URL** to the production URL.
+2. **Stripe** — create the webhook destination (`https://<domain>/api/stripe/webhook`, the three
+   `checkout.session.*` events) and copy its signing secret. Before going live, switch to live keys
+   (ideally a restricted key) and complete Stripe account activation.
+3. **Resend** — create an account, verify your sending domain (DNS records), create an API key.
+4. **Vercel** — deploy, then add every variable from Setup step 1 (including `CRON_SECRET`) and redeploy.
+   Optional: a Supabase **Database Webhook** on `notifications` INSERT → `POST https://<domain>/api/notifications/deliver`
+   with header `Authorization: Bearer <CRON_SECRET>` for instant delivery of sign-up-time notifications.
+5. **Business details** — fill in the `BUSINESS_*` variables (ABN is required on tax invoices).
+6. **Data migration** — review the existing Airtable base and map its customers, orders and artwork
+   onto these tables (needs access to the base).
+7. **Test pass** — place a Prepaid-company order and pay with `4242 4242 4242 4242`; confirm the order
+   shows **Paid** and the emails arrive.
 
 ---
 
@@ -77,6 +216,10 @@
 | **TypeScript** | 5 | Type safety across all mock data and components |
 | **Tailwind CSS** | 4 | Utility-first styling, zero runtime |
 | **Lucide React** | 1.56.0 | Consistent icon system |
+| **Supabase** | Postgres + Auth + Storage | Row Level Security for company separation; private artwork bucket |
+| **Stripe** | `stripe` 22.6.0 | Hosted Checkout for card payments; signed webhooks |
+| **Resend** | HTTP API | Transactional email for notifications and invitations |
+| **Vercel** | Hosting + Cron | Zero-config Next.js hosting; daily email backstop |
 | **League Spartan** | Google Fonts | Brand-aligned industrial sans-serif |
 
 ---
@@ -85,35 +228,34 @@
 
 ```
 app/
-├── (auth)/                   # Auth route group (no dashboard nav)
-│   ├── login/page.tsx
-│   ├── registration/page.tsx
-│   └── forgot-password/page.tsx
-├── (dashboard)/              # Dashboard route group (with SideNav + Header)
-│   ├── layout.tsx            # Shared shell: SideNav + top header
-│   ├── page.tsx              # Dashboard overview
-│   ├── catalog/page.tsx      # Product catalog + quick reorder
-│   ├── order/
-│   │   ├── page.tsx          # Order history list
-│   │   └── [id]/page.tsx     # Order detail
-│   ├── vault/page.tsx        # Artwork vault
-│   ├── team/page.tsx         # Team & permissions
-│   └── admin/
-│       └── companies/
-│           ├── page.tsx      # All companies (admin)
-│           └── [id]/page.tsx # Company detail (admin)
-├── component/
-│   ├── navigation/
-│   │   ├── SideNav.tsx       # Collapsible sidebar
-│   │   └── NavBar.tsx        # Top header
-│   ├── modals/
-│   │   ├── ReorderModal.tsx  # Reorder flow with qty adjustment
-│   │   └── InviteUserModal.tsx
-│   └── ui/                   # (reserved for shared UI primitives)
+├── (auth)/                     # Login, registration (incl. invite links), password reset
+├── (dashboard)/                # Signed-in shell: SideNav + TopBar
+│   ├── page.tsx                # Dashboard overview
+│   ├── catalog/                # Approved artwork priced from last order → cart
+│   ├── cart/page.tsx           # Review, place order, prepaid → Stripe Checkout
+│   ├── order/                  # Order history, reorder requests, order detail + payment panel
+│   ├── vault/                  # Artwork & proofs (signed URLs, proof approval)
+│   ├── team/                   # Invite users, change roles, deactivate
+│   ├── notifications/          # In-portal notifications
+│   ├── search/                 # Orders + artwork search
+│   └── admin/                  # Staff: overview, companies, orders, reorder requests
+├── invoice/[id]/               # Printable tax invoice / order confirmation
+├── api/
+│   ├── stripe/webhook/         # Signed Stripe events → order payment state
+│   └── notifications/deliver/  # Cron / DB-webhook email backstop
+├── auth/callback/              # Supabase email-link callback
+├── component/                  # Modals, navigation, admin widgets, PayOrderButton
 └── lib/
-    ├── types.ts              # TypeScript interfaces
-    ├── mockData.ts           # All mock orders, artwork, team, companies
-    └── utils.ts              # formatAUD, formatDate, status style helpers
+    ├── actions.ts              # Server Actions (all writes)
+    ├── db.ts / db.types.ts     # Queries + row mapping
+    ├── stripe.ts               # Checkout + idempotent payment sync
+    ├── email.ts                # Notification + invitation emails (Resend)
+    ├── business.ts             # Supplier details for invoices
+    └── supabase/               # Browser, server, middleware and service-role clients
+supabase/
+├── migrations/                 # 000 → 006, idempotent
+└── tests/rls.test.mjs          # Security test suite (PGlite)
+proxy.ts                        # Auth gate (skips signed machine routes)
 ```
 
 ---
@@ -152,8 +294,9 @@ These terms are used throughout the platform and reflect the B2B packaging indus
 - **Dark sidebar + light content area** — matches industrial B2B aesthetics while maintaining readability for dense data tables.
 - **Amber (`#FBBF24`) as the primary action colour** — high contrast against the zinc dark backgrounds, energetic without being aggressive.
 - **Monospace font for all references** — order refs, plate refs, tracking numbers, and prices use `font-mono` to visually separate data from labels.
-- **No spinners or skeletons** — this is a UI demo; all data is synchronous mock data for clean, fast rendering.
-- **Public image APIs used for demo only** — Unsplash (artwork previews) and Pravatar (user avatars) are used solely for visual fidelity in the demo. Production would use authenticated storage (e.g. AWS S3 + CloudFront).
+- **Loading skeletons per route** — each data page streams in behind a `loading.tsx` skeleton.
+- **The database is the gatekeeper** — prices, permissions and payment state are enforced in Postgres (RLS + `SECURITY DEFINER` functions), so a bug in the UI can't leak another company's data or under-price an order.
+- **Public image APIs used for demo data only** — Unsplash and Pravatar appear only in `DEMO_MODE`; real artwork lives in the private Supabase Storage bucket behind 5-minute signed URLs.
 
 ---
 

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createClient } from '../lib/supabase/server';
 import { getOrdersByCompany, getDashboardStats } from '../lib/db';
 import { formatAUD, formatDate, orderStatusStyles } from '../lib/utils';
+import { isDemoMode } from '../lib/demo';
 
 export default async function OverviewPage() {
   const supabase = await createClient();
@@ -16,10 +17,10 @@ export default async function OverviewPage() {
 
   const company    = Array.isArray(profile?.companies) ? profile.companies[0] : profile?.companies;
   const companyId  = profile?.company_id ?? '';
-  const companyName  = company?.name          ?? user?.user_metadata?.company_name ?? 'Acme Packaging Pty Ltd';
+  const companyName  = company?.name          ?? user?.user_metadata?.company_name ?? 'Your Company';
   const paymentTerms = company?.payment_terms ?? 'Net 30';
-  const creditLimit  = company?.credit_limit  ?? 35000;
-  const creditUsed   = company?.current_owing ?? 14250;
+  const creditLimit  = company?.credit_limit  ?? (isDemoMode ? 35000 : 0);
+  const creditUsed   = company?.current_owing ?? (isDemoMode ? 14250 : 0);
   const creditPct    = creditLimit > 0 ? Math.round((creditUsed / creditLimit) * 100) : 0;
 
   const [orders, stats] = await Promise.all([

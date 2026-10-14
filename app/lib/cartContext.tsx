@@ -48,19 +48,26 @@ export function CartProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
+      // Reading localStorage must wait until after hydration, so this one-time sync stays in an effect
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (stored) setItems(JSON.parse(stored));
     } catch {
       // ignore parse errors
     }
   }, []);
 
-  // Persist to localStorage whenever items change
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
-  }, [items]);
+  // Persist on every change (not in an effect: a mount-time effect would
+  // overwrite the stored cart with [] before it has been read back)
+  const update = useCallback((fn: (prev: CartItem[]) => CartItem[]) => {
+    setItems((prev) => {
+      const next = fn(prev);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* storage full / disabled */ }
+      return next;
+    });
+  }, []);
 
   const addItem = useCallback((newItem: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
-    setItems((prev) => {
+    update((prev) => {
       const existing = prev.find((i) => i.artId === newItem.artId);
       if (existing) {
         // bump quantity
@@ -75,23 +82,23 @@ export function CartProvider({ children }: { children: ReactNode }) {
         { ...newItem, quantity: newItem.quantity ?? newItem.minQty },
       ];
     });
-  }, []);
+  }, [update]);
 
   const removeItem = useCallback((artId: string) => {
-    setItems((prev) => prev.filter((i) => i.artId !== artId));
-  }, []);
+    update((prev) => prev.filter((i) => i.artId !== artId));
+  }, [update]);
 
   const updateQty = useCallback((artId: string, quantity: number) => {
-    setItems((prev) =>
+    update((prev) =>
       prev.map((i) =>
-        i.artId === artId ? { ...i, quantity: Math.max(i.minQty, quantity) } : i
+        i.artId === artId ? { ...i, quantity: Math.max(1, Math.floor(quantity)) } : i
       )
     );
-  }, []);
+  }, [update]);
 
   const clearCart = useCallback(() => {
-    setItems([]);
-  }, []);
+    update(() => []);
+  }, [update]);
 
   const isInCart = useCallback(
     (artId: string) => items.some((i) => i.artId === artId),

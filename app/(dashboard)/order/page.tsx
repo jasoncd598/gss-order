@@ -1,5 +1,5 @@
 import { createClient } from '../../lib/supabase/server';
-import { getOrdersByCompany } from '../../lib/db';
+import { getOrdersByCompany, getReorderRequestsByCompany } from '../../lib/db';
 import OrdersClient from './OrdersClient';
 
 export default async function OrderHistoryPage() {
@@ -16,7 +16,10 @@ export default async function OrderHistoryPage() {
   const companyId   = profile?.company_id ?? '';
   const companyName = company?.name ?? user?.user_metadata?.company_name ?? 'Your Company';
 
-  const orders = await getOrdersByCompany(supabase, companyId);
+  const [orders, reorders] = await Promise.all([
+    getOrdersByCompany(supabase, companyId),
+    getReorderRequestsByCompany(supabase, companyId),
+  ]);
 
-  return <OrdersClient orders={orders} companyName={companyName} />;
+  return <OrdersClient orders={orders} reorders={reorders} companyName={companyName} />;
 }

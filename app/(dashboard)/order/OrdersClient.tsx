@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { RefreshCw, ChevronRight, Search, Filter, Package } from 'lucide-react';
-import { formatAUD, formatDate, orderStatusStyles } from '../../lib/utils';
-import type { Order, OrderStatus } from '../../lib/types';
+import { formatAUD, formatDate, orderStatusStyles, paymentStatusStyles } from '../../lib/utils';
+import type { Order, OrderStatus, ReorderRequest } from '../../lib/types';
+import ReorderRequestsPanel from './ReorderRequestsPanel';
 
 const ALL_STATUSES: OrderStatus[] = [
   'Pending Approval', 'In Production', 'Quality Check',
@@ -13,9 +14,11 @@ const ALL_STATUSES: OrderStatus[] = [
 
 export default function OrdersClient({
   orders,
+  reorders,
   companyName,
 }: {
   orders: Order[];
+  reorders: ReorderRequest[];
   companyName: string;
 }) {
   const [search, setSearch]           = useState('');
@@ -48,6 +51,8 @@ export default function OrdersClient({
           <span>Quick Reorder Catalog</span>
         </Link>
       </div>
+
+      <ReorderRequestsPanel requests={reorders} />
 
       {/* Filters */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -101,13 +106,14 @@ export default function OrdersClient({
                 <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4 text-right">Total (AUD)</th>
+                <th className="py-3 px-4">Payment</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-12 text-center text-zinc-400 text-xs">No orders match your search.</td>
+                  <td colSpan={9} className="py-12 text-center text-zinc-400 text-xs">No orders match your search.</td>
                 </tr>
               ) : (
                 filtered.map((order) => (
@@ -126,6 +132,13 @@ export default function OrdersClient({
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-[11px]">{formatAUD(order.total)}</td>
+                    <td className="py-3.5 px-4">
+                      {order.paymentStatus && (
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${paymentStatusStyles(order.paymentStatus)}`}>
+                          {order.paymentStatus}
+                        </span>
+                      )}
+                    </td>
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
                         <Link href={`/order/${order.id}`} className="text-[10px] font-semibold text-zinc-600 hover:text-zinc-900 flex items-center space-x-1 underline">

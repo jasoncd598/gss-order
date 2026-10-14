@@ -2,10 +2,11 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = { title: 'Companies | GSS Admin' };
 
 import Link from 'next/link';
-import { Building2, ShieldCheck, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, AlertTriangle } from 'lucide-react';
 import { createClient } from '../../../lib/supabase/server';
 import { getAllCompanies, type AdminCompany } from '../../../lib/db';
 import { formatAUD } from '../../../lib/utils';
+import CompanyFormModal from '../../../component/admin/CompanyFormModal';
 
 const STATUS_COLORS: Record<string, string> = {
   Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -34,9 +35,7 @@ export default async function AdminCompaniesPage() {
         </div>
         <div className="flex items-center space-x-2">
           <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">STAFF ONLY</span>
-          <button className="inline-flex items-center space-x-2 bg-zinc-900 hover:bg-zinc-800 text-amber-400 px-3.5 py-2 rounded text-xs font-bold transition-colors">
-            <Building2 className="w-3.5 h-3.5" /><span>Add Company</span>
-          </button>
+          <CompanyFormModal />
         </div>
       </div>
 

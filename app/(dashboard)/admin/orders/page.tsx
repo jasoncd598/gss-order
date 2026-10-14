@@ -5,7 +5,8 @@ import Link from 'next/link';
 import { ShieldCheck, Package } from 'lucide-react';
 import { createClient } from '../../../lib/supabase/server';
 import { getAllOrdersAdmin } from '../../../lib/db';
-import { formatAUD, formatDate, orderStatusStyles } from '../../../lib/utils';
+import { formatAUD, formatDate, paymentStatusStyles } from '../../../lib/utils';
+import OrderStatusSelect from '../../../component/admin/OrderStatusSelect';
 import type { OrderStatus } from '../../../lib/types';
 
 const ALL_STATUSES: OrderStatus[] = [
@@ -60,7 +61,6 @@ export default async function AdminOrdersPage() {
           <div className="py-16 text-center text-zinc-400 text-sm">No orders in the system yet.</div>
         ) : (
           <div className="overflow-x-auto">
-            <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider bg-zinc-50/50">
@@ -70,34 +70,32 @@ export default async function AdminOrdersPage() {
                   <th className="py-3 px-4">Date</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Total</th>
+                  <th className="py-3 px-4">Payment</th>
                   <th className="py-3 px-4"></th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-100">
                 {rows.map((row) => {
-                  const companyName = Array.isArray(row.companies)
-                    ? row.companies[0]?.name ?? '—'
-                    : row.companies?.name ?? '—';
-                  // Support both raw DB rows (order_items) and mock mapped rows (items)
-                  const rawRow = row as unknown as Record<string, unknown>;
-                  const orderItems = (rawRow.order_items as { product_name?: string }[] | undefined);
-                  const mappedItems = (rawRow.items as { productName?: string }[] | undefined);
-                  const firstProductName = orderItems?.[0]?.product_name ?? mappedItems?.[0]?.productName ?? '—';
                   return (
                     <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
                       <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-[11px]">{row.ref}</td>
-                      <td className="py-3.5 px-4 text-zinc-700 font-medium max-w-[160px] truncate">{companyName}</td>
+                      <td className="py-3.5 px-4 text-zinc-700 font-medium max-w-[160px] truncate"><Link href={`/admin/companies/${row.companyId}`} className="hover:text-amber-700 hover:underline">{row.companyName}</Link></td>
                       <td className="py-3.5 px-4 text-zinc-600 max-w-[180px] truncate">
-                        {firstProductName}
+                        {row.firstProduct}
                       </td>
                       <td className="py-3.5 px-4 text-zinc-500 text-[11px]">{formatDate(row.date)}</td>
                       <td className="py-3.5 px-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${orderStatusStyles(row.status as OrderStatus)}`}>
-                          {row.status}
-                        </span>
+                        <OrderStatusSelect orderId={row.id} status={row.status} />
                       </td>
                       <td className="py-3.5 px-4 text-right font-bold font-mono text-zinc-900 text-[11px]">
                         {formatAUD(row.total)}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        {row.paymentStatus && (
+                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${paymentStatusStyles(row.paymentStatus)}`}>
+                            {row.paymentStatus}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <Link href={`/order/${row.id}`} className="text-[11px] font-semibold text-amber-600 hover:text-amber-800 underline">
@@ -109,7 +107,6 @@ export default async function AdminOrdersPage() {
                 })}
               </tbody>
             </table>
-            </div>
           </div>
         )}
       </div>

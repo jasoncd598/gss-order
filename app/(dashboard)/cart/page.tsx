@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import {
   ShoppingCart, Trash2, Plus, Minus, ArrowRight,
@@ -10,56 +10,62 @@ import {
 import { useCart } from '../../lib/cartContext';
 import { useUser } from '../../lib/userContext';
 import { formatAUD } from '../../lib/utils';
-import { placeOrderAction } from '../../lib/actions';
+import { createOrderCheckoutAction, placeOrderAction } from '../../lib/actions';
+import ArtworkThumb from '../../component/ArtworkThumb';
+import PayOrderButton from '../../component/PayOrderButton';
 
 type Step = 'cart' | 'review' | 'confirmed';
 
 export default function CartPage() {
   const { items, removeItem, updateQty, clearCart } = useCart();
-  const { companyName, email, paymentTerms } = useUser();
+  const { companyName, paymentTerms } = useUser();
   const [poRef, setPoRef]             = useState('');
   const [deliveryNote, setDeliveryNote] = useState('');
   const [step, setStep]               = useState<Step>('cart');
-  const [orderRef, setOrderRef]       = useState('ORD-2026-8900');
+  const [orderRef, setOrderRef]       = useState('');
+  const [orderId, setOrderId]         = useState('');
+  const [confirmedTotal, setConfirmedTotal] = useState<number | null>(null);
   const [placing, setPlacing]         = useState(false);
   const [placeError, setPlaceError]   = useState('');
-
-  useEffect(() => {
-    setOrderRef(`ORD-2026-${Math.floor(8900 + Math.random() * 99)}`);
-  }, []);
 
   const subtotal = items.reduce((s, i) => s + i.unitPrice * i.quantity, 0);
   const gst      = subtotal * 0.1;
   const total    = subtotal + gst;
+  const prepaid  = paymentTerms === 'Prepaid';
 
   async function handlePlaceOrder() {
     setPlacing(true);
     setPlaceError('');
 
     const result = await placeOrderAction({
-      items: items.map((i) => ({
-        skuId:       i.artId,
-        productName: i.name,
-        dimensions:  i.dimensions,
-        substrate:   i.substrate,
-        plateRef:    i.plateRef,
-        quantity:    i.quantity,
-        unitPrice:   i.unitPrice,
-        lineTotal:   i.unitPrice * i.quantity,
-      })),
+      // Prices are set by the database from your last order of each plate
+      items: items.map((i) => ({ plateRef: i.plateRef, quantity: i.quantity })),
       poRef:  poRef  || undefined,
       notes:  deliveryNote || undefined,
     });
 
-    setPlacing(false);
-
     if (!result.success) {
+      setPlacing(false);
       setPlaceError(result.error ?? 'Something went wrong. Please try again.');
       return;
     }
 
-    if (result.ref) setOrderRef(result.ref);
     clearCart();
+
+    // Prepaid accounts pay before production — go straight to Stripe Checkout.
+    // If that fails, the confirmation screen still offers the pay button.
+    if (prepaid && result.orderId) {
+      const checkout = await createOrderCheckoutAction(result.orderId);
+      if (checkout.success && checkout.url) {
+        window.location.assign(checkout.url);
+        return;
+      }
+    }
+
+    setPlacing(false);
+    if (result.orderId) setOrderId(result.orderId);
+    if (result.ref) setOrderRef(result.ref);
+    setConfirmedTotal(result.total !== undefined ? result.total * 1.1 : total);
     setStep('confirmed');
   }
 
@@ -79,7 +85,7 @@ export default function CartPage() {
           Your purchase order <span className="font-mono font-bold text-zinc-900">{orderRef}</span> has been received.
         </p>
         <p className="text-zinc-400 text-xs mb-8">
-          Our production team will review and confirm within 1 business day. A confirmation email has been sent to {email}
+          Our production team will review and confirm within 1 business day. You&apos;ll get a notification here as it moves through production.
         </p>
         <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-left mb-6 space-y-2 text-xs font-mono">
           <div className="flex justify-between">
@@ -94,13 +100,23 @@ export default function CartPage() {
           )}
           <div className="flex justify-between">
             <span className="text-zinc-400">Estimated Total</span>
-            <span className="font-bold text-emerald-600">{formatAUD(total)}</span>
+            <span className="font-bold text-emerald-600">{formatAUD(confirmedTotal ?? total)} <span className="text-zinc-400 font-normal">inc. GST</span></span>
           </div>
           <div className="flex justify-between">
             <span className="text-zinc-400">Payment Terms</span>
             <span className="font-bold text-zinc-900">{paymentTerms}</span>
           </div>
         </div>
+        {orderId && (
+          <div className={`rounded-xl p-4 mb-6 text-left ${prepaid ? 'bg-amber-50 border border-amber-200' : 'bg-white border border-zinc-200'}`}>
+            <p className="text-xs text-zinc-600 mb-3">
+              {prepaid
+                ? 'Your account is on prepaid terms — production starts once payment is received.'
+                : `Prefer to pay now instead of on ${paymentTerms} terms? You can pay this order by card.`}
+            </p>
+            <PayOrderButton orderId={orderId} label={prepaid ? 'Pay Now' : 'Pay by Card'} />
+          </div>
+        )}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href="/order"
@@ -167,8 +183,7 @@ export default function CartPage() {
               <div key={item.artId} className="bg-white border border-zinc-200 rounded-xl shadow-sm overflow-hidden">
                 <div className="flex items-start gap-4 p-4">
                   <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-lg overflow-hidden bg-zinc-100 shrink-0">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={item.previewUrl} alt={item.name} className="w-full h-full object-cover" />
+                    <ArtworkThumb name={item.name} plateRef={item.plateRef} previewUrl={item.previewUrl} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start">
@@ -196,7 +211,8 @@ export default function CartPage() {
                           <input
                             type="number"
                             value={item.quantity}
-                            onChange={(e) => updateQty(item.artId, parseInt(e.target.value) || item.minQty)}
+                            min={1}
+                            onChange={(e) => updateQty(item.artId, parseInt(e.target.value) || 1)}
                             className="w-20 text-center text-xs font-mono font-bold py-1.5 bg-white border-x border-zinc-200 focus:outline-none focus:ring-1 focus:ring-amber-400"
                           />
                           <button onClick={() => stepQty(item.artId, item.minQty, item.minQty, item.quantity)} className="px-2.5 py-1.5 bg-zinc-50 hover:bg-zinc-100 text-zinc-600 font-bold transition-colors">
@@ -211,10 +227,10 @@ export default function CartPage() {
                         <div className="font-bold text-zinc-900 font-mono text-sm">{formatAUD(item.unitPrice * item.quantity)}</div>
                       </div>
                     </div>
-                    {step === 'cart' && item.quantity === item.minQty && (
-                      <p className="text-[10px] text-amber-600 mt-1.5 flex items-center space-x-1">
+                    {step === 'cart' && (
+                      <p className="text-[10px] text-zinc-400 mt-1.5 flex items-center space-x-1">
                         <AlertCircle className="w-3 h-3" />
-                        <span>Minimum: {item.minQty.toLocaleString()} units</span>
+                        <span>Last run: {item.minQty.toLocaleString()} units · price confirmed at checkout</span>
                       </p>
                     )}
                   </div>
@@ -283,7 +299,7 @@ export default function CartPage() {
                   )}
                   <button onClick={handlePlaceOrder} disabled={placing} className="w-full flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 disabled:bg-amber-400/50 disabled:cursor-not-allowed text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors">
                     {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
-                    <span>{placing ? 'Placing order…' : 'Place Order'}</span>
+                    <span>{placing ? 'Placing order…' : prepaid ? 'Place Order & Pay' : 'Place Order'}</span>
                   </button>
                   <button onClick={() => setStep('cart')} disabled={placing} className="w-full border border-zinc-200 hover:bg-zinc-50 text-zinc-600 font-medium py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
                     Edit Cart
@@ -294,7 +310,7 @@ export default function CartPage() {
 
             <div className="bg-zinc-900 rounded-xl p-4 space-y-2.5">
               {[
-                { icon: ShieldCheck, text: 'Net 30 Terms — pay after delivery' },
+                { icon: ShieldCheck, text: prepaid ? 'Prepaid — pay securely by card via Stripe' : `${paymentTerms} Terms — or pay by card anytime` },
                 { icon: FileText,    text: 'Invoice sent to your Xero account' },
                 { icon: RefreshCw,   text: 'Artwork plates already approved' },
               ].map(({ icon: Icon, text }) => (

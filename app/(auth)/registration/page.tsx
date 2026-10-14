@@ -1,12 +1,27 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Building2, UserPlus, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Building2, UserPlus, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { createClient } from '../../lib/supabase/client';
 
+interface InviteInfo { company_name: string; email: string; role: string }
+
 export default function RegistrationPage() {
-  const [step, setStep] = useState(1);
+  // useSearchParams needs a Suspense boundary so the page shell can prerender
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-zinc-950" />}>
+      <Registration />
+    </Suspense>
+  );
+}
+
+function Registration() {
+  const inviteToken = useSearchParams().get('invite');
+  // undefined = loading, null = invalid/expired
+  const [invite, setInvite] = useState<InviteInfo | null | undefined>(inviteToken ? undefined : null);
+  const [step, setStep] = useState(inviteToken ? 2 : 1);
   const [loading, setLoading] = useState(false);
   const [error, setError]     = useState('');
   const [done, setDone]       = useState(false);
@@ -24,8 +39,19 @@ export default function RegistrationPage() {
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
   const [confirm, setConfirm]       = useState('');
-  const [role, setRole]             = useState('Procurement Manager');
   const [agreed, setAgreed]         = useState(false);
+
+  useEffect(() => {
+    if (!inviteToken) return;
+    createClient()
+      .rpc('get_invitation', { p_token: inviteToken })
+      .then(({ data }) => {
+        const info = (data as InviteInfo[] | null)?.[0] ?? null;
+        setInvite(info);
+        if (info) setEmail(info.email);
+        else setStep(1);
+      });
+  }, [inviteToken]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -47,16 +73,17 @@ export default function RegistrationPage() {
       email,
       password,
       options: {
-        data: {
-          first_name:   firstName,
-          last_name:    lastName,
-          company_name: companyName,
-          abn,
-          industry,
-          address,
-          phone,
-          role,
-        },
+        data: invite && inviteToken
+          ? { first_name: firstName, last_name: lastName, invite_token: inviteToken }
+          : {
+              first_name:   firstName,
+              last_name:    lastName,
+              company_name: companyName,
+              abn,
+              industry,
+              address,
+              phone,
+            },
         emailRedirectTo: `${window.location.origin}/auth/callback`,
       },
     });
@@ -81,10 +108,12 @@ export default function RegistrationPage() {
           </div>
           <h2 className="text-white font-bold text-xl mb-2">Check your email</h2>
           <p className="text-zinc-400 text-sm mb-2">
-            We've sent a confirmation link to <span className="text-white font-semibold">{email}</span>.
+            We&apos;ve sent a confirmation link to <span className="text-white font-semibold">{email}</span>.
           </p>
           <p className="text-zinc-500 text-xs mb-6">
-            Click the link in your email to verify your account, then you can sign in.
+            {invite
+              ? `Verify your email, then sign in to join ${invite.company_name}.`
+              : 'Verify your email, then sign in. You can browse straight away; ordering unlocks once our team approves your company account (usually within 1 business day).'}
           </p>
           <Link href="/login" className="inline-flex items-center justify-center bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold px-6 py-2.5 rounded-lg text-sm transition-colors">
             Back to Sign In
@@ -108,8 +137,26 @@ export default function RegistrationPage() {
         </div>
 
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-8 shadow-2xl">
+          {inviteToken && invite === undefined && (
+            <div className="flex items-center justify-center py-10 text-zinc-400 text-xs gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Checking invitation…
+            </div>
+          )}
+          {inviteToken && invite === null && (
+            <div className="mb-4 bg-amber-950/40 border border-amber-800/60 rounded-lg px-3.5 py-3 text-xs text-amber-200">
+              This invitation link is invalid or has expired. Ask your company admin for a new one, or register a new company below.
+            </div>
+          )}
+          {invite && (
+            <div className="mb-6 bg-amber-400/10 border border-amber-400/30 rounded-lg px-4 py-3">
+              <p className="text-[10px] uppercase tracking-wider text-amber-400/80 font-semibold">You&apos;ve been invited</p>
+              <p className="text-white text-sm font-bold mt-0.5">{invite.company_name}</p>
+              <p className="text-zinc-400 text-xs">Joining as <span className="text-amber-400 font-semibold">{invite.role}</span></p>
+            </div>
+          )}
+
           {/* Step indicator */}
-          <div className="flex items-center mb-6">
+          {!invite && invite !== undefined && <div className="flex items-center mb-6">
             {['Company Details', 'Your Account'].map((label, i) => {
               const s = i + 1;
               return (
@@ -126,7 +173,7 @@ export default function RegistrationPage() {
                 </div>
               );
             })}
-          </div>
+          </div>}
 
           {error && (
             <div className="mb-4 flex items-start space-x-2.5 bg-red-950/50 border border-red-800 rounded-lg px-3.5 py-3">
@@ -135,7 +182,7 @@ export default function RegistrationPage() {
             </div>
           )}
 
-          {step === 1 ? (
+          {invite === undefined ? null : step === 1 ? (
             <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); setStep(2); }}>
               <div>
                 <h2 className="text-white font-bold text-lg mb-0.5">Company Information</h2>
@@ -190,7 +237,7 @@ export default function RegistrationPage() {
                 </div>
                 <div className="col-span-2">
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Work Email *</label>
-                  <input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@company.com.au" className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-zinc-500" />
+                  <input required type="email" value={email} readOnly={!!invite} onChange={(e) => setEmail(e.target.value)} placeholder="sarah@company.com.au" className="w-full read-only:opacity-70 bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-zinc-500" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Password *</label>
@@ -200,24 +247,18 @@ export default function RegistrationPage() {
                   <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Confirm Password *</label>
                   <input required type="password" value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repeat password" className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400 placeholder:text-zinc-500" />
                 </div>
-                <div className="col-span-2">
-                  <label className="block text-xs font-semibold text-zinc-300 mb-1.5">Your Role</label>
-                  <select value={role} onChange={(e) => setRole(e.target.value)} className="w-full bg-zinc-800 border border-zinc-700 text-white text-sm px-3.5 py-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-400">
-                    <option>Procurement Manager</option>
-                    <option>Admin</option>
-                    <option>Finance</option>
-                    <option>Viewer</option>
-                  </select>
-                </div>
+                {!invite && <p className="col-span-2 text-[11px] text-zinc-400 bg-zinc-800/60 border border-zinc-700 rounded-lg px-3.5 py-2.5">
+                  You&apos;ll be the <span className="text-amber-400 font-semibold">company administrator</span> and can invite colleagues once our team approves your account.
+                </p>}
               </div>
               <label className="flex items-start space-x-2 text-xs text-zinc-400 cursor-pointer">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 rounded border-zinc-600 bg-zinc-800 text-amber-400" />
                 <span>I agree to the <span className="text-amber-400 underline">Terms of Service</span> and <span className="text-amber-400 underline">Privacy Policy</span></span>
               </label>
               <div className="flex space-x-3">
-                <button type="button" onClick={() => setStep(1)} className="flex items-center space-x-1 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 font-medium py-2.5 px-4 rounded-lg text-xs transition-colors">
+                {!invite && <button type="button" onClick={() => setStep(1)} className="flex items-center space-x-1 border border-zinc-700 text-zinc-300 hover:bg-zinc-800 font-medium py-2.5 px-4 rounded-lg text-xs transition-colors">
                   <ChevronLeft className="w-4 h-4" /><span>Back</span>
-                </button>
+                </button>}
                 <button type="submit" disabled={loading} className="flex-1 flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 disabled:bg-amber-400/50 disabled:cursor-not-allowed text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors">
                   <UserPlus className="w-4 h-4" />
                   <span>{loading ? 'Creating account…' : 'Request Portal Access'}</span>
@@ -234,7 +275,7 @@ export default function RegistrationPage() {
 
         <div className="mt-4 mx-4 p-3 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-start space-x-3">
           <Building2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-zinc-400 text-[11px]">Access is reviewed by our team. You'll receive email confirmation within 1 business day once your account is approved.</p>
+          <p className="text-zinc-400 text-[11px]">Access is reviewed by our team. You&apos;ll receive email confirmation within 1 business day once your account is approved.</p>
         </div>
       </div>
     </div>

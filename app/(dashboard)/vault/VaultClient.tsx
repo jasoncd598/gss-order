@@ -1,80 +1,44 @@
 'use client';
 
-import { useState } from 'react';
-import { Download, Eye, RefreshCw, Search, FolderLock, CheckCircle2, X, ShoppingCart } from 'lucide-react';
+import { useState, useTransition } from 'react';
+import { Download, Eye, RefreshCw, Search, FolderLock, CheckCircle2, ShoppingCart, Loader2, ClipboardCheck } from 'lucide-react';
 import { formatDate, artworkStatusStyles } from '../../lib/utils';
 import { useCart } from '../../lib/cartContext';
+import ArtworkThumb from '../../component/ArtworkThumb';
+import ProofModal, { downloadArtwork } from '../../component/modals/ProofModal';
 import type { ArtworkStatus, ArtworkFile } from '../../lib/types';
-
-const UNIT_PRICE: Record<string, number> = {
-  'art-001': 1.94, 'art-002': 0.32, 'art-003': 2.15,
-  'art-004': 0.12, 'art-005': 0.48, 'art-006': 0.22,
-};
-const MIN_QTY: Record<string, number> = {
-  'art-001': 1000, 'art-002': 5000, 'art-003': 2500,
-  'art-004': 2500, 'art-005': 1000, 'art-006': 3000,
-};
 
 const STATUSES: ArtworkStatus[] = ['Approved', 'Pending Review', 'Revision Required', 'Superseded'];
 
-function ProofModal({ art, onClose }: { art: ArtworkFile; onClose: () => void }) {
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={onClose} />
-      <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-3.5 border-b border-zinc-100">
-          <div>
-            <h3 className="font-bold text-zinc-900 text-sm">{art.name}</h3>
-            <p className="text-amber-600 font-mono text-[11px] mt-0.5">
-              {art.plateRef} · {art.version} ·{' '}
-              <span className={`font-bold ${art.status === 'Approved' ? 'text-emerald-600' : 'text-amber-600'}`}>
-                {art.status}
-              </span>
-            </p>
-          </div>
-          <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors">
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={art.previewUrl?.replace('w=400&h=300', 'w=800&h=600') ?? art.previewUrl}
-          alt={art.name}
-          className="w-full object-cover max-h-[55vh]"
-        />
-        <div className="px-5 py-4 bg-zinc-50 grid grid-cols-3 gap-4 text-xs font-mono">
-          <div>
-            <span className="text-zinc-400 block text-[10px] uppercase tracking-wider mb-0.5">Dimensions</span>
-            <span className="font-semibold text-zinc-800">{art.dimensions}</span>
-          </div>
-          <div>
-            <span className="text-zinc-400 block text-[10px] uppercase tracking-wider mb-0.5">Substrate</span>
-            <span className="font-semibold text-zinc-800">{art.substrate}</span>
-          </div>
-          <div>
-            <span className="text-zinc-400 block text-[10px] uppercase tracking-wider mb-0.5">Colour</span>
-            <span className="font-semibold text-zinc-800">{art.colorProfile}</span>
-          </div>
-        </div>
-        <div className="px-5 py-3 border-t border-zinc-100 flex justify-between items-center">
-          <span className="text-[11px] text-zinc-400 font-mono">
-            {art.uploadedBy} · {formatDate(art.uploadedAt)} · {art.fileSize}
-          </span>
-          <button className="text-xs text-zinc-500 hover:text-zinc-800 flex items-center space-x-1.5 font-medium">
-            <Download className="w-3.5 h-3.5" /><span>Download PDF</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
+export interface VaultPrice { unitPrice: number; lastQuantity: number }
 
-export default function VaultClient({ artwork }: { artwork: ArtworkFile[] }) {
+export default function VaultClient({
+  artwork: initial,
+  prices,
+  canReview,
+  canOrder,
+  initialSearch = '',
+}: {
+  artwork: ArtworkFile[];
+  prices: Record<string, VaultPrice>;
+  canReview: boolean;
+  canOrder: boolean;
+  /** Pre-filled search, e.g. a plate ref linked from an order */
+  initialSearch?: string;
+}) {
   const { addItem, isInCart } = useCart();
-  const [search, setSearch]       = useState('');
+  const [artwork, setArtwork]     = useState(initial);
+  const [synced, setSynced]       = useState(initial);
+  if (synced !== initial) { setSynced(initial); setArtwork(initial); }
+
+  const awaiting = artwork.filter((a) => a.status === 'Pending Review').length;
+  const [search, setSearch]       = useState(initialSearch);
   const [filter, setFilter]       = useState<ArtworkStatus | 'All'>('All');
   const [justAdded, setJustAdded] = useState<string | null>(null);
   const [proofArt, setProofArt]   = useState<ArtworkFile | null>(null);
+  const [busyId, setBusyId]       = useState<string | null>(null);
+  const [notice, setNotice]       = useState<string | null>(null);
+  const [, startTransition]       = useTransition();
 
   const filtered = artwork.filter((a) => {
     const matchesStatus = filter === 'All' || a.status === filter;
@@ -84,24 +48,47 @@ export default function VaultClient({ artwork }: { artwork: ArtworkFile[] }) {
   });
 
   function handleReorder(art: ArtworkFile) {
+    const price = prices[art.id];
+    if (!price) return;
     addItem({
-      artId:        art.id,
-      name:         art.name,
-      plateRef:     art.plateRef,
-      substrate:    art.substrate,
-      dimensions:   art.dimensions,
-      colorProfile: art.colorProfile,
-      unitPrice:    UNIT_PRICE[art.id] ?? 1.00,
-      minQty:       MIN_QTY[art.id]    ?? 1000,
-      previewUrl:   art.previewUrl,
+      artId: art.id, name: art.name, plateRef: art.plateRef, substrate: art.substrate,
+      dimensions: art.dimensions, colorProfile: art.colorProfile,
+      unitPrice: price.unitPrice, minQty: price.lastQuantity, previewUrl: art.previewUrl,
     });
     setJustAdded(art.id);
     setTimeout(() => setJustAdded(null), 2500);
   }
 
+  function download(id: string) {
+    setBusyId(id);
+    setNotice(null);
+    startTransition(async () => {
+      const err = await downloadArtwork(id);
+      setBusyId(null);
+      if (err) setNotice(err);
+    });
+  }
+
+  function downloadAllApproved() {
+    const approved = artwork.filter((a) => a.status === 'Approved' && a.storagePath);
+    if (approved.length === 0) { setNotice('No approved files have been uploaded yet.'); return; }
+    // One download at a time; browsers may ask once to allow multiple downloads
+    approved.forEach((a, i) => setTimeout(() => download(a.id), i * 800));
+  }
+
   return (
     <>
-      {proofArt && <ProofModal art={proofArt} onClose={() => setProofArt(null)} />}
+      {proofArt && (
+        <ProofModal
+          art={proofArt}
+          canReview={canReview}
+          onClose={() => setProofArt(null)}
+          onReviewed={(status, comment) => setArtwork((as) => as.map((a) =>
+            a.id === proofArt.id ? { ...a, status, reviewComment: comment }
+            : status === 'Approved' && a.plateRef === proofArt.plateRef && a.status === 'Approved' ? { ...a, status: 'Superseded' }
+            : a))}
+        />
+      )}
       <div className="space-y-6 max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center pb-4 border-b border-zinc-200 gap-3">
@@ -111,17 +98,36 @@ export default function VaultClient({ artwork }: { artwork: ArtworkFile[] }) {
               <span>Artwork &amp; Proof Vault</span>
             </h1>
             <p className="text-xs text-zinc-500 mt-0.5">
-              {artwork.length} files stored · Secure access only · All revisions retained
+              {artwork.length} files · private to your company · all revisions retained
             </p>
           </div>
-          <button className="inline-flex items-center space-x-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 px-3.5 py-2 rounded text-xs font-semibold transition-colors">
+          <button onClick={downloadAllApproved} className="inline-flex items-center space-x-2 border border-zinc-200 bg-white hover:bg-zinc-50 text-zinc-700 px-3.5 py-2 rounded text-xs font-semibold transition-colors">
             <Download className="w-3.5 h-3.5" /><span>Download All Approved</span>
           </button>
         </div>
 
+        {canReview && awaiting > 0 && (
+          <button
+            onClick={() => setFilter('Pending Review')}
+            className="w-full flex items-center gap-3 bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-left hover:bg-amber-100 transition-colors"
+          >
+            <ClipboardCheck className="w-5 h-5 text-amber-600 shrink-0" />
+            <span className="text-xs text-amber-900">
+              <strong>{awaiting} proof{awaiting > 1 ? 's' : ''} awaiting your approval.</strong> Open a proof to approve it or request changes.
+            </span>
+          </button>
+        )}
+
+        {notice && (
+          <div className="bg-zinc-900 text-zinc-100 rounded-lg px-4 py-2.5 text-xs flex justify-between items-center">
+            <span>{notice}</span>
+            <button onClick={() => setNotice(null)} className="text-zinc-400 hover:text-white">Dismiss</button>
+          </div>
+        )}
+
         {/* Filters */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-          <div className="relative flex-1 max-w-sm">
+          <div className="relative w-full sm:max-w-sm">
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-zinc-400" />
             <input
               type="text"
@@ -131,7 +137,7 @@ export default function VaultClient({ artwork }: { artwork: ArtworkFile[] }) {
               className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 text-zinc-800"
             />
           </div>
-          <div className="flex items-center space-x-2 flex-wrap gap-1.5">
+          <div className="flex items-center flex-wrap gap-1.5">
             {(['All', ...STATUSES] as const).map((s) => (
               <button
                 key={s}
@@ -148,52 +154,60 @@ export default function VaultClient({ artwork }: { artwork: ArtworkFile[] }) {
 
         {/* Grid */}
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-zinc-400 text-sm">
-            {artwork.length === 0 ? 'No artwork files have been uploaded yet.' : 'No artwork files match your search.'}
+          <div className="bg-white border border-dashed border-zinc-300 rounded-lg py-16 text-center">
+            <FolderLock className="w-10 h-10 text-zinc-300 mx-auto mb-2" />
+            <h3 className="font-semibold text-zinc-600 text-sm">
+              {artwork.length === 0 ? 'Your vault is empty' : 'No artwork matches'}
+            </h3>
+            <p className="text-xs text-zinc-400 mt-1">
+              {artwork.length === 0
+                ? 'Proofs, plates and print-ready files appear here as soon as our studio uploads them.'
+                : 'Try a different search or status filter.'}
+            </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
             {filtered.map((art) => {
               const inCart = isInCart(art.id);
               const isJust = justAdded === art.id;
+              const price  = prices[art.id];
               return (
                 <div key={art.id} className="bg-white border border-zinc-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow flex flex-col">
-                  <div className="relative h-40 bg-zinc-100 overflow-hidden group">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img src={art.previewUrl} alt={art.name} className="w-full h-full object-cover" loading="lazy" />
-                    <button
-                      onClick={() => setProofArt(art)}
-                      className="absolute inset-0 bg-zinc-950/0 group-hover:bg-zinc-950/30 flex items-center justify-center transition-colors"
-                    >
+                  <button onClick={() => setProofArt(art)} className="relative h-40 bg-zinc-100 overflow-hidden group text-left" aria-label={`View ${art.name}`}>
+                    <ArtworkThumb name={art.name} plateRef={art.plateRef} previewUrl={art.previewUrl} mimeType={art.mimeType} />
+                    <span className="absolute inset-0 bg-zinc-950/0 group-hover:bg-zinc-950/30 flex items-center justify-center transition-colors">
                       <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
-                    </button>
-                    <div className="absolute top-2 right-2">
-                      <span className={`text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm ${artworkStatusStyles(art.status)}`}>
-                        {art.status}
-                      </span>
-                    </div>
-                  </div>
+                    </span>
+                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm ${artworkStatusStyles(art.status)}`}>
+                      {art.status}
+                    </span>
+                  </button>
                   <div className="p-4 flex flex-col flex-1">
                     <div className="mb-2">
                       <h3 className="font-bold text-zinc-900 text-sm leading-tight">{art.name}</h3>
                       <p className="text-amber-600 text-[11px] font-mono mt-0.5">{art.plateRef} · {art.version}</p>
                     </div>
                     <div className="bg-zinc-50 rounded p-2.5 text-[10px] font-mono space-y-1 mb-3">
-                      <div className="flex justify-between"><span className="text-zinc-400">Dimensions</span><span className="text-zinc-700 font-semibold">{art.dimensions}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-400">Substrate</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.substrate}</span></div>
-                      <div className="flex justify-between"><span className="text-zinc-400">Colour</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.colorProfile}</span></div>
+                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Dimensions</span><span className="text-zinc-700 font-semibold truncate">{art.dimensions || '—'}</span></div>
+                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Substrate</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.substrate || '—'}</span></div>
+                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Colour</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.colorProfile || '—'}</span></div>
                     </div>
+                    {art.status === 'Revision Required' && art.reviewComment && (
+                      <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1.5 mb-3 line-clamp-2">“{art.reviewComment}”</p>
+                    )}
                     <div className="text-[10px] text-zinc-400 mb-3 mt-auto">
-                      By <span className="text-zinc-600 font-semibold">{art.uploadedBy}</span> · {formatDate(art.uploadedAt)} · {art.fileSize}
+                      By <span className="text-zinc-600 font-semibold">{art.uploadedBy}</span> · {formatDate(art.uploadedAt)}{art.fileSize ? ` · ${art.fileSize}` : ''}
                     </div>
                     <div className="flex items-center gap-2 pt-3 border-t border-zinc-100">
-                      <button onClick={() => setProofArt(art)} className="flex-1 flex items-center justify-center space-x-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-1.5 rounded text-[11px] font-semibold transition-colors">
-                        <Eye className="w-3.5 h-3.5" /><span>View Proof</span>
+                      <button onClick={() => setProofArt(art)} className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-[11px] font-semibold transition-colors ${
+                        art.status === 'Pending Review' && canReview ? 'bg-amber-400 hover:bg-amber-500 text-zinc-950' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
+                      }`}>
+                        <Eye className="w-3.5 h-3.5" /><span>{art.status === 'Pending Review' && canReview ? 'Review' : 'View'}</span>
                       </button>
-                      <button className="flex-1 flex items-center justify-center space-x-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-1.5 rounded text-[11px] font-semibold transition-colors">
-                        <Download className="w-3.5 h-3.5" /><span>Download</span>
+                      <button onClick={() => download(art.id)} disabled={busyId === art.id} className="flex-1 flex items-center justify-center space-x-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-1.5 rounded text-[11px] font-semibold transition-colors">
+                        {busyId === art.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}<span>Download</span>
                       </button>
-                      {art.status === 'Approved' && (
+                      {art.status === 'Approved' && canOrder && price && (
                         <button
                           onClick={() => handleReorder(art)}
                           className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-[11px] font-bold transition-colors ${

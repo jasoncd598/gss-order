@@ -49,7 +49,7 @@ export default function ForgotPasswordPage() {
             <>
               <div className="mb-6">
                 <h2 className="text-white font-bold text-xl mb-1">Reset your password</h2>
-                <p className="text-zinc-400 text-xs">Enter your work email and we'll send a secure reset link valid for 1 hour.</p>
+                <p className="text-zinc-400 text-xs">Enter your work email and we&apos;ll send a secure reset link valid for 1 hour.</p>
               </div>
 
               {error && (
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
                 A reset link has been sent to <span className="text-white font-semibold">{email}</span>. It expires in 1 hour.
               </p>
               <p className="text-zinc-500 text-[11px]">
-                Didn't receive it? Check your spam folder or{' '}
+                Didn&apos;t receive it? Check your spam folder or{' '}
                 <button onClick={() => setSent(false)} className="text-amber-400 hover:text-amber-300 underline">try again</button>.
               </p>
             </div>

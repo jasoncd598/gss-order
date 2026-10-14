@@ -1,4 +1,4 @@
-import type { OrderStatus, ArtworkStatus } from './types';
+import type { OrderStatus, ArtworkStatus, PaymentStatus } from './types';
 
 export function formatAUD(amount: number): string {
   return new Intl.NumberFormat('en-AU', {
@@ -25,6 +25,15 @@ export function orderStatusStyles(status: OrderStatus): string {
     'Dispatched':       'bg-emerald-50 text-emerald-700 border-emerald-200',
     'Delivered':        'bg-zinc-100 text-zinc-600 border-zinc-200',
     'Cancelled':        'bg-red-50 text-red-700 border-red-200',
+  };
+  return map[status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200';
+}
+
+export function paymentStatusStyles(status: PaymentStatus): string {
+  const map: Record<PaymentStatus, string> = {
+    Unpaid:     'bg-zinc-50 text-zinc-600 border-zinc-200',
+    Processing: 'bg-amber-50 text-amber-800 border-amber-200',
+    Paid:       'bg-emerald-50 text-emerald-700 border-emerald-200',
   };
   return map[status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200';
 }

@@ -3,7 +3,8 @@
 export const instant = false;
 
 import AccountClient from './AccountClient';
+import { isDemoMode } from '../../lib/demo';
 
 export default function AccountPage() {
-  return <AccountClient />;
+  return <AccountClient demo={isDemoMode} />;
 }

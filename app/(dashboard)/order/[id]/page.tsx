@@ -6,29 +6,55 @@ export const metadata: Metadata = { title: 'Order Detail | GSS Order Portal' };
 import Link from 'next/link';
 import {
   ArrowLeft, Package, Truck, FileText,
-  RefreshCw, CheckCircle2, Clock, MapPin,
+  RefreshCw, CheckCircle2, Clock, MapPin, CreditCard,
 } from 'lucide-react';
 import { createClient } from '../../../lib/supabase/server';
 import { getOrderById } from '../../../lib/db';
-import { formatAUD, formatDate, orderStatusStyles } from '../../../lib/utils';
+import { formatAUD, formatDate, orderStatusStyles, paymentStatusStyles } from '../../../lib/utils';
 import ReorderModal from '../../../component/modals/ReorderModal';
+import OrderStatusSelect from '../../../component/admin/OrderStatusSelect';
+import { isDemoMode } from '../../../lib/demo';
+import { syncCheckoutSession, GST_RATE } from '../../../lib/stripe';
+import PayOrderButton from '../../../component/PayOrderButton';
+import { queueEmailDelivery } from '../../../lib/email';
+
+const PAYING_ROLES = ['Admin', 'Procurement Manager', 'Finance'];
 
 export default async function OrderDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ session_id?: string; payment?: string }>;
 }) {
   const { id } = await params;
+  const { session_id: sessionId, payment } = await searchParams;
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('company_id')
+    .select('is_staff, role')
     .eq('id', user!.id)
     .single();
+  const isStaff = isDemoMode || (profile?.is_staff ?? false);
+  const canPay  = isStaff || PAYING_ROLES.includes(profile?.role ?? '');
 
-  const order = await getOrderById(supabase, id, profile?.company_id ?? '');
+  // Back from Stripe Checkout: record the payment now rather than waiting for
+  // the webhook (which still runs, and is idempotent with this).
+  let paymentNotice: 'paid' | 'processing' | 'cancelled' | null = payment === 'cancelled' ? 'cancelled' : null;
+  if (sessionId && !isDemoMode) {
+    try {
+      const result = await syncCheckoutSession(sessionId);
+      if (result === 'Paid')       paymentNotice = 'paid';
+      if (result === 'Processing') paymentNotice = 'processing';
+      queueEmailDelivery();
+    } catch (err) {
+      console.error('Order page payment sync:', (err as Error).message);
+    }
+  }
+
+  const order = await getOrderById(supabase, id);
 
   if (!order) {
     return (
@@ -69,7 +95,15 @@ export default async function OrderDetailPage({
             Ordered {formatDate(order.date)}{order.invoiceRef ? ` · Invoice: ${order.invoiceRef}` : ''}
           </p>
         </div>
-        <ReorderModal order={order} />
+        <div className="flex items-center gap-3 flex-wrap">
+          {isStaff && (
+            <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Staff · Status</span>
+              <OrderStatusSelect orderId={order.id} status={order.status} />
+            </div>
+          )}
+          <ReorderModal order={order} />
+        </div>
       </div>
 
       {/* Progress */}
@@ -142,6 +176,46 @@ export default async function OrderDetailPage({
 
         {/* Sidebar */}
         <div className="space-y-4">
+          {order.paymentStatus && (
+            <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <CreditCard className="w-4 h-4 text-amber-500" />
+                  <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Payment</h3>
+                </div>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${paymentStatusStyles(order.paymentStatus)}`}>
+                  {order.paymentStatus}
+                </span>
+              </div>
+              {paymentNotice === 'paid' && (
+                <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2.5 py-2 mb-3">Payment received — thank you.</p>
+              )}
+              {paymentNotice === 'processing' && (
+                <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-2 mb-3">Your payment is processing. We&apos;ll notify you when it clears.</p>
+              )}
+              {paymentNotice === 'cancelled' && order.paymentStatus === 'Unpaid' && (
+                <p className="text-[11px] text-zinc-600 bg-zinc-50 border border-zinc-200 rounded px-2.5 py-2 mb-3">Payment cancelled — nothing was charged.</p>
+              )}
+              <div className="space-y-2 text-xs font-mono">
+                <div className="flex justify-between">
+                  <span className="text-zinc-400">Total inc. GST</span>
+                  <span className="font-semibold text-zinc-800">{formatAUD(order.total * (1 + GST_RATE))}</span>
+                </div>
+                {order.paymentStatus === 'Paid' && order.amountPaid !== undefined && (
+                  <div className="flex justify-between">
+                    <span className="text-zinc-400">Paid</span>
+                    <span className="font-semibold text-emerald-600">{formatAUD(order.amountPaid)}{order.paidAt ? ` · ${formatDate(order.paidAt)}` : ''}</span>
+                  </div>
+                )}
+              </div>
+              {order.paymentStatus === 'Unpaid' && order.status !== 'Cancelled' && canPay && (
+                <div className="mt-3">
+                  <PayOrderButton orderId={order.id} />
+                </div>
+              )}
+            </div>
+          )}
+
           {order.courier && (
             <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
               <div className="flex items-center space-x-2 mb-3">
@@ -203,14 +277,16 @@ export default async function OrderDetailPage({
           <div className="bg-zinc-900 rounded-lg p-4">
             <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Quick Actions</h3>
             <div className="space-y-2">
-              <button className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
+              <Link href={`/invoice/${order.id}`} target="_blank" className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
                 <FileText className="w-3.5 h-3.5 text-amber-400" />
-                <span>Download Invoice PDF</span>
-              </button>
-              <button className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
-                <FileText className="w-3.5 h-3.5 text-amber-400" />
-                <span>View Artwork Proof</span>
-              </button>
+                <span>{order.invoiceRef ? 'Download Invoice PDF' : 'Print Order Confirmation'}</span>
+              </Link>
+              {!isStaff && order.items[0]?.plateRef && (
+                <Link href={`/vault?q=${encodeURIComponent(order.items[0].plateRef)}`} className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
+                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                  <span>View Artwork Proof</span>
+                </Link>
+              )}
               <Link href="/catalog" className="w-full flex items-center space-x-2 text-xs font-bold text-zinc-950 bg-amber-400 hover:bg-amber-300 px-3 py-2 rounded transition-colors">
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Reorder This Product</span>

@@ -1,3 +1,6 @@
 @import "tailwindcss";
 
-
+/* League Spartan (loaded in app/layout.tsx) is the app-wide sans font */
+@theme {
+  --font-sans: var(--font-spartan), ui-sans-serif, system-ui, sans-serif;
+}

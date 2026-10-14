@@ -1,4 +1,4 @@
-import type { Order, ArtworkFile, TeamMember, Company } from './types';
+import type { Order, ArtworkFile, TeamMember, Company, ReorderRequest, OrderItem, CatalogItem, Invitation, AppNotification } from './types';
 
 // ─── Orders ───────────────────────────────────────────────────────────────────
 
@@ -6,6 +6,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-8812',
     ref: 'ORD-2026-8812',
+    paymentStatus: 'Paid',
     date: '2026-10-02',
     status: 'Dispatched',
     courier: 'TNT Express',
@@ -31,6 +32,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-8740',
     ref: 'ORD-2026-8740',
+    paymentStatus: 'Unpaid',
     date: '2026-09-18',
     status: 'In Production',
     invoiceRef: 'INV-26-8740',
@@ -52,6 +54,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-8600',
     ref: 'ORD-2026-8600',
+    paymentStatus: 'Paid',
     date: '2026-08-05',
     status: 'Delivered',
     courier: 'StarTrack',
@@ -75,6 +78,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-8421',
     ref: 'ORD-2026-8421',
+    paymentStatus: 'Paid',
     date: '2026-07-14',
     status: 'Delivered',
     courier: 'Toll Priority',
@@ -98,6 +102,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-8102',
     ref: 'ORD-2026-8102',
+    paymentStatus: 'Paid',
     date: '2026-05-22',
     status: 'Delivered',
     courier: 'TNT Express',
@@ -121,6 +126,7 @@ export const MOCK_ORDERS: Order[] = [
   {
     id: 'ord-7890',
     ref: 'ORD-2025-7890',
+    paymentStatus: 'Paid',
     date: '2025-12-09',
     status: 'Delivered',
     courier: 'StarTrack',
@@ -157,7 +163,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'Sarah Jenkins',
     uploadedAt: '2026-09-15',
     fileSize: '4.2 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
   {
     id: 'art-002',
@@ -171,7 +177,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'James Wu',
     uploadedAt: '2026-08-01',
     fileSize: '1.8 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
   {
     id: 'art-003',
@@ -185,7 +191,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'Sarah Jenkins',
     uploadedAt: '2026-10-01',
     fileSize: '6.1 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1583947215259-38e31be8751f?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
   {
     id: 'art-004',
@@ -199,7 +205,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'James Wu',
     uploadedAt: '2026-06-20',
     fileSize: '2.3 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1553531384-cc64ac80f931?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
   {
     id: 'art-005',
@@ -213,7 +219,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'Sarah Jenkins',
     uploadedAt: '2026-07-10',
     fileSize: '3.5 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1612817288484-6f916006741a?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
   {
     id: 'art-006',
@@ -227,7 +233,7 @@ export const MOCK_ARTWORK: ArtworkFile[] = [
     uploadedBy: 'James Wu',
     uploadedAt: '2026-09-28',
     fileSize: '2.9 MB',
-    previewUrl: 'https://images.unsplash.com/photo-1549465220-1a8b9238cd48?w=400&h=300&fit=crop',
+    previewUrl: '',
   },
 ];
 
@@ -275,8 +281,8 @@ export const MOCK_TEAM: TeamMember[] = [
     name: 'Mia Chen',
     email: 'm.chen@gss-demo.com.au',
     role: 'Procurement Manager',
-    lastLogin: 'Never',
-    status: 'Invited',
+    lastLogin: '2026-10-12',
+    status: 'Active',
     avatarUrl: 'https://i.pravatar.cc/150?img=49',
   },
 ];
@@ -348,4 +354,60 @@ export const MOCK_COMPANIES: Company[] = [
     totalSpend: 127600,
     status: 'Suspended',
   },
+];
+
+// ─── Reorder requests ─────────────────────────────────────────────────────────
+
+const line = (skuId: string, productName: string, plateRef: string, substrate: string, quantity: number, unitPrice: number): OrderItem => ({
+  skuId, productName, plateRef, substrate, dimensions: '', quantity, unitPrice, lineTotal: Math.round(quantity * unitPrice * 100) / 100,
+});
+
+export const MOCK_REORDER_REQUESTS: ReorderRequest[] = [
+  { id: 'rr-001', ref: 'RRQ-2026-0091', companyId: 'cmp-001', companyName: 'Acme Packaging Pty Ltd',     sourceOrderId: 'ord-8740', sourceOrderRef: 'ORD-2026-8740', createdOrderId: 'ord-8740', status: 'Approved',
+    items: [line('PLY-MAIL-L', 'Flexo Printed Poly Mailer Bags (Large)', 'PLT-5510-A', '60mu Recycled LDPE', 10000, 0.32)], total: 3200,  requestedBy: 'James Wu',      requestedAt: '2026-10-13', poRef: 'PO-ACME-0039' },
+  { id: 'rr-002', ref: 'RRQ-2026-0088', companyId: 'cmp-002', companyName: 'BrightBox Retail Solutions', sourceOrderId: 'ord-bb-01', sourceOrderRef: 'ORD-2026-8790', status: 'Pending',
+    items: [line('ART-SKU-350', 'Custom Corrugated Shipping Box', 'PLT-8812-B', 'E-Flute White Kraft', 5000, 1.94)], total: 9700,    requestedBy: 'Daniel Park',   requestedAt: '2026-10-12', poRef: 'PO-BB-0021' },
+  { id: 'rr-003', ref: 'RRQ-2026-0085', companyId: 'cmp-001', companyName: 'Acme Packaging Pty Ltd',     sourceOrderId: 'ord-8421', sourceOrderRef: 'ORD-2026-8421', status: 'Pending',
+    items: [line('LBL-TAMPER', 'Roll Labels – Tamper Evident Security Seal', 'PLT-1140-D', 'Gloss Vinyl', 13000, 0.12)], total: 1560, requestedBy: 'Sarah Jenkins', requestedAt: '2026-10-10', notes: 'Please use the updated Pantone ref from the latest brief.' },
+  { id: 'rr-004', ref: 'RRQ-2026-0081', companyId: 'cmp-003', companyName: 'NorthShore Naturals',        sourceOrderId: 'ord-ns-01', sourceOrderRef: 'ORD-2026-8655', status: 'Pending',
+    items: [line('TAG-SWING', 'Premium Retail Swing Tag', 'PLT-3301-E', '350gsm Matte Art Board', 3000, 0.48)], total: 1440,          requestedBy: 'Lara Nguyen',   requestedAt: '2026-10-08' },
+  { id: 'rr-005', ref: 'RRQ-2026-0074', companyId: 'cmp-004', companyName: 'TradeLink Wholesale Group',  sourceOrderId: 'ord-tl-01', sourceOrderRef: 'ORD-2026-8410', status: 'Rejected',
+    items: [line('ART-SKU-350', 'Custom Corrugated Shipping Box', 'PLT-8812-B', 'E-Flute White Kraft', 10000, 1.80)], total: 18000,  requestedBy: 'Chris Mercer',  requestedAt: '2026-10-02', rejectionReason: 'Account on hold — credit limit exceeded.' },
+];
+
+// ─── Catalog (artwork + last order pricing) ───────────────────────────────────
+
+const LAST_PRICE: Record<string, [number, number, string]> = {
+  'art-001': [1.94, 2500,  '2026-10-02'],
+  'art-002': [0.32, 10000, '2026-09-18'],
+  'art-003': [2.15, 2500,  '2026-08-05'],
+  'art-004': [0.12, 13000, '2026-07-14'],
+  'art-005': [0.48, 1000,  '2026-06-20'],
+};
+
+export const MOCK_CATALOG: CatalogItem[] = MOCK_ARTWORK
+  .filter((a) => a.status !== 'Superseded')
+  .map((a) => ({
+    artworkId: a.id, name: a.name, plateRef: a.plateRef, version: a.version, status: a.status,
+    dimensions: a.dimensions, substrate: a.substrate, colorProfile: a.colorProfile, previewUrl: a.previewUrl,
+    unitPrice: LAST_PRICE[a.id]?.[0] ?? null,
+    lastQuantity: LAST_PRICE[a.id]?.[1] ?? null,
+    lastOrdered: LAST_PRICE[a.id]?.[2] ?? null,
+  }));
+
+// ─── Invitations ──────────────────────────────────────────────────────────────
+
+export const MOCK_INVITATIONS: Invitation[] = [
+  { id: 'inv-001', email: 'l.nguyen@gss-demo.com.au', role: 'Viewer', status: 'Pending',
+    token: '00000000-0000-4000-8000-000000000001', createdAt: '2026-10-12', expiresAt: '2026-10-26' },
+];
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+
+export const MOCK_NOTIFICATIONS: AppNotification[] = [
+  { id: 'n1', type: 'order',   title: 'Order ORD-2026-8812 — Dispatched', body: 'Your order has been dispatched via TNT Express.', link: '/order/ord-8812', read: false, createdAt: '2026-10-14T09:14:00' },
+  { id: 'n2', type: 'reorder', title: 'Reorder RRQ-2026-0091 approved',   body: 'Production has been scheduled.',                   link: '/order/ord-8740', read: false, createdAt: '2026-10-13T15:45:00' },
+  { id: 'n3', type: 'artwork', title: 'Proof ready for review',           body: 'Custom Foil-Stamped Product Carton (PLT-9921-C v4) is awaiting your approval.', link: '/vault', read: false, createdAt: '2026-10-13T08:03:00' },
+  { id: 'n4', type: 'team',    title: 'Invitation accepted',              body: 'Priya Sharma joined as Finance.',                  link: '/team',           read: true,  createdAt: '2026-10-10T11:20:00' },
+  { id: 'n5', type: 'order',   title: 'Order ORD-2026-8600 — Delivered',  body: 'Your order has been delivered.',                   link: '/order/ord-8600', read: true,  createdAt: '2026-08-05T11:00:00' },
 ];

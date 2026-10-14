@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useCart } from '../../lib/cartContext';
@@ -19,6 +19,7 @@ import {
   Boxes,
   X,
   Menu,
+  Gauge,
 } from 'lucide-react';
 
 const CUSTOMER_NAV = [
@@ -31,6 +32,7 @@ const CUSTOMER_NAV = [
 ];
 
 const ADMIN_NAV = [
+  { name: 'Staff Overview',    href: '/admin',           icon: Gauge,      badge: 'Staff' },
   { name: 'Companies',         href: '/admin/companies', icon: Building2,  badge: 'Staff' },
   { name: 'All Orders',        href: '/admin/orders',    icon: Package,    badge: 'Staff' },
   { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck, badge: 'Staff' },
@@ -131,7 +133,6 @@ function NavContent({
         )}
         {CUSTOMER_NAV.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
-          const Icon = item.icon;
           return (
             <NavItem
               key={item.name}
@@ -155,7 +156,7 @@ function NavContent({
               <div className="border-t border-zinc-800 my-2" />
             )}
             {ADMIN_NAV.map((item) => {
-              const isActive = pathname.startsWith(item.href);
+              const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
               return (
                 <NavItem
                   key={item.name}
@@ -197,10 +198,12 @@ export default function SideNav() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const pathname = usePathname();
 
-  // Close mobile drawer on route change
-  useEffect(() => {
+  // Close mobile drawer on route change (adjusting state during render, not in an effect)
+  const [drawerPath, setDrawerPath] = useState(pathname);
+  if (drawerPath !== pathname) {
+    setDrawerPath(pathname);
     setMobileOpen(false);
-  }, [pathname]);
+  }
 
   return (
     <>

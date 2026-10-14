@@ -1,15 +1,23 @@
 export const instant = false;
 
 import Link from 'next/link';
-import { ArrowLeft, Building2, DollarSign, Package, Users, AlertTriangle } from 'lucide-react';
+import { ArrowLeft, Building2, DollarSign, Package, Users, FolderLock } from 'lucide-react';
 import { createClient } from '../../../../lib/supabase/server';
 import {
   getCompanyById,
   getOrdersByCompanyAdmin,
   getUsersByCompany,
+  getArtworkByCompany,
 } from '../../../../lib/db';
+import { isDemoMode } from '../../../../lib/demo';
+import { artworkStatusStyles } from '../../../../lib/utils';
+import CompanyFormModal from '../../../../component/admin/CompanyFormModal';
+import ArtworkUploadModal from '../../../../component/admin/ArtworkUploadModal';
+import InviteUserModal from '../../../../component/modals/InviteUserModal';
+import ArtworkThumb from '../../../../component/ArtworkThumb';
 import { formatAUD, formatDate, orderStatusStyles } from '../../../../lib/utils';
 import { redirect } from 'next/navigation';
+import CompanyStatusActions from '../../../../component/admin/CompanyStatusActions';
 
 const STATUS_COLORS: Record<string, string> = {
   Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -25,10 +33,11 @@ export default async function CompanyDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [company, orders, users] = await Promise.all([
+  const [company, orders, users, artwork] = await Promise.all([
     getCompanyById(supabase, id),
     getOrdersByCompanyAdmin(supabase, id),
     getUsersByCompany(supabase, id),
+    getArtworkByCompany(supabase, id),
   ]);
 
   if (!company) redirect('/admin/companies');
@@ -62,17 +71,9 @@ export default async function CompanyDetailPage({
             <p className="text-xs text-zinc-500">Member since {formatDate(company.created_at)}</p>
           </div>
         </div>
-        <div className="flex items-center space-x-2">
-          {company.status === 'Suspended' && (
-            <button className="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded text-xs font-bold transition-colors">
-              Reinstate Account
-            </button>
-          )}
-          {company.status !== 'Suspended' && (
-            <button className="inline-flex items-center space-x-1.5 border border-red-200 text-red-600 hover:bg-red-50 px-3 py-2 rounded text-xs font-semibold transition-colors">
-              <AlertTriangle className="w-3.5 h-3.5" /><span>Suspend Account</span>
-            </button>
-          )}
+        <div className="flex items-start gap-2 flex-wrap">
+          <CompanyFormModal company={company} />
+          <CompanyStatusActions companyId={company.id} status={company.status} />
         </div>
       </div>
 
@@ -161,7 +162,9 @@ export default async function CompanyDetailPage({
                 <tbody className="divide-y divide-zinc-100">
                   {orders.map((order) => (
                     <tr key={order.id} className="hover:bg-zinc-50">
-                      <td className="py-3 px-4 font-mono font-bold text-zinc-900 text-[11px]">{order.ref}</td>
+                      <td className="py-3 px-4 font-mono font-bold text-zinc-900 text-[11px]">
+                        <Link href={`/order/${order.id}`} className="hover:text-amber-700 hover:underline">{order.ref}</Link>
+                      </td>
                       <td className="py-3 px-4 text-zinc-700 max-w-[160px] truncate">{order.items[0]?.productName ?? '—'}</td>
                       <td className="py-3 px-4 text-zinc-500 text-[11px]">{formatDate(order.date)}</td>
                       <td className="py-3 px-4">
@@ -187,7 +190,7 @@ export default async function CompanyDetailPage({
                 <Users className="w-4 h-4 text-indigo-500" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Portal Users</h3>
               </div>
-              <button className="text-[11px] font-semibold text-amber-600 hover:text-amber-800">+ Add User</button>
+              <InviteUserModal variant="link" companyId={company.id} companyName={company.name} />
             </div>
             {users.length === 0 ? (
               <div className="py-8 text-center text-zinc-400 text-xs">No users yet.</div>
@@ -196,23 +199,53 @@ export default async function CompanyDetailPage({
                 {users.map((member) => (
                   <div key={member.id} className="px-5 py-3 flex items-center justify-between hover:bg-zinc-50">
                     <div className="flex items-center space-x-3">
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(member.name)}&background=18181b&color=fbbf24&bold=true&size=64`}
-                        alt={member.name}
-                        className="w-7 h-7 rounded-full object-cover border border-zinc-200"
-                      />
+                      <div className="w-7 h-7 rounded-full bg-zinc-900 text-amber-400 text-[10px] font-bold flex items-center justify-center">
+                        {member.name.split(/\s+/).map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                      </div>
                       <div>
                         <div className="font-semibold text-zinc-900 text-xs">{member.name}</div>
                         <div className="text-zinc-400 text-[10px] font-mono">{member.email || '—'}</div>
                       </div>
                     </div>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-zinc-100 text-zinc-600 border border-zinc-200">
-                      {member.role}
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${member.status === 'Suspended' ? 'bg-red-50 text-red-600 border-red-200' : 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
+                      {member.status === 'Suspended' ? 'Deactivated' : member.role}
                     </span>
                   </div>
                 ))}
               </div>
+            )}
+          </div>
+
+          {/* Artwork */}
+          <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+            <div className="px-5 py-3 border-b border-zinc-100 flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <FolderLock className="w-4 h-4 text-amber-500" />
+                <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Artwork &amp; Proofs</h3>
+                <span className="text-[10px] text-zinc-400">{artwork.length} files</span>
+              </div>
+              <ArtworkUploadModal companyId={company.id} demo={isDemoMode} />
+            </div>
+            {artwork.length === 0 ? (
+              <div className="py-8 text-center text-zinc-400 text-xs">No artwork uploaded yet.</div>
+            ) : (
+              <ul className="divide-y divide-zinc-100">
+                {artwork.map((a) => (
+                  <li key={a.id} className="px-5 py-2.5 flex items-center gap-3 text-xs">
+                    <div className="w-12 h-9 rounded overflow-hidden border border-zinc-200 shrink-0">
+                      <ArtworkThumb name={a.name} previewUrl={a.previewUrl} mimeType={a.mimeType} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-semibold text-zinc-900 truncate">{a.name}</div>
+                      <div className="text-[10px] text-zinc-400 font-mono">
+                        {a.plateRef} · {a.version} · {formatDate(a.uploadedAt)}
+                        {a.reviewComment && <span className="text-red-600 font-sans"> · “{a.reviewComment}”</span>}
+                      </div>
+                    </div>
+                    <span className={`shrink-0 px-2 py-0.5 rounded text-[10px] font-bold border ${artworkStatusStyles(a.status)}`}>{a.status}</span>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </div>
