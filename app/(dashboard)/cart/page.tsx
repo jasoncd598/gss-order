@@ -3,30 +3,26 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ShoppingCart,
-  Trash2,
-  Plus,
-  Minus,
-  ArrowRight,
-  CheckCircle2,
-  RefreshCw,
-  FileText,
-  ShieldCheck,
-  AlertCircle,
+  ShoppingCart, Trash2, Plus, Minus, ArrowRight,
+  CheckCircle2, RefreshCw, FileText, ShieldCheck,
+  AlertCircle, Loader2,
 } from 'lucide-react';
 import { useCart } from '../../lib/cartContext';
 import { useUser } from '../../lib/userContext';
 import { formatAUD } from '../../lib/utils';
+import { placeOrderAction } from '../../lib/actions';
 
 type Step = 'cart' | 'review' | 'confirmed';
 
 export default function CartPage() {
   const { items, removeItem, updateQty, clearCart } = useCart();
   const { companyName, email, paymentTerms } = useUser();
-  const [poRef, setPoRef] = useState('');
+  const [poRef, setPoRef]             = useState('');
   const [deliveryNote, setDeliveryNote] = useState('');
-  const [step, setStep] = useState<Step>('cart');
-  const [orderRef, setOrderRef] = useState('ORD-2026-8900');
+  const [step, setStep]               = useState<Step>('cart');
+  const [orderRef, setOrderRef]       = useState('ORD-2026-8900');
+  const [placing, setPlacing]         = useState(false);
+  const [placeError, setPlaceError]   = useState('');
 
   useEffect(() => {
     setOrderRef(`ORD-2026-${Math.floor(8900 + Math.random() * 99)}`);
@@ -36,9 +32,35 @@ export default function CartPage() {
   const gst      = subtotal * 0.1;
   const total    = subtotal + gst;
 
-  function handlePlaceOrder() {
-    setStep('confirmed');
+  async function handlePlaceOrder() {
+    setPlacing(true);
+    setPlaceError('');
+
+    const result = await placeOrderAction({
+      items: items.map((i) => ({
+        skuId:       i.artId,
+        productName: i.name,
+        dimensions:  i.dimensions,
+        substrate:   i.substrate,
+        plateRef:    i.plateRef,
+        quantity:    i.quantity,
+        unitPrice:   i.unitPrice,
+        lineTotal:   i.unitPrice * i.quantity,
+      })),
+      poRef:  poRef  || undefined,
+      notes:  deliveryNote || undefined,
+    });
+
+    setPlacing(false);
+
+    if (!result.success) {
+      setPlaceError(result.error ?? 'Something went wrong. Please try again.');
+      return;
+    }
+
+    if (result.ref) setOrderRef(result.ref);
     clearCart();
+    setStep('confirmed');
   }
 
   function stepQty(artId: string, delta: number, minQty: number, currentQty: number) {
@@ -253,10 +275,17 @@ export default function CartPage() {
                 </button>
               ) : (
                 <div className="space-y-2 mt-4">
-                  <button onClick={handlePlaceOrder} className="w-full flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors">
-                    <ShieldCheck className="w-4 h-4" /><span>Place Order</span>
+                  {placeError && (
+                    <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2 flex items-start space-x-2">
+                      <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                      <span>{placeError}</span>
+                    </p>
+                  )}
+                  <button onClick={handlePlaceOrder} disabled={placing} className="w-full flex items-center justify-center space-x-2 bg-amber-400 hover:bg-amber-300 disabled:bg-amber-400/50 disabled:cursor-not-allowed text-zinc-950 font-bold py-2.5 rounded-lg text-sm transition-colors">
+                    {placing ? <Loader2 className="w-4 h-4 animate-spin" /> : <ShieldCheck className="w-4 h-4" />}
+                    <span>{placing ? 'Placing order…' : 'Place Order'}</span>
                   </button>
-                  <button onClick={() => setStep('cart')} className="w-full border border-zinc-200 hover:bg-zinc-50 text-zinc-600 font-medium py-2 rounded-lg text-xs transition-colors">
+                  <button onClick={() => setStep('cart')} disabled={placing} className="w-full border border-zinc-200 hover:bg-zinc-50 text-zinc-600 font-medium py-2 rounded-lg text-xs transition-colors disabled:opacity-50">
                     Edit Cart
                   </button>
                 </div>

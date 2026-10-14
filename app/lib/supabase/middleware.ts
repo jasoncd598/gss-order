@@ -1,10 +1,6 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 
-/**
- * Refreshes the Supabase session on every request.
- * Called from the root middleware.ts file.
- */
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({ request });
 
@@ -29,27 +25,41 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  // Refresh session — do not remove this
+  // Refresh session — always keep this call
   const { data: { user } } = await supabase.auth.getUser();
 
   const { pathname } = request.nextUrl;
 
-  // Public routes that don't require auth
   const publicPaths = ['/login', '/registration', '/forgot-password', '/auth/callback'];
-  const isPublic = publicPaths.some((p) => pathname.startsWith(p));
+  const isPublic    = publicPaths.some((p) => pathname.startsWith(p));
 
-  // Redirect unauthenticated users to login
+  // 1. Unauthenticated → login
   if (!user && !isPublic) {
     const url = request.nextUrl.clone();
     url.pathname = '/login';
     return NextResponse.redirect(url);
   }
 
-  // Redirect authenticated users away from auth pages
+  // 2. Authenticated on auth page → dashboard
   if (user && isPublic && !pathname.startsWith('/auth/callback')) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
+  }
+
+  // 3. Protect /admin/* — only staff can access
+  if (user && pathname.startsWith('/admin')) {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('is_staff')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile?.is_staff) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
   }
 
   return supabaseResponse;

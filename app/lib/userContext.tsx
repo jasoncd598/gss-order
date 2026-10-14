@@ -15,8 +15,10 @@ export interface UserSession {
   email: string;
   role: string;
   companyName: string;
+  companyId: string;
   paymentTerms: string;
   creditLimit: number;
+  isStaff: boolean;
 }
 
 const UserContext = createContext<UserSession>({
@@ -27,8 +29,10 @@ const UserContext = createContext<UserSession>({
   email: '',
   role: 'Viewer',
   companyName: '',
+  companyId: '',
   paymentTerms: 'Net 30',
   creditLimit: 0,
+  isStaff: false,
 });
 
 export function UserProvider({

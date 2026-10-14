@@ -21,31 +21,33 @@ export default async function DashboardLayout({
   // Fetch profile + joined company in one query
   const { data: profile } = await supabase
     .from('profiles')
-    .select('first_name, last_name, role, companies(name, payment_terms, credit_limit)')
+    .select('first_name, last_name, role, is_staff, company_id, companies(name, payment_terms, credit_limit)')
     .eq('id', user.id)
     .single();
 
-  // Supabase returns joined table as object or array — handle both
+  // Supabase returns joined table as object or array — normalise both
   const company = Array.isArray(profile?.companies)
     ? profile.companies[0]
     : profile?.companies;
 
-  const firstName   = profile?.first_name  ?? user.user_metadata?.first_name  ?? '';
-  const lastName    = profile?.last_name   ?? user.user_metadata?.last_name   ?? '';
+  const firstName   = profile?.first_name ?? user.user_metadata?.first_name ?? '';
+  const lastName    = profile?.last_name  ?? user.user_metadata?.last_name  ?? '';
   const displayName = (`${firstName} ${lastName}`.trim() || user.email?.split('@')[0]) ?? 'User';
 
-  // Fall back to metadata stored at signup if company row not linked yet
-  const companyName   = company?.name          ?? user.user_metadata?.company_name ?? 'Your Company';
-  const paymentTerms  = company?.payment_terms ?? 'Net 30';
-  const creditLimit   = company?.credit_limit  ?? 0;
+  // Fall back to signup metadata while company row is being linked
+  const companyName  = company?.name          ?? user.user_metadata?.company_name ?? 'Your Company';
+  const paymentTerms = company?.payment_terms ?? 'Net 30';
+  const creditLimit  = company?.credit_limit  ?? 0;
 
   const session: UserSession = {
-    id:           user.id,
+    id:          user.id,
     displayName,
     firstName,
     lastName,
-    email:        user.email ?? '',
-    role:         profile?.role ?? user.user_metadata?.role ?? 'Viewer',
+    email:       user.email ?? '',
+    role:        profile?.role    ?? user.user_metadata?.role ?? 'Viewer',
+    isStaff:     profile?.is_staff ?? false,
+    companyId:   profile?.company_id ?? '',
     companyName,
     paymentTerms,
     creditLimit,

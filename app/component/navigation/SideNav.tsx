@@ -21,18 +21,64 @@ import {
   Menu,
 } from 'lucide-react';
 
-const navigation = [
-  { name: 'Dashboard',             href: '/',                  icon: LayoutDashboard },
-  { name: 'Product Catalog',       href: '/catalog',           icon: Boxes,        badge: 'Shop' },
-  { name: 'Cart & Checkout',       href: '/cart',              icon: ShoppingCart, badge: 'Cart' },
-  { name: 'Order History',         href: '/order',             icon: Package },
-  { name: 'Artwork & Proof Vault', href: '/vault',             icon: FolderLock },
-  { name: 'Team & Permissions',    href: '/team',              icon: Users },
-  { name: 'Companies',             href: '/admin/companies',   icon: Building2,    badge: 'Staff' },
-  { name: 'All Orders',            href: '/admin/orders',      icon: Package,      badge: 'Staff' },
-  { name: 'Reorder Requests',      href: '/admin/reorders',    icon: ShieldCheck,  badge: 'Staff' },
+const CUSTOMER_NAV = [
+  { name: 'Dashboard',             href: '/',        icon: LayoutDashboard },
+  { name: 'Product Catalog',       href: '/catalog', icon: Boxes,        badge: 'Shop' },
+  { name: 'Cart & Checkout',       href: '/cart',    icon: ShoppingCart, badge: 'Cart' },
+  { name: 'Order History',         href: '/order',   icon: Package },
+  { name: 'Artwork & Proof Vault', href: '/vault',   icon: FolderLock },
+  { name: 'Team & Permissions',    href: '/team',    icon: Users },
 ];
 
+const ADMIN_NAV = [
+  { name: 'Companies',         href: '/admin/companies', icon: Building2,  badge: 'Staff' },
+  { name: 'All Orders',        href: '/admin/orders',    icon: Package,    badge: 'Staff' },
+  { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck, badge: 'Staff' },
+];
+
+// ─── Shared nav item ─────────────────────────────────────────────────────────
+function NavItem({
+  item,
+  isActive,
+  isCollapsed,
+  cartCount,
+  onLinkClick,
+}: {
+  item: { name: string; href: string; icon: React.ElementType; badge?: string };
+  isActive: boolean;
+  isCollapsed: boolean;
+  cartCount: number;
+  onLinkClick?: () => void;
+}) {
+  const Icon = item.icon;
+  const badge = item.href === '/cart' && cartCount > 0 ? String(cartCount) : item.badge;
+  return (
+    <Link
+      href={item.href}
+      onClick={onLinkClick}
+      title={isCollapsed ? item.name : undefined}
+      className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-md text-xs font-medium transition-colors ${
+        isActive
+          ? 'bg-amber-400 text-zinc-950 font-bold shadow-sm'
+          : 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
+      }`}
+    >
+      <div className="flex items-center space-x-2.5">
+        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-zinc-950' : 'text-amber-400'}`} />
+        {!isCollapsed && <span className="truncate">{item.name}</span>}
+      </div>
+      {!isCollapsed && badge && (
+        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${
+          isActive ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-amber-400 border border-zinc-800'
+        }`}>
+          {badge}
+        </span>
+      )}
+    </Link>
+  );
+}
+
+// ─── Nav content (shared by desktop + mobile drawer) ─────────────────────────
 function NavContent({
   isCollapsed,
   onLinkClick,
@@ -42,7 +88,7 @@ function NavContent({
 }) {
   const pathname = usePathname();
   const { count } = useCart();
-  const { companyName, paymentTerms, creditLimit } = useUser();
+  const { companyName, paymentTerms, creditLimit, isStaff } = useUser();
 
   return (
     <>
@@ -83,47 +129,46 @@ function NavContent({
             Storefront &amp; Orders
           </div>
         )}
-        {navigation.map((item) => {
+        {CUSTOMER_NAV.map((item) => {
           const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href));
           const Icon = item.icon;
-          const isAdminSection = item.href.startsWith('/admin');
-          const prevItem = navigation[navigation.indexOf(item) - 1];
-          const showAdminDivider = isAdminSection && (!prevItem || !prevItem.href.startsWith('/admin'));
           return (
-            <div key={item.name}>
-              {showAdminDivider && !isCollapsed && (
-                <div className="px-3 pt-3 pb-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider border-t border-zinc-800 mt-2">
-                  Internal Admin
-                </div>
-              )}
-              {showAdminDivider && isCollapsed && (
-                <div className="border-t border-zinc-800 my-2" />
-              )}
-              <Link
-                href={item.href}
-                onClick={onLinkClick}
-                title={isCollapsed ? item.name : undefined}
-                className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-md text-xs font-medium transition-colors ${
-                  isActive
-                    ? 'bg-amber-400 text-zinc-950 font-bold shadow-sm'
-                    : 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
-                }`}
-              >
-                <div className="flex items-center space-x-2.5">
-                  <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-zinc-950' : 'text-amber-400'}`} />
-                  {!isCollapsed && <span className="truncate">{item.name}</span>}
-                </div>
-                {!isCollapsed && item.badge && (
-                  <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${
-                    isActive ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-amber-400 border border-zinc-800'
-                  }`}>
-                    {item.href === '/cart' && count > 0 ? count : item.badge}
-                  </span>
-                )}
-              </Link>
-            </div>
+            <NavItem
+              key={item.name}
+              item={item}
+              isActive={isActive}
+              isCollapsed={isCollapsed}
+              cartCount={count}
+              onLinkClick={onLinkClick}
+            />
           );
         })}
+
+        {/* Admin section — staff only */}
+        {isStaff && (
+          <>
+            {!isCollapsed ? (
+              <div className="px-3 pt-3 pb-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider border-t border-zinc-800 mt-2">
+                Internal Admin
+              </div>
+            ) : (
+              <div className="border-t border-zinc-800 my-2" />
+            )}
+            {ADMIN_NAV.map((item) => {
+              const isActive = pathname.startsWith(item.href);
+              return (
+                <NavItem
+                  key={item.name}
+                  item={item}
+                  isActive={isActive}
+                  isCollapsed={isCollapsed}
+                  cartCount={count}
+                  onLinkClick={onLinkClick}
+                />
+              );
+            })}
+          </>
+        )}
       </nav>
 
       {/* Footer */}
