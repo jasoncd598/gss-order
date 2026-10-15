@@ -1,6 +1,7 @@
 import type Stripe from 'stripe';
 import { getStripe, markCheckoutFailed, syncCheckoutSession } from '../../../lib/stripe';
 import { queueEmailDelivery } from '../../../lib/email';
+import { invoiceSubscriptionId, syncSubscription, syncSubscriptionCheckout } from '../../../lib/billing';
 
 /**
  * Stripe webhook. Register this URL in the Stripe Dashboard (or forward to it
@@ -8,6 +9,9 @@ import { queueEmailDelivery } from '../../../lib/email';
  *   checkout.session.completed
  *   checkout.session.async_payment_succeeded
  *   checkout.session.async_payment_failed
+ * and, for portal subscriptions (Stripe Billing):
+ *   customer.subscription.created / .updated / .deleted
+ *   invoice.paid / invoice.payment_failed
  * Excluded from the auth proxy (proxy.ts) — the signature is the authentication.
  */
 export async function POST(request: Request) {
@@ -32,9 +36,23 @@ export async function POST(request: Request) {
   try {
     switch (event.type) {
       case 'checkout.session.completed':
+        if (event.data.object.mode === 'subscription') await syncSubscriptionCheckout(event.data.object);
+        else await syncCheckoutSession(event.data.object.id);
+        break;
       case 'checkout.session.async_payment_succeeded':
         await syncCheckoutSession(event.data.object.id);
         break;
+      case 'customer.subscription.created':
+      case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
+        await syncSubscription(event.data.object.id);
+        break;
+      case 'invoice.paid':
+      case 'invoice.payment_failed': {
+        const subId = invoiceSubscriptionId(event.data.object);
+        if (subId) await syncSubscription(subId);
+        break;
+      }
       case 'checkout.session.async_payment_failed':
         await markCheckoutFailed(event.data.object.id);
         break;

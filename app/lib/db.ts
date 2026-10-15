@@ -306,9 +306,9 @@ const MOCK_ADMIN_ORDERS: AdminOrderRow[] = [
     id: o.id, ref: o.ref, date: o.date, status: o.status, total: o.total, paymentStatus: o.paymentStatus,
     companyId: 'cmp-001', companyName: 'Acme Packaging Pty Ltd', firstProduct: o.items[0]?.productName ?? '—',
   })),
-  { id: 'ord-bb-01', ref: 'ORD-2026-8790', date: '2026-10-05', status: 'In Production',    total: 9700,  paymentStatus: 'Unpaid', companyId: 'cmp-002', companyName: 'BrightBox Retail Solutions', firstProduct: 'Custom Corrugated Shipping Box' },
-  { id: 'ord-ns-01', ref: 'ORD-2026-8655', date: '2026-09-30', status: 'Delivered',        total: 1440,  paymentStatus: 'Paid',   companyId: 'cmp-003', companyName: 'NorthShore Naturals',        firstProduct: 'Premium Retail Swing Tag' },
-  { id: 'ord-tl-01', ref: 'ORD-2026-8410', date: '2026-09-20', status: 'Pending Approval', total: 18000, paymentStatus: 'Unpaid', companyId: 'cmp-004', companyName: 'TradeLink Wholesale Group',  firstProduct: 'Custom Corrugated Shipping Box' },
+  { id: 'ord-bb-01', ref: 'ORD-2026-8790', date: '2026-10-05', status: 'In Production',    total: 5700,  paymentStatus: 'Unpaid', companyId: 'cmp-002', companyName: 'BrightBox Retail Solutions', firstProduct: 'Hand-Painted Ceramic Plate – Lavender & Bees' },
+  { id: 'ord-ns-01', ref: 'ORD-2026-8655', date: '2026-09-30', status: 'Delivered',        total: 4160,  paymentStatus: 'Paid',   companyId: 'cmp-003', companyName: 'NorthShore Naturals',        firstProduct: 'Hand-Painted Ceramic Plate – Peacock' },
+  { id: 'ord-tl-01', ref: 'ORD-2026-8410', date: '2026-09-20', status: 'Pending Approval', total: 18000, paymentStatus: 'Unpaid', companyId: 'cmp-004', companyName: 'TradeLink Wholesale Group',  firstProduct: 'Cast Brass Works Plate – Blue Enamel' },
 ];
 
 const COMPANY_COLUMNS = 'id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at';
@@ -519,4 +519,45 @@ export async function searchPortal(supabase: SupabaseClient, rawQuery: string): 
     artwork: ((art.data ?? []) as { id: string; name: string; plate_ref: string; version: string; status: ArtworkStatus }[])
       .map((a) => ({ id: a.id, name: a.name, plateRef: a.plate_ref, version: a.version, status: a.status })),
   };
+}
+
+// ─── Staff: portal subscriptions (Stripe Billing) ─────────────────────────────
+
+export interface SubscriptionRow {
+  id: string;
+  companyName: string | null;
+  email: string | null;
+  plan: string;
+  interval: 'month' | 'year';
+  status: string;
+  cancelAtPeriodEnd: boolean;
+  trialEnd: string | null;
+  currentPeriodEnd: string | null;
+  createdAt: string;
+}
+
+const MOCK_SUBSCRIPTIONS: SubscriptionRow[] = [
+  { id: 'sub-1', companyName: 'Harbour Signs Co',        email: 'ops@harboursigns.test',     plan: 'growth',  interval: 'month', status: 'active',   cancelAtPeriodEnd: false, trialEnd: null,         currentPeriodEnd: '2026-11-02', createdAt: '2026-08-19' },
+  { id: 'sub-2', companyName: 'Brassworks Foundry',      email: 'admin@brassworks.test',     plan: 'scale',   interval: 'year',  status: 'active',   cancelAtPeriodEnd: false, trialEnd: null,         currentPeriodEnd: '2027-07-01', createdAt: '2026-06-17' },
+  { id: 'sub-3', companyName: 'Kiln & Glaze Studio',     email: 'hello@kilnglaze.test',      plan: 'starter', interval: 'month', status: 'trialing', cancelAtPeriodEnd: false, trialEnd: '2026-10-24', currentPeriodEnd: '2026-10-24', createdAt: '2026-10-10' },
+  { id: 'sub-4', companyName: 'Southern Print Supplies', email: 'accounts@southernprint.test', plan: 'growth', interval: 'month', status: 'past_due', cancelAtPeriodEnd: false, trialEnd: null,         currentPeriodEnd: '2026-10-12', createdAt: '2026-04-03' },
+  { id: 'sub-5', companyName: 'Metro Labels',            email: 'it@metrolabels.test',       plan: 'starter', interval: 'year',  status: 'active',   cancelAtPeriodEnd: true,  trialEnd: null,         currentPeriodEnd: '2026-12-15', createdAt: '2025-12-15' },
+];
+
+/** RLS: staff only. */
+export async function getSubscriptions(supabase: SupabaseClient): Promise<SubscriptionRow[]> {
+  if (isDemoMode) return MOCK_SUBSCRIPTIONS;
+
+  const { data, error } = await supabase
+    .from('subscriptions')
+    .select('id, company_name, email, plan, billing_interval, status, cancel_at_period_end, trial_end, current_period_end, created_at')
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getSubscriptions:', error.message); return []; }
+
+  return data.map((r) => ({
+    id: r.id, companyName: r.company_name, email: r.email, plan: r.plan,
+    interval: r.billing_interval === 'year' ? 'year' : 'month', status: r.status,
+    cancelAtPeriodEnd: r.cancel_at_period_end, trialEnd: r.trial_end,
+    currentPeriodEnd: r.current_period_end, createdAt: r.created_at,
+  }));
 }

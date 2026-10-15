@@ -14,6 +14,7 @@ import {
   Users,
   Building2,
   ShieldCheck,
+  CreditCard,
   ChevronLeft,
   ChevronRight,
   Boxes,
@@ -36,6 +37,7 @@ const ADMIN_NAV = [
   { name: 'Companies',         href: '/admin/companies', icon: Building2,  badge: 'Staff' },
   { name: 'All Orders',        href: '/admin/orders',    icon: Package,    badge: 'Staff' },
   { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck, badge: 'Staff' },
+  { name: 'Subscriptions',     href: '/admin/subscriptions', icon: CreditCard, badge: 'Staff' },
 ];
 
 // ─── Shared nav item ─────────────────────────────────────────────────────────

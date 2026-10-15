@@ -33,8 +33,15 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ['/login', '/registration', '/forgot-password', '/auth/callback'];
+  const publicPaths = ['/login', '/registration', '/forgot-password', '/auth/callback', '/welcome'];
   const isPublic    = publicPaths.some((p) => pathname.startsWith(p));
+
+  // 0. Signed-out visitors at the homepage see the landing page (URL stays "/")
+  if (!user && pathname === '/') {
+    const rewrite = NextResponse.rewrite(new URL('/welcome', request.url));
+    supabaseResponse.cookies.getAll().forEach((c) => rewrite.cookies.set(c));
+    return rewrite;
+  }
 
   // 1. Unauthenticated → login
   if (!user && !isPublic) {
@@ -43,8 +50,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2. Authenticated on auth page → dashboard
-  if (user && isPublic && !pathname.startsWith('/auth/callback')) {
+  // 2. Authenticated on auth page → dashboard (the landing page stays viewable)
+  if (user && isPublic && !pathname.startsWith('/auth/callback') && !pathname.startsWith('/welcome')) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);

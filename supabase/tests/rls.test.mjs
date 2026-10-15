@@ -332,5 +332,26 @@ ok('priced new plate can be ordered (10 × 0.30 = 3)', !poNew.err && Number(poNe
 ok('specs copied from artwork', (await lineOf(poNew.rows?.[0]?.ref))?.dimensions === '50×30mm');
 ok('non-positive price rejected', !!(await asErr(S, `update product_prices set unit_price=0 where plate_ref='PLT-NEW'`)).err);
 
+// ════════════════════════════════════════════════════════════════════════════
+// Migration 008 — portal subscriptions (Stripe Billing)
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\n── 008 ──');
+await apply('008_subscriptions.sql');
+await apply('008_subscriptions.sql');
+
+await db.exec('set role service_role');
+const subIns = await db.query(`insert into subscriptions (stripe_subscription_id, stripe_customer_id, email, company_name, plan, billing_interval, status)
+  values ('sub_test_1','cus_test_1','ops@harbour.test','Harbour Signs','growth','month','trialing') returning id`).then(() => null, (e) => e.message);
+await db.query(`insert into subscriptions (stripe_subscription_id, stripe_customer_id, plan, billing_interval, status) values ('sub_test_1','cus_test_1','growth','month','active')
+  on conflict (stripe_subscription_id) do update set status = excluded.status`);
+await db.exec('reset role');
+ok('server (service role) records a subscription', subIns === null, subIns);
+ok('upsert by Stripe subscription id keeps one row', (await su(`select count(*)::int n, max(status) s from subscriptions`)).rows[0].n === 1 && (await su(`select status from subscriptions`)).rows[0].status === 'active');
+ok('staff can read subscriptions', (await as(S, `select * from subscriptions`)).rows.length === 1);
+ok('customers cannot read subscriptions', (await as(A1, `select * from subscriptions`)).rows.length === 0);
+ok('customers cannot insert subscriptions', !!(await asErr(A1, `insert into subscriptions (stripe_subscription_id, stripe_customer_id, plan, billing_interval, status) values ('sub_x','cus_x','scale','year','active')`)).err);
+ok('staff cannot edit subscriptions (Stripe is the source of truth)', (await asErr(S, `update subscriptions set status='active', plan='scale'`)).affected === 0);
+ok('duplicate Stripe subscription id rejected', !!(await su(`insert into subscriptions (stripe_subscription_id, stripe_customer_id, plan, billing_interval, status) values ('sub_test_1','cus_y','starter','month','active')`).then(() => null, (e) => e.message)));
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

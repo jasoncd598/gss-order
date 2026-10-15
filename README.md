@@ -14,6 +14,7 @@
    SUPABASE_SERVICE_ROLE_KEY=...     # server only — records Stripe payments on orders
    STRIPE_SECRET_KEY=sk_test_...     # or a restricted key (rk_test_...) — see Payments below
    STRIPE_WEBHOOK_SECRET=whsec_...
+   STRIPE_BILLING_PORTAL_URL=https://billing.stripe.com/p/login/...   # Stripe customer-portal login link (plans)
    # Email notifications — off until EMAIL_FROM + either SMTP_* or RESEND_API_KEY is set.
    # SMTP wins when set. Gmail: smtp.gmail.com / 465 / your address / a Google App Password.
    SMTP_HOST=smtp.gmail.com
@@ -34,7 +35,7 @@
    # DEMO_MODE=true   # optional: skip login and show sample data (screenshots only — never in production)
    ```
 2. **Database** — run the files in `supabase/migrations/` in order in the Supabase SQL editor
-   (`000` → `007`). They are idempotent. `003` is the core security layer; `004` adds invitations,
+   (`000` → `008`). They are idempotent. `003` is the core security layer; `004` adds invitations,
    the private `artwork` storage bucket, proof approval, server-priced ordering and notifications.
 3. **First staff user** — sign up in the portal, then in the SQL editor:
    ```sql
@@ -104,10 +105,26 @@ Orders can be paid by card through Stripe Checkout (hosted page, AUD, GST as its
 - Restricted key permissions needed: Checkout Sessions (write).
 - Test card: `4242 4242 4242 4242`, any future expiry, any CVC.
 
+### Landing page & paid plans (Stripe Billing)
+Signed-out visitors at `/` see the marketing page (`app/welcome`, rewritten by the auth proxy, so the URL
+stays `/`); signed-in users still get their dashboard. The page sells the portal on three plans —
+**Starter A$79/mo, Growth A$199/mo, Scale A$499/mo** (incl. GST; yearly = 2 months free) — each with a
+14-day free trial.
+- Plan cards call `startTrialAction` → Stripe Checkout in `subscription` mode. Prices are found by
+  lookup key (`gss_<plan>_<monthly|yearly>`), so amounts can change in Stripe without a deploy — keep
+  `PLANS` in `app/lib/billing.ts` in step for display.
+- The webhook and `/welcome/success` upsert the `subscriptions` table (service role only; staff read it
+  under **Admin → Subscriptions**, with MRR). Subscribers manage card, plan, invoices and cancellation in
+  Stripe's customer portal (`STRIPE_BILLING_PORTAL_URL`).
+- Webhook events needed in addition to the payment ones: `customer.subscription.created`,
+  `customer.subscription.updated`, `customer.subscription.deleted`, `invoice.paid`, `invoice.payment_failed`.
+- Provisioning a portal for a new subscriber is manual for now (the success page promises it within
+  1 business day).
+
 ### Tests
 `npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
 escalation guards, reorders, invitations, storage access, proof approval, server pricing and
-notifications, payment state, email delivery and product pricing (128 checks).
+notifications, payment state, email delivery, product pricing and subscriptions (137 checks).
 
 ---
 
@@ -125,7 +142,7 @@ notifications, payment state, email delivery and product pricing (128 checks).
 | Order status workflow | Staff status changes → customer notifications |
 | Email notifications | Every notification + invitations, via Resend (see Notifications) |
 | Responsive | Mobile drawer nav, scrollable tables, print-friendly invoices |
-| Data separation between companies | Postgres RLS; `npm run test:db` proves it (128 checks) |
+| Data separation between companies | Postgres RLS; `npm run test:db` proves it (137 checks) |
 | Third-party integrations | Stripe card payments (Phase 2 item, done); Resend email |
 | Built for future integrations | `invoice_ref` / payment fields ready for Xero sync; per-order pages ready for QR codes |
 
