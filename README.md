@@ -14,8 +14,14 @@
    SUPABASE_SERVICE_ROLE_KEY=...     # server only — records Stripe payments on orders
    STRIPE_SECRET_KEY=sk_test_...     # or a restricted key (rk_test_...) — see Payments below
    STRIPE_WEBHOOK_SECRET=whsec_...
-   RESEND_API_KEY=re_...             # email notifications (off until set)
-   EMAIL_FROM="GSS Orders <orders@your-domain.com.au>"
+   # Email notifications — off until EMAIL_FROM + either SMTP_* or RESEND_API_KEY is set.
+   # SMTP wins when set. Gmail: smtp.gmail.com / 465 / your address / a Google App Password.
+   SMTP_HOST=smtp.gmail.com
+   SMTP_PORT=465
+   SMTP_USER=you@gmail.com
+   SMTP_PASS=xxxx xxxx xxxx xxxx
+   # RESEND_API_KEY=re_...           # alternative once you own a domain
+   EMAIL_FROM="GSS Orders <you@gmail.com>"
    # EMAIL_REPLY_TO=accounts@your-domain.com.au
    CRON_SECRET=...                   # any long random string — protects /api/notifications/deliver
    SITE_URL=https://portal.your-domain.com.au   # links in emails (Vercel production URL is used if unset)
@@ -70,13 +76,13 @@ Database triggers create in-portal notifications for: new orders and reorder req
 order status changes (customer), reorder decisions (requester), proofs ready / reviewed, invitations
 accepted, account approval, and payments received / failed.
 
-**Email:** every notification is also emailed to its recipient (via [Resend](https://resend.com)), and
+**Email:** every notification is also emailed to its recipient (via SMTP, e.g. Gmail, or [Resend](https://resend.com)), and
 team invitations email the sign-up link to the invitee. Emails go out right after the action that
 caused them (Next.js `after()`), so pages never wait on email. `/api/notifications/deliver` re-sends
 anything still pending — Vercel Cron calls it daily (`vercel.json`), and a Supabase Database Webhook on
 `notifications` INSERT can call it instantly. Undelivered rows are claimed atomically (no duplicate
 emails), retried up to 3 times, and failures are kept in `notifications.email_error`. Email is a no-op
-until `RESEND_API_KEY` and `EMAIL_FROM` are set.
+until `EMAIL_FROM` and either the `SMTP_*` variables or `RESEND_API_KEY` are set.
 
 ### Invoices
 Each order has a printable page at `/invoice/<order id>` (order page → *Download Invoice PDF*; the
@@ -135,7 +141,8 @@ Everything in code is done. These steps need your accounts, data or decisions:
 2. **Stripe** — create the webhook destination (`https://<domain>/api/stripe/webhook`, the three
    `checkout.session.*` events) and copy its signing secret. Before going live, switch to live keys
    (ideally a restricted key) and complete Stripe account activation.
-3. **Resend** — create an account, verify your sending domain (DNS records), create an API key.
+3. **Email** — now: Gmail SMTP with an App Password, in both Supabase (Auth → SMTP) and the app (`SMTP_*`).
+   Before launch: buy a domain, verify it in Resend (or any SMTP provider) and switch `EMAIL_FROM` / credentials.
 4. **Vercel** — deploy, then add every variable from Setup step 1 (including `CRON_SECRET`) and redeploy.
    Optional: a Supabase **Database Webhook** on `notifications` INSERT → `POST https://<domain>/api/notifications/deliver`
    with header `Authorization: Bearer <CRON_SECRET>` for instant delivery of sign-up-time notifications.
@@ -220,7 +227,7 @@ Everything in code is done. These steps need your accounts, data or decisions:
 | **Lucide React** | 1.56.0 | Consistent icon system |
 | **Supabase** | Postgres + Auth + Storage | Row Level Security for company separation; private artwork bucket |
 | **Stripe** | `stripe` 22.6.0 | Hosted Checkout for card payments; signed webhooks |
-| **Resend** | HTTP API | Transactional email for notifications and invitations |
+| **Nodemailer / Resend** | SMTP or HTTP API | Transactional email for notifications and invitations |
 | **Vercel** | Hosting + Cron | Zero-config Next.js hosting; daily email backstop |
 | **League Spartan** | Google Fonts | Brand-aligned industrial sans-serif |
 

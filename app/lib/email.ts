@@ -1,4 +1,5 @@
 import { after } from 'next/server';
+import nodemailer, { type Transporter } from 'nodemailer';
 import { createAdminClient } from './supabase/admin';
 
 /**
@@ -10,8 +11,9 @@ import { createAdminClient } from './supabase/admin';
  * same delivery on a schedule as a backstop. Rows are claimed atomically, so
  * overlapping runs never send the same email twice.
  *
- * Sends through Resend's HTTP API. Disabled (no-op) until RESEND_API_KEY and
- * EMAIL_FROM are set.
+ * Sends through SMTP when SMTP_HOST is set (e.g. Gmail with an app password),
+ * otherwise through Resend's HTTP API. Disabled (no-op) until EMAIL_FROM and
+ * one of those is configured.
  */
 
 const MAX_ATTEMPTS = 3;
@@ -19,8 +21,10 @@ const BATCH_SIZE   = 25;
 /** Don't email very old notifications if delivery was switched off for a while */
 const MAX_AGE_MS   = 2 * 24 * 60 * 60 * 1000;
 
+const smtpConfigured = () => !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
 export function emailEnabled(): boolean {
-  return !!process.env.RESEND_API_KEY && !!process.env.EMAIL_FROM;
+  return !!process.env.EMAIL_FROM && (smtpConfigured() || !!process.env.RESEND_API_KEY);
 }
 
 /** Absolute base URL for links in emails */
@@ -145,7 +149,28 @@ interface Email {
   idempotencyKey: string;
 }
 
+let smtp: Transporter | null = null;
+
 async function sendEmail(email: Email) {
+  if (smtpConfigured()) {
+    const port = Number(process.env.SMTP_PORT || 465);
+    smtp ??= nodemailer.createTransport({
+      host:   process.env.SMTP_HOST,
+      port,
+      secure: port === 465,
+      auth:   { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS },
+    });
+    await smtp.sendMail({
+      from:    process.env.EMAIL_FROM,
+      to:      email.to,
+      subject: email.subject,
+      html:    email.html,
+      text:    email.text,
+      replyTo: process.env.EMAIL_REPLY_TO || undefined,
+    });
+    return;
+  }
+
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
     headers: {
