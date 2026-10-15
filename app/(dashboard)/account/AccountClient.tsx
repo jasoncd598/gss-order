@@ -91,15 +91,15 @@ export default function AccountClient({ demo }: { demo: boolean }) {
 
       {/* Identity card */}
       <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm flex items-center space-x-4">
-        <div className="w-14 h-14 rounded-full bg-zinc-900 text-amber-400 text-lg font-black flex items-center justify-center border-2 border-amber-400 shrink-0">
+        <div className="w-14 h-14 rounded-full bg-wall text-brass-light text-lg font-black flex items-center justify-center border-2 border-amber-400 shrink-0">
           {initials || '?'}
         </div>
         <div className="min-w-0">
           <div className="font-bold text-zinc-900 text-base truncate">{displayName}</div>
           <div className="text-xs text-zinc-500 font-mono truncate">{email}</div>
           <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-            <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold">{role}</span>
-            <span className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 text-[10px] font-mono">{companyName}</span>
+            <span className="px-2 py-0.5 rounded bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">{role}</span>
+            <span className="px-2 py-0.5 rounded bg-zinc-100 border border-zinc-200 text-zinc-600 text-xs font-mono">{companyName}</span>
           </div>
         </div>
       </div>
@@ -133,7 +133,7 @@ export default function AccountClient({ demo }: { demo: boolean }) {
             <div className="sm:col-span-2">
               <label className={label}>Work Email</label>
               <input type="email" value={email} readOnly className={`${input} bg-zinc-50 text-zinc-500`} />
-              <p className="text-[10px] text-zinc-400 mt-1">Your sign-in email. Ask your company admin or our team to change it.</p>
+              <p className="text-xs text-zinc-400 mt-1">Your sign-in email. Ask your company admin or our team to change it.</p>
             </div>
             <div>
               <label className={label}>Role</label>
@@ -193,7 +193,7 @@ export default function AccountClient({ demo }: { demo: boolean }) {
                 <h2 className="text-sm font-bold text-zinc-800">Other Devices</h2>
                 <p className="text-xs text-zinc-500">Signed in on a shared or lost device? Sign out everywhere except here.</p>
               </div>
-              <button onClick={signOutOthers} disabled={signingOut} className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold bg-zinc-900 text-amber-400 px-3 py-2 rounded-lg hover:bg-zinc-800 disabled:opacity-60">
+              <button onClick={signOutOthers} disabled={signingOut} className="shrink-0 inline-flex items-center gap-1.5 text-xs font-bold bg-wall text-brass-light px-3 py-2 rounded-lg hover:bg-zinc-800 disabled:opacity-60">
                 {signingOut ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <LogOut className="w-3.5 h-3.5" />} Sign out other devices
               </button>
             </div>

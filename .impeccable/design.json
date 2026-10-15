@@ -1,0 +1,168 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-15T00:00:00Z",
+  "title": "Design System: GSS Order Portal",
+  "extensions": {
+    "colorMeta": {
+      "enamel-wall": { "role": "primary", "displayName": "Enamel Wall", "canonical": "#1c2b5a", "tonalRamp": ["#0f1834", "#152148", "#1c2b5a", "#2a4079", "#3b5492", "#5c74ad", "#8a9dc9", "#dbe1f0"] },
+      "enamel-wall-deep": { "role": "primary", "displayName": "Enamel Wall Deep", "canonical": "#131e40", "tonalRamp": ["#0f1834", "#131e40", "#152148", "#1c2b5a", "#2a4079", "#3b5492", "#8a9dc9", "#eef1f8"] },
+      "enamel-wall-soft": { "role": "primary", "displayName": "Enamel Wall Soft", "canonical": "#2a3b6e", "tonalRamp": ["#0f1834", "#152148", "#1c2b5a", "#2a3b6e", "#3b5492", "#5c74ad", "#b7c3e0", "#eef1f8"] },
+      "enamel-blue-mid": { "role": "primary", "displayName": "Enamel Ink", "canonical": "#2a4079", "tonalRamp": ["#0f1834", "#152148", "#1c2b5a", "#2a4079", "#3b5492", "#5c74ad", "#b7c3e0", "#eef1f8"] },
+      "enamel-blue-pale": { "role": "primary", "displayName": "Pale Enamel", "canonical": "#dbe1f0", "tonalRamp": ["#0f1834", "#1c2b5a", "#3b5492", "#5c74ad", "#8a9dc9", "#b7c3e0", "#dbe1f0", "#eef1f8"] },
+      "cast-brass": { "role": "primary", "displayName": "Cast Brass", "canonical": "#b38b3b", "tonalRamp": ["#33270d", "#4a3814", "#634b1b", "#7c5f24", "#9a752f", "#b38b3b", "#d4b06a", "#f0e4c6"] },
+      "brass-light": { "role": "primary", "displayName": "Brass Light", "canonical": "#d4b06a", "tonalRamp": ["#33270d", "#634b1b", "#9a752f", "#b38b3b", "#d4b06a", "#e3cd97", "#f0e4c6", "#f8f3e6"] },
+      "brass-deep": { "role": "primary", "displayName": "Brass Deep", "canonical": "#7c5f24", "tonalRamp": ["#33270d", "#4a3814", "#634b1b", "#7c5f24", "#9a752f", "#b38b3b", "#e3cd97", "#f8f3e6"] },
+      "archival-board": { "role": "neutral", "displayName": "Archival Board", "canonical": "#e4e2dc", "tonalRamp": ["#12110f", "#262521", "#46443e", "#5f5c55", "#bcb8ae", "#d4d1c9", "#e4e2dc", "#f6f5f2"] },
+      "board-rule": { "role": "neutral", "displayName": "Board Rule", "canonical": "#d4d1c9", "tonalRamp": ["#12110f", "#262521", "#46443e", "#5f5c55", "#bcb8ae", "#d4d1c9", "#e4e2dc", "#f6f5f2"] },
+      "board-rule-strong": { "role": "neutral", "displayName": "Board Rule Strong", "canonical": "#bcb8ae", "tonalRamp": ["#12110f", "#262521", "#46443e", "#5f5c55", "#bcb8ae", "#d4d1c9", "#e4e2dc", "#f6f5f2"] },
+      "label-stock": { "role": "neutral", "displayName": "Label Stock", "canonical": "#f4f2ec", "tonalRamp": ["#12110f", "#35332e", "#56534c", "#bcb8ae", "#d4d1c9", "#e4e2dc", "#f4f2ec", "#ffffff"] },
+      "card-white": { "role": "neutral", "displayName": "Card White", "canonical": "#ffffff", "tonalRamp": ["#12110f", "#35332e", "#56534c", "#bcb8ae", "#d4d1c9", "#e4e2dc", "#f6f5f2", "#ffffff"] },
+      "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#12110f", "tonalRamp": ["#12110f", "#1a1916", "#262521", "#35332e", "#46443e", "#56534c", "#5f5c55", "#bcb8ae"] },
+      "ink-body": { "role": "neutral", "displayName": "Ink Body", "canonical": "#35332e", "tonalRamp": ["#12110f", "#1a1916", "#262521", "#35332e", "#46443e", "#56534c", "#5f5c55", "#bcb8ae"] },
+      "ink-muted": { "role": "neutral", "displayName": "Ink Muted", "canonical": "#56534c", "tonalRamp": ["#12110f", "#1a1916", "#262521", "#35332e", "#46443e", "#56534c", "#5f5c55", "#bcb8ae"] },
+      "stamp-red": { "role": "secondary", "displayName": "Stamp Red", "canonical": "#a5352a", "tonalRamp": ["#591c16", "#73241c", "#8c2c23", "#a5352a", "#bb5a4c", "#cf7f73", "#e2aca4", "#f8ecea"] },
+      "verdigris": { "role": "tertiary", "displayName": "Verdigris", "canonical": "#355e47", "tonalRamp": ["#1f382b", "#2a4b39", "#355e47", "#437558", "#5a8e6e", "#81ad91", "#aecbb8", "#edf3ef"] },
+      "ochre": { "role": "tertiary", "displayName": "Ochre", "canonical": "#8c6015", "tonalRamp": ["#714d11", "#8c6015", "#a8741a", "#d1a752", "#e2c686", "#f0e1bd", "#f8f1e1", "#fcf8ef"] },
+      "plum": { "role": "tertiary", "displayName": "Plum", "canonical": "#5a3d5d", "tonalRamp": ["#2e1f30", "#4a314c", "#5a3d5d", "#6b4a6e", "#937595", "#ccb6cc", "#e6dbe6", "#f3eef3"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Landing hero headline only, label stock on the enamel wall." },
+      "headline": { "displayName": "Headline", "purpose": "Landing section titles and plan names." },
+      "title": { "displayName": "Title", "purpose": "Portal page titles; every h1 inherits Bodoni from the base layer." },
+      "body": { "displayName": "Body", "purpose": "Landing prose and definitions, max 34-42rem." },
+      "ui": { "displayName": "UI", "purpose": "Portal text, nav items, table cells, controls." },
+      "label": { "displayName": "Label", "purpose": "Uppercase tracked table headers, rail group names, ledger captions." },
+      "stamp": { "displayName": "Stamp", "purpose": "Registration stamp text for every status." },
+      "accession": { "displayName": "Accession", "purpose": "Plate refs, order refs, quantities and money, tabular figures." }
+    },
+    "shadows": [
+      { "name": "wall-hang", "value": "0 18px 40px -18px rgba(5,10,28,0.85)", "purpose": "Side catalogue labels and standard plan cards on the enamel wall." },
+      { "name": "wall-hang-forward", "value": "0 28px 60px -22px rgba(5,10,28,0.95)", "purpose": "Centre hero label and featured plan, hung forward." },
+      { "name": "board-print", "value": "0 24px 50px -24px rgba(19,18,15,0.5)", "purpose": "Mounted product print and specimen label on archival board." },
+      { "name": "floating-menu", "value": "0 12px 32px -8px rgba(19,18,15,0.28)", "purpose": "Notification and profile dropdowns." },
+      { "name": "auth-card", "value": "0 24px 60px -24px rgba(8,14,32,0.75)", "purpose": "Sign-in card on the wall." },
+      { "name": "rail-active", "value": "0 1px 2px rgba(8,14,32,0.35)", "purpose": "Active nav item tab on the rail." },
+      { "name": "stamp-inset", "value": "inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent)", "purpose": "Inked double edge inside every registration stamp." }
+    ],
+    "motion": [
+      { "name": "stamp-press", "value": "420ms cubic-bezier(0.16, 1, 0.3, 1)", "purpose": "Hero registration stamp press: from rotate(-11deg) scale(1.55) blur(2px) to rotate(-6deg) scale(1). Reduced motion: no movement." },
+      { "name": "rail-slide", "value": "300ms ease-out", "purpose": "Rail collapse width and mobile drawer slide." },
+      { "name": "colour-state", "value": "150ms ease", "purpose": "Hover colour transitions on buttons, rows and links." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Cast brass action with ink text; one per decision.",
+      "html": "<button class=\"ds-btn-primary\">Start 14-day free trial</button>",
+      "css": ".ds-btn-primary { background: var(--color-brass, #b38b3b); color: #12110f; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 14px; padding: 10px 16px; border: none; border-radius: 2px; cursor: pointer; transition: background-color 150ms ease; } .ds-btn-primary:hover { background: #d4b06a; } .ds-btn-primary:focus-visible { outline: 2px solid #b38b3b; outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }"
+    },
+    {
+      "name": "Ink Button",
+      "kind": "button",
+      "refersTo": "button-ink",
+      "description": "Secondary action on light grounds: ink fill, label-stock text.",
+      "html": "<button class=\"ds-btn-ink\">Start 14-day free trial</button>",
+      "css": ".ds-btn-ink { background: #12110f; color: #f4f2ec; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-weight: 600; font-size: 14px; padding: 12px 24px; border: none; border-radius: 2px; cursor: pointer; transition: background-color 150ms ease; } .ds-btn-ink:hover { background: #262521; } .ds-btn-ink:focus-visible { outline: 2px solid #b38b3b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Wall Outline Button",
+      "kind": "button",
+      "refersTo": "button-wall-outline",
+      "description": "Secondary action on the enamel wall.",
+      "html": "<div class=\"ds-wall\"><a class=\"ds-btn-wall\" href=\"#\">Customer sign in</a></div>",
+      "css": ".ds-wall { background: #1c2b5a; padding: 24px; } .ds-btn-wall { display: inline-flex; color: #f4f2ec; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-weight: 500; font-size: 15px; padding: 14px 24px; border: 1px solid rgba(138,157,201,0.6); border-radius: 2px; text-decoration: none; transition: border-color 150ms ease; } .ds-btn-wall:hover { border-color: #f4f2ec; } .ds-btn-wall:focus-visible { outline: 2px solid #b38b3b; outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input-field",
+      "description": "White field, board rule border, brass focus.",
+      "html": "<label class=\"ds-field\"><span>Work Email Address</span><input class=\"ds-input\" placeholder=\"you@company.com.au\"></label>",
+      "css": ".ds-field { display: block; font-family: 'Hanken Grotesk', system-ui, sans-serif; } .ds-field span { display: block; font-size: 12px; font-weight: 600; color: #35332e; margin-bottom: 6px; } .ds-input { width: 100%; background: #fff; color: #12110f; font-size: 14px; padding: 10px 14px; border: 1px solid #bcb8ae; border-radius: 2px; outline: none; } .ds-input::placeholder { color: #5f5c55; opacity: 1; } .ds-input:focus { border-color: #b38b3b; box-shadow: 0 0 0 1px #b38b3b; }"
+    },
+    {
+      "name": "Registration Stamps",
+      "kind": "chip",
+      "refersTo": "stamp-green",
+      "description": "Every status as an inked stamp in its state colour.",
+      "html": "<div class=\"ds-stamps\"><span class=\"ds-stamp ds-stamp-ochre\">Pending Approval</span><span class=\"ds-stamp ds-stamp-blue\">In Production</span><span class=\"ds-stamp ds-stamp-plum\">Quality Check</span><span class=\"ds-stamp ds-stamp-green\">Dispatched</span><span class=\"ds-stamp ds-stamp-grey\">Delivered</span><span class=\"ds-stamp ds-stamp-red\">Cancelled</span></div>",
+      "css": ".ds-stamps { display: flex; flex-wrap: wrap; gap: 8px; } .ds-stamp { display: inline-flex; align-items: center; padding: 2px 7px; border: 1.5px solid currentColor; border-radius: 2px; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 11px; font-weight: 700; line-height: 1.35; letter-spacing: 0.09em; text-transform: uppercase; white-space: nowrap; box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent); } .ds-stamp-ochre { color: #8c6015; background: #f8f1e1; } .ds-stamp-blue { color: #2a4079; background: #eef1f8; } .ds-stamp-plum { color: #5a3d5d; background: #f3eef3; } .ds-stamp-green { color: #355e47; background: #edf3ef; } .ds-stamp-grey { color: #46443e; background: #f6f5f2; } .ds-stamp-red { color: #8c2c23; background: #f8ecea; }"
+    },
+    {
+      "name": "Ledger",
+      "kind": "custom",
+      "refersTo": "card-catalogue",
+      "description": "Register line: the figures a screen opens with, in one hairline-ruled strip.",
+      "html": "<dl class=\"ds-ledger\"><a class=\"ds-ledger-cell\" href=\"#\"><dt>Active orders</dt><dd class=\"ds-ledger-val\">7</dd><dd class=\"ds-ledger-note\">42 orders in total</dd></a><div class=\"ds-ledger-cell\"><dt>Spend this year</dt><dd class=\"ds-ledger-val\">A$18,420.00</dd></div><div class=\"ds-ledger-cell\"><dt>Net 30 credit used</dt><dd class=\"ds-ledger-val ds-warn\">A$32,100.00</dd><dd class=\"ds-ledger-note\">92% of A$35,000.00</dd></div></dl>",
+      "css": ".ds-ledger { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: #bcb8ae; border: 1px solid #bcb8ae; border-radius: 2px; overflow: hidden; margin: 0; font-family: 'Hanken Grotesk', system-ui, sans-serif; } .ds-ledger-cell { background: #fff; padding: 14px 16px; text-decoration: none; color: inherit; transition: background-color 150ms ease; } a.ds-ledger-cell:hover { background: #f6f5f2; } .ds-ledger dt { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em; color: #56534c; } .ds-ledger dd { margin: 0; } .ds-ledger-val { margin-top: 6px !important; font-family: 'Courier Prime', 'Courier New', monospace; font-variant-numeric: tabular-nums; font-size: 22px; font-weight: 700; line-height: 1; color: #12110f; } .ds-warn { color: #8c6015; } .ds-ledger-note { margin-top: 6px !important; font-size: 12px; color: #46443e; }"
+    },
+    {
+      "name": "Catalogue Label",
+      "kind": "card",
+      "refersTo": "catalogue-label",
+      "description": "Label-stock card hung on the wall with a brass hairline frame.",
+      "html": "<div class=\"ds-wall-room\"><div class=\"ds-label\"><p class=\"ds-acc\">Acc. PLT-8812-B</p><p class=\"ds-label-title\">Cast brass works plate, blue enamel</p><p class=\"ds-label-spec\">380 x 270 mm oval · enamel infill</p><div class=\"ds-label-foot\"><span>Last run <b class=\"ds-acc\">20</b></span><span class=\"ds-acc\">A$185.00</span></div></div></div>",
+      "css": ".ds-wall-room { background: #1c2b5a; padding: 32px; } .ds-label { background: #f4f2ec; color: #12110f; border-radius: 2px; padding: 24px; max-width: 320px; box-shadow: 0 0 0 2px #b38b3b, 0 28px 60px -22px rgba(5,10,28,0.95); font-family: 'Hanken Grotesk', system-ui, sans-serif; } .ds-acc { font-family: 'Courier Prime', 'Courier New', monospace; font-variant-numeric: tabular-nums; letter-spacing: 0.02em; font-size: 12px; color: #46443e; margin: 0; } .ds-label-title { font-family: 'Bodoni Moda', 'Bodoni 72', Didot, serif; font-size: 26px; line-height: 1.15; margin: 8px 0 0; } .ds-label-spec { font-size: 13px; color: #46443e; margin: 6px 0 0; } .ds-label-foot { margin-top: 16px; padding-top: 12px; border-top: 1px solid #bcb8ae; display: flex; justify-content: space-between; font-size: 11px; color: #46443e; } .ds-label-foot b { font-weight: 400; color: #12110f; }"
+    },
+    {
+      "name": "Portal Card",
+      "kind": "card",
+      "refersTo": "card-catalogue",
+      "description": "White work card on archival board with a ruled header strip.",
+      "html": "<div class=\"ds-board\"><div class=\"ds-card\"><div class=\"ds-card-head\">Recent Supply Orders</div><div class=\"ds-card-row\"><span class=\"ds-ref\">GSS-24-0912</span><span>Cast brass works plate</span><span class=\"ds-ref\">A$3,700.00</span></div></div></div>",
+      "css": ".ds-board { background: #e4e2dc; padding: 24px; } .ds-card { background: #fff; border: 1px solid #d4d1c9; border-radius: 3px; overflow: hidden; font-family: 'Hanken Grotesk', system-ui, sans-serif; font-size: 13px; color: #35332e; } .ds-card-head { padding: 12px 20px; background: #f6f5f2; border-bottom: 1px solid #e4e2dc; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #46443e; } .ds-card-row { display: flex; justify-content: space-between; gap: 16px; padding: 14px 20px; transition: background-color 150ms ease; } .ds-card-row:hover { background: #f6f5f2; } .ds-ref { font-family: 'Courier Prime', 'Courier New', monospace; font-variant-numeric: tabular-nums; font-weight: 700; color: #12110f; }"
+    },
+    {
+      "name": "Enamel Rail",
+      "kind": "nav",
+      "refersTo": "nav-rail",
+      "description": "Enamel-blue navigation rail with a label-stock active tab.",
+      "html": "<nav class=\"ds-rail\"><div class=\"ds-rail-brand\"><span class=\"ds-rail-mark\">GSS</span><span class=\"ds-rail-sub\">Trade Orders</span></div><div class=\"ds-rail-group\">Ordering</div><a class=\"ds-rail-item ds-active\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\"><rect x=\"3\" y=\"3\" width=\"7\" height=\"9\"/><rect x=\"14\" y=\"3\" width=\"7\" height=\"5\"/><rect x=\"14\" y=\"12\" width=\"7\" height=\"9\"/><rect x=\"3\" y=\"16\" width=\"7\" height=\"5\"/></svg>Dashboard</a><a class=\"ds-rail-item\" href=\"#\"><svg viewBox=\"0 0 24 24\" width=\"16\" height=\"16\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.75\"><path d=\"M21 8 12 3 3 8v8l9 5 9-5z\"/><path d=\"M3 8l9 5 9-5M12 13v8\"/></svg>Order History</a></nav>",
+      "css": ".ds-rail { background: #1c2b5a; color: #dbe1f0; width: 256px; padding: 0 12px 16px; font-family: 'Hanken Grotesk', system-ui, sans-serif; } .ds-rail-brand { display: flex; align-items: baseline; gap: 10px; padding: 20px 8px; border-bottom: 1px solid rgba(255,255,255,0.1); margin: 0 -12px 12px; padding-left: 20px; } .ds-rail-mark { font-family: 'Bodoni Moda', Didot, serif; font-size: 26px; line-height: 1; color: #f4f2ec; } .ds-rail-sub { font-size: 12px; text-transform: uppercase; letter-spacing: 0.16em; color: #d4b06a; } .ds-rail-group { padding: 4px 12px 8px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.14em; color: #8a9dc9; } .ds-rail-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; margin-bottom: 4px; border-radius: 2px; font-size: 13px; color: #dbe1f0; text-decoration: none; transition: background-color 150ms ease, color 150ms ease; } .ds-rail-item svg { color: #d4b06a; flex-shrink: 0; } .ds-rail-item:hover { background: #2a3b6e; color: #fff; } .ds-rail-item:focus-visible { outline: 2px solid #b38b3b; outline-offset: 2px; } .ds-rail-item.ds-active { background: #f4f2ec; color: #12110f; font-weight: 600; box-shadow: 0 1px 2px rgba(8,14,32,0.35); } .ds-rail-item.ds-active svg { color: #7c5f24; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Collection Catalogue",
+    "overview": "A trade customer's order history is treated as a museum collection. Every job GSS made hangs on an enamel-blue gallery wall or sits in a warm archival reading room, carrying its catalogue label: an accession number (the plate ref), provenance (the approved proof), last run and price. Status is never a soft pill; it is a registration stamp, inked in its state colour, set by the event that happened.\n\nThe world has two renditions. The public landing (Persuade) lets the wall own whole rooms: the first viewport and the pricing room are full-bleed enamel blue, with label-stock cards hung on one sightline and lit by soft gallery shadows. The portal, staff admin, auth and invoice screens (Operate) borrow only type, palette, density and the signature move: an enamel-blue rail, a label-stock top bar, white catalogue cards on archival board, accession-typed refs and stamped statuses. The user should know where everything is before noticing the world.\n\nDensity is that of a working register: 12-13px UI text, hairline rules, figures set in a ledger strip rather than big-number tiles. Corners are crisp (2-3px). Ornament is limited to what a real catalogue has: brass hairline frames, Bodoni titles, typed numbers, stamps.",
+    "keyCharacteristics": [
+      "Enamel-blue wall (nav rail, hero, pricing, auth backdrop) against warm archival board reading rooms.",
+      "Cast brass is the single action colour; ink text sits on it.",
+      "Bodoni Moda for titles only; Hanken Grotesk for every UI word; Courier Prime with tabular figures for refs, quantities and money.",
+      "Every status is a registration stamp; every plate or order ref is an accession label.",
+      "Near-square corners (2px), 1px board rules, soft diffuse shadows only where a card hangs on the wall or floats as a menu."
+    ],
+    "rules": [
+      { "name": "The Warm Board Rule", "body": "The page ground is warm archival board (#e4e2dc, also `zinc-100`). Impeccable's detector flags it as `cream-palette` on every route; that flag is a known, accepted exception. The direction contract specifies a warm archival museum board, the finish review ruled that the contract outranks the detector here, and a cooler grey tried mid-build was reverted as a contract violation. Do not \"fix\" the board to a neutral or cool grey.", "section": "colors" },
+      { "name": "The Inked State Rule", "body": "Red, verdigris, ochre and plum appear only as state: in stamps, error text, warn figures. A colour with no status behind it stays brass, enamel or ink.", "section": "colors" },
+      { "name": "The One Action Colour Rule", "body": "Brass is the action. Secondary actions are ink-filled (on light grounds) or outlined in pale enamel (on the wall), never a second hue.", "section": "colors" },
+      { "name": "The Titles-Only Didone Rule", "body": "Bodoni sets titles, label headings and the GSS wordmark. It never sets buttons, tables, form text or body copy.", "section": "typography" },
+      { "name": "The Typed Figures Rule", "body": "Any ref, quantity or amount is set in the accession face with tabular figures, in lists, detail pages, invoices and admin alike.", "section": "typography" },
+      { "name": "The Gallery Light Rule", "body": "Shadows are soft, long and offset downward with negative spread, like light on a hung object. No hard offset shadows, no glows.", "section": "elevation" }
+    ],
+    "dos": [
+      "**Do** keep the page ground warm archival board (#e4e2dc) and treat the detector's `cream-palette` flag as an accepted exception (The Warm Board Rule).",
+      "**Do** render every status through `orderStatusStyles` / `paymentStatusStyles` / `artworkStatusStyles` as a registration stamp.",
+      "**Do** set every ref, quantity and amount in the accession face with tabular figures.",
+      "**Do** use cast brass with ink text for the primary action, and only one brass action per decision.",
+      "**Do** open data screens with a Ledger strip instead of stat tiles.",
+      "**Do** keep corners at 2px (3px for portal cards) and divide with 1px board rules.",
+      "**Do** hang landing objects on one sightline (bottom-aligned) with the wall-hang shadows."
+    ],
+    "donts": [
+      "**Don't** replace the warm board with a cool or neutral grey; it was tried and reverted as a contract violation.",
+      "**Don't** show status as a soft rounded pill or an unbordered tint.",
+      "**Don't** use stamp red, verdigris, ochre or plum decoratively; they mean a state.",
+      "**Don't** set buttons, tables or body copy in Bodoni.",
+      "**Don't** use hard offset shadows or glows.",
+      "**Don't** introduce a second accent hue for secondary actions; use ink fill or the pale-enamel outline."
+    ]
+  }
+}

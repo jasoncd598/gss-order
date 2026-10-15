@@ -17,33 +17,34 @@ export function formatDate(dateStr: string): string {
   });
 }
 
+/** Registration-stamp classes (see .stamp in globals.css) */
 export function orderStatusStyles(status: OrderStatus): string {
   const map: Record<OrderStatus, string> = {
-    'Pending Approval': 'bg-yellow-50 text-yellow-700 border-yellow-200',
-    'In Production':    'bg-blue-50 text-blue-700 border-blue-200',
-    'Quality Check':    'bg-purple-50 text-purple-700 border-purple-200',
-    'Dispatched':       'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'Delivered':        'bg-zinc-100 text-zinc-600 border-zinc-200',
-    'Cancelled':        'bg-red-50 text-red-700 border-red-200',
+    'Pending Approval': 'stamp stamp-ochre',
+    'In Production':    'stamp stamp-blue',
+    'Quality Check':    'stamp stamp-plum',
+    'Dispatched':       'stamp stamp-green',
+    'Delivered':        'stamp stamp-grey',
+    'Cancelled':        'stamp stamp-red',
   };
-  return map[status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200';
+  return map[status] ?? 'stamp stamp-grey';
 }
 
 export function paymentStatusStyles(status: PaymentStatus): string {
   const map: Record<PaymentStatus, string> = {
-    Unpaid:     'bg-zinc-50 text-zinc-600 border-zinc-200',
-    Processing: 'bg-amber-50 text-amber-800 border-amber-200',
-    Paid:       'bg-emerald-50 text-emerald-700 border-emerald-200',
+    Unpaid:     'stamp stamp-grey',
+    Processing: 'stamp stamp-ochre',
+    Paid:       'stamp stamp-green',
   };
-  return map[status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200';
+  return map[status] ?? 'stamp stamp-grey';
 }
 
 export function artworkStatusStyles(status: ArtworkStatus): string {
   const map: Record<ArtworkStatus, string> = {
-    'Approved':          'bg-emerald-50 text-emerald-700 border-emerald-200',
-    'Pending Review':    'bg-amber-50 text-amber-700 border-amber-200',
-    'Revision Required': 'bg-red-50 text-red-700 border-red-200',
-    'Superseded':        'bg-zinc-100 text-zinc-500 border-zinc-200',
+    'Approved':          'stamp stamp-green',
+    'Pending Review':    'stamp stamp-ochre',
+    'Revision Required': 'stamp stamp-red',
+    'Superseded':        'stamp stamp-grey',
   };
-  return map[status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200';
+  return map[status] ?? 'stamp stamp-grey';
 }

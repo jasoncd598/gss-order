@@ -1,31 +1,38 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import {
-  ArrowRight, Building2, RefreshCw, FolderLock, CreditCard, ShieldCheck, Bell,
-  UserPlus, MousePointerClick, PackageCheck, CheckCircle2,
-} from 'lucide-react';
+import { ArrowRight, Plus } from 'lucide-react';
 import { PLANS, TRIAL_DAYS, billingPortalUrl } from '../lib/billing';
 import PricingSection from './PricingSection';
+import HeroCatalogue from './HeroCatalogue';
 
 export const metadata: Metadata = {
-  title: 'GSS Order Portal — B2B ordering & reordering for Australian suppliers',
+  title: 'GSS Order Portal — every trade job catalogued and ready to reorder',
   description:
-    'Give your trade customers a secure portal to view orders, approve artwork and reorder in two clicks. Card payments, tax invoices and staff admin built in.',
+    'Give each trade customer their own catalogue of past jobs — plate refs, approved artwork, specs and price — reordered in two clicks, paid by card and invoiced automatically.',
 };
 
-const FEATURES = [
-  { icon: Building2,   title: 'Company accounts & roles', body: 'Each customer business gets its own account with Admin, Procurement, Finance and Viewer roles. Their admins invite and manage their own team.' },
-  { icon: RefreshCw,   title: 'Two-click reorders',       body: 'Customers see every past order — products, quantities, specs, PO refs — and repeat it with updated quantities. You approve before production.' },
-  { icon: FolderLock,  title: 'Artwork & proof vault',    body: 'Plates, proofs and files in private per-company storage. Customers approve proofs or request changes, and every version is kept.' },
-  { icon: CreditCard,  title: 'Card payments built in',   body: 'Prepaid customers pay by card at checkout through Stripe; account customers can pay any invoice online. Paid status updates automatically.' },
-  { icon: ShieldCheck, title: 'Pricing you control',      body: 'Set per-customer prices and minimum quantities. Every order is priced on the server, so customers can never change what they pay.' },
-  { icon: Bell,        title: 'Staff admin & alerts',     body: 'Approve companies and reorders, move orders through production, and keep customers informed with in-portal and email notifications.' },
+/* What each mark on a catalogue label means — the product, explained by its own artifact */
+const LABEL_PARTS = [
+  { mark: 'A', title: 'Accession number', body: 'The plate reference from your production records, so every reorder points at exactly the right tooling and artwork.' },
+  { mark: 'B', title: 'Provenance', body: 'The approved proof version. Customers approve or request changes in their artwork vault, and every version is kept.' },
+  { mark: 'C', title: 'Last run', body: 'Quantity, date and the price you set for that customer. Orders are priced on the server, so nobody can edit what they pay.' },
+  { mark: 'D', title: 'Registration stamp', body: 'Status set by the event that happened — approved, in production, dispatched, paid — never typed by hand.' },
+];
+
+const INDEX = [
+  { term: 'Company accounts & roles', def: 'Each customer business gets its own account with Admin, Procurement, Finance and Viewer roles; their admins invite and manage their own team.' },
+  { term: 'Reorder requests', def: 'Customers repeat a past job with new quantities; your staff approve it before it goes into production.' },
+  { term: 'Artwork & proof vault', def: 'Plates, proofs and files in private per-company storage, with approvals and change requests.' },
+  { term: 'Card payments', def: 'Prepaid customers pay by card at checkout through Stripe; account customers can pay any order online. Paid status updates automatically.' },
+  { term: 'Per-customer pricing', def: 'Set a fixed unit price and minimum quantity for each customer and product, or fall back to their last order price.' },
+  { term: 'Staff register & alerts', def: 'Approve companies and reorders, move orders through production, and keep customers informed in the portal and by email.' },
+  { term: 'Tax invoices', def: 'A printable tax invoice or order confirmation for every order, with GST shown.' },
 ];
 
 const STEPS = [
-  { icon: UserPlus,          title: 'Invite your customers',  body: 'Add a company, set their terms and prices, and send their team an invite link.' },
-  { icon: MousePointerClick, title: 'They order & reorder',   body: 'Customers browse their approved products, reorder past jobs and pay by card or on account.' },
-  { icon: PackageCheck,      title: 'You approve & dispatch', body: 'Approve in one click, update status as it moves through production, and get paid.' },
+  { title: 'Hang the collection', body: 'Add a customer company, set their terms and prices, and invite their team.' },
+  { title: 'They reorder from it', body: 'Customers open their catalogue, pick a past job, change the quantity and pay by card or on account.' },
+  { title: 'You stamp it through', body: 'Approve in one click and move it through production to dispatch. The customer sees every stamp.' },
 ];
 
 const FAQ = [
@@ -41,188 +48,220 @@ export default function LandingPage() {
   const portalUrl = billingPortalUrl();
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-white overflow-x-hidden">
-      {/* ── Nav ── */}
-      <header className="sticky top-0 z-40 bg-zinc-950/85 backdrop-blur border-b border-zinc-900">
-        <nav className="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
-          <Link href="/welcome" className="flex items-center gap-2.5 shrink-0">
-            <span className="bg-amber-400 text-zinc-950 font-black text-sm px-2 py-1 rounded">GSS</span>
-            <span className="font-black tracking-tight text-sm sm:text-base">ORDER PORTAL</span>
-          </Link>
-          <div className="hidden md:flex items-center gap-7 text-sm text-zinc-400">
-            <a href="#features" className="hover:text-white">Features</a>
-            <a href="#how" className="hover:text-white">How it works</a>
-            <a href="#pricing" className="hover:text-white">Pricing</a>
-            <a href="#faq" className="hover:text-white">FAQ</a>
-          </div>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Link href="/login" className="text-sm text-zinc-300 hover:text-white px-2 py-2">Sign in</Link>
-            <a href="#pricing" className="bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold text-sm px-3.5 sm:px-4 py-2 rounded-lg whitespace-nowrap">Start free trial</a>
-          </div>
-        </nav>
-      </header>
+    <div className="min-h-screen bg-board text-zinc-950 overflow-x-hidden">
+      {/* ── Gallery wall: nav + hero ── */}
+      <div className="bg-wall text-label">
+        <header className="border-b border-[#b38b3b]/50">
+          <nav className="max-w-7xl mx-auto px-4 sm:px-8 h-16 flex items-center justify-between gap-4">
+            <Link href="/welcome" className="flex items-baseline gap-2.5 shrink-0">
+              <span className="font-display text-[28px] leading-none tracking-tight">GSS</span>
+              <span className="hidden sm:inline text-[11px] uppercase tracking-[0.18em] text-brass-light">Trade Orders</span>
+            </Link>
+            <div className="hidden md:flex items-center gap-8 text-sm text-blue-100">
+              <a href="#catalogue" className="hover:text-white">How it reads</a>
+              <a href="#how" className="hover:text-white">How it works</a>
+              <a href="#pricing" className="hover:text-white">Pricing</a>
+              <a href="#faq" className="hover:text-white">FAQ</a>
+            </div>
+            <div className="flex items-center gap-2 sm:gap-4">
+              <Link href="/login" className="text-sm text-blue-100 hover:text-white px-2 py-2">Sign in</Link>
+              <a href="#pricing" className="bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold text-sm px-4 py-2 rounded-[2px] whitespace-nowrap transition-colors">Start free trial</a>
+            </div>
+          </nav>
+        </header>
 
-      {/* ── Hero ── */}
-      <section className="relative">
-        <div className="absolute inset-0 bg-[linear-gradient(rgba(251,191,36,0.04)_1px,transparent_1px),linear-gradient(90deg,rgba(251,191,36,0.04)_1px,transparent_1px)] bg-[size:48px_48px] [mask-image:radial-gradient(ellipse_at_top,black_30%,transparent_75%)]" />
-        <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-16 sm:pt-24 pb-12 text-center">
-          <p className="inline-flex items-center gap-2 text-xs font-semibold text-amber-300 bg-amber-400/10 border border-amber-400/20 rounded-full px-3 py-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-amber-400" /> B2B ordering portal for Australian suppliers
-          </p>
-          <h1 className="mt-6 text-4xl sm:text-6xl font-black tracking-tight leading-[1.05] max-w-4xl mx-auto">
-            Let your trade customers <span className="text-amber-400">reorder in two clicks.</span>
-          </h1>
-          <p className="mt-6 text-zinc-400 text-base sm:text-lg max-w-2xl mx-auto">
-            One secure portal for every customer account: order history, artwork approvals, reorders, card payments and tax invoices.
-            Less email, fewer phone orders, faster payment.
-          </p>
-          <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <a href="#pricing" className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold px-6 py-3 rounded-lg">
-              Start {TRIAL_DAYS}-day free trial <ArrowRight className="w-4 h-4" />
-            </a>
-            <a href="#features" className="w-full sm:w-auto inline-flex items-center justify-center border border-zinc-700 hover:border-zinc-500 text-zinc-200 font-semibold px-6 py-3 rounded-lg">
-              See how it works
-            </a>
+        <section className="max-w-7xl mx-auto px-4 sm:px-8 pt-14 sm:pt-20 pb-20 sm:pb-28 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-10 items-end">
+          <div className="lg:col-span-5">
+            <h1 className="font-display text-[44px] sm:text-[60px] leading-[1.02] tracking-[-0.02em] text-label [text-wrap:balance]">
+              Every job you&apos;ve made, catalogued for reorder.
+            </h1>
+            <p className="mt-6 text-[17px] leading-relaxed text-blue-100 max-w-[34rem]">
+              Give each trade customer their own collection: every past order with its plate ref, approved artwork,
+              specs and price. They reorder in two clicks, pay by card, and get a tax invoice. You approve and dispatch.
+            </p>
+            <div className="mt-9 flex flex-col sm:flex-row gap-3">
+              <a href="#pricing" className="inline-flex items-center justify-center gap-2 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold px-6 py-3.5 rounded-[2px] transition-colors">
+                Start {TRIAL_DAYS}-day free trial <ArrowRight className="w-4 h-4" />
+              </a>
+              <Link href="/login" className="inline-flex items-center justify-center border border-blue-300/60 hover:border-label text-label font-medium px-6 py-3.5 rounded-[2px] transition-colors">
+                Customer sign in
+              </Link>
+            </div>
+            <p className="mt-5 text-[13px] text-blue-200">No setup fee · cancel any time · AUD incl. GST</p>
           </div>
-          <p className="mt-5 text-xs text-zinc-500">No setup fee · Cancel anytime · Prices in AUD incl. GST</p>
+          <div className="lg:col-span-7">
+            <HeroCatalogue />
+          </div>
+        </section>
+      </div>
 
-          <div className="mt-14 relative mx-auto max-w-5xl">
-            <div className="absolute -inset-x-10 -inset-y-6 bg-amber-400/10 blur-3xl rounded-full" aria-hidden />
-            <div className="relative rounded-xl border border-zinc-800 bg-zinc-900 shadow-2xl overflow-hidden">
-              <div className="flex items-center gap-1.5 px-4 h-9 border-b border-zinc-800 bg-zinc-900">
-                <span className="w-2.5 h-2.5 rounded-full bg-zinc-700" /><span className="w-2.5 h-2.5 rounded-full bg-zinc-700" /><span className="w-2.5 h-2.5 rounded-full bg-zinc-700" />
+      {/* ── Reading room: how a label works ── */}
+      <section id="catalogue" className="scroll-mt-6 max-w-7xl mx-auto px-4 sm:px-8 py-20 sm:py-28">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          <div className="lg:col-span-5">
+            <h2 className="font-display text-[34px] sm:text-[44px] leading-[1.05] tracking-[-0.015em] [text-wrap:balance]">
+              Read a job the way your customers will.
+            </h2>
+            <p className="mt-5 text-[16px] leading-relaxed text-zinc-700 max-w-[36rem]">
+              Each order a customer has placed with you becomes a catalogue entry. Nothing on it is decoration: every mark is
+              a fact from your production records, and every action happens right on the label.
+            </p>
+
+            {/* Specimen label with lettered marks */}
+            <div className="mt-10 relative bg-label rounded-[2px] p-6 ring-1 ring-[#b38b3b]/70 shadow-[0_14px_30px_-18px_rgba(19,18,15,0.45)] max-w-md">
+              <div className="flex items-baseline justify-between">
+                <p className="accession text-xs text-zinc-700"><Mark>A</Mark> Acc. PLT-5510-A</p>
+                <span className="stamp stamp-blue relative">
+                  <Mark className="absolute -left-6 top-1/2 -translate-y-1/2">D</Mark>In production
+                </span>
               </div>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/landing/dashboard.png" alt="Customer dashboard showing active orders, approved plates, spend and recent supply orders" className="w-full h-auto block" width={1440} height={1000} />
+              <p className="font-display text-2xl leading-snug mt-3">Illuminated logo lightbox sign</p>
+              <p className="text-[13px] text-zinc-600 mt-1">900 × 800 mm · aluminium tray, opal acrylic face</p>
+              <p className="text-[13px] text-zinc-700 mt-3"><Mark>B</Mark> Proof v2 approved · 01 Aug 2026</p>
+              <p className="text-[13px] text-zinc-700 mt-1.5"><Mark>C</Mark> Last run <span className="accession">2</span> · <span className="accession">A$1,450.00</span> ea</p>
+              <p className="mt-4 text-[11px] uppercase tracking-[0.16em] text-zinc-500">Example</p>
             </div>
           </div>
+
+          <ol className="lg:col-span-7 lg:pt-3 divide-y divide-zinc-300 border-y border-zinc-300">
+            {LABEL_PARTS.map((p) => (
+              <li key={p.mark} className="py-6 grid grid-cols-[2.25rem_1fr] gap-4">
+                <Mark large>{p.mark}</Mark>
+                <div>
+                  <h3 className="font-semibold text-[17px]">{p.title}</h3>
+                  <p className="mt-1.5 text-[15px] leading-relaxed text-zinc-700 max-w-[38rem]">{p.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* ── Features ── */}
-      <section id="features" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-        <div className="max-w-2xl">
-          <p className="text-amber-400 text-sm font-bold uppercase tracking-wider">Everything in one place</p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Built for how B2B customers actually buy.</h2>
-          <p className="mt-4 text-zinc-400">Repeat orders, approved artwork, purchase orders and account terms — not a shopping cart bolted onto a consumer store.</p>
+      {/* ── Staff register: a mounted print of the real screen ── */}
+      <section className="bg-zinc-200/60 border-y border-zinc-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-20 sm:py-24 grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+          <div className="lg:col-span-4">
+            <h2 className="font-display text-[32px] sm:text-[40px] leading-[1.06] tracking-[-0.015em] [text-wrap:balance]">
+              Behind the counter, one register.
+            </h2>
+            <p className="mt-5 text-[16px] leading-relaxed text-zinc-700">
+              Your staff see every order from every customer with its production and payment stamps, approve new
+              companies and reorder requests in one click, set prices, and upload proofs for approval.
+            </p>
+          </div>
+          <figure className="lg:col-span-8">
+            <div className="bg-label p-3 sm:p-5 rounded-[2px] ring-1 ring-zinc-300 shadow-[0_24px_50px_-24px_rgba(19,18,15,0.5)]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/landing/admin-orders.png" alt="The staff order register: every order with company, product, status and payment stamps" className="w-full h-auto block ring-1 ring-zinc-300" width={1440} height={1000} loading="lazy" />
+            </div>
+            <figcaption className="mt-3 text-[12px] text-zinc-600">
+              <span className="accession">Fig. 1</span> — The staff order register, shown with sample data.
+            </figcaption>
+          </figure>
         </div>
-        <div className="mt-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {FEATURES.map(({ icon: Icon, title, body }) => (
-            <div key={title} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <div className="w-10 h-10 rounded-lg bg-amber-400/10 border border-amber-400/20 flex items-center justify-center">
-                <Icon className="w-5 h-5 text-amber-400" />
-              </div>
-              <h3 className="mt-4 font-bold text-white">{title}</h3>
-              <p className="mt-2 text-sm text-zinc-400 leading-relaxed">{body}</p>
+      </section>
+
+      {/* ── Index of everything else ── */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-8 py-20 sm:py-28 grid grid-cols-1 lg:grid-cols-12 gap-10">
+        <h2 className="lg:col-span-4 font-display text-[32px] sm:text-[40px] leading-[1.06] tracking-[-0.015em] [text-wrap:balance]">
+          Also in the collection.
+        </h2>
+        <dl className="lg:col-span-8 border-t border-zinc-400">
+          {INDEX.map((i) => (
+            <div key={i.term} className="grid grid-cols-1 sm:grid-cols-[14rem_1fr] gap-1 sm:gap-8 py-5 border-b border-zinc-300">
+              <dt className="font-semibold text-[16px]">{i.term}</dt>
+              <dd className="text-[15px] leading-relaxed text-zinc-700">{i.def}</dd>
             </div>
           ))}
+        </dl>
+      </section>
+
+      {/* ── How it works: three steps on one rule ── */}
+      <section id="how" className="scroll-mt-6 border-t border-zinc-300">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-20 sm:py-24">
+          <h2 className="font-display text-[32px] sm:text-[40px] leading-[1.06] tracking-[-0.015em]">Live in an afternoon.</h2>
+          <ol className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-10 md:gap-8 relative">
+            <span aria-hidden className="hidden md:block absolute left-0 right-0 top-[15px] h-px bg-[#b38b3b]" />
+            {STEPS.map((s, i) => (
+              <li key={s.title} className="relative">
+                <span className="relative z-10 w-8 h-8 rounded-full bg-board ring-1 ring-[#b38b3b] text-amber-700 font-display text-lg flex items-center justify-center">{i + 1}</span>
+                <h3 className="mt-5 font-semibold text-[17px]">{s.title}</h3>
+                <p className="mt-2 text-[15px] leading-relaxed text-zinc-700 max-w-sm">{s.body}</p>
+              </li>
+            ))}
+          </ol>
         </div>
       </section>
 
-      {/* ── Staff split ── */}
-      <section className="border-y border-zinc-900 bg-zinc-900/30">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <div>
-            <p className="text-amber-400 text-sm font-bold uppercase tracking-wider">For your team</p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Every order, every customer, one screen.</h2>
-            <ul className="mt-6 space-y-3 text-zinc-300">
-              {[
-                'See every order across all customers with live payment status',
-                'Approve new companies and reorder requests in one click',
-                'Upload proofs; customers approve or request changes',
-                'Printable tax invoices for every order',
-              ].map((t) => (
-                <li key={t} className="flex items-start gap-3"><CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" /><span>{t}</span></li>
-              ))}
-            </ul>
+      {/* ── Pricing room: back on the wall ── */}
+      <section id="pricing" className="scroll-mt-0 bg-wall text-label">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-20 sm:py-28">
+          <div className="max-w-2xl">
+            <h2 className="font-display text-[34px] sm:text-[48px] leading-[1.04] tracking-[-0.02em] [text-wrap:balance]">
+              Three plans. {TRIAL_DAYS} days free.
+            </h2>
+            <p className="mt-4 text-[16px] text-blue-100">Pick the plan that fits the size of your customer base. Upgrade or cancel any time.</p>
           </div>
-          <div className="relative">
-            <div className="rounded-xl border border-zinc-800 overflow-hidden shadow-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/landing/admin-orders.png" alt="Staff view of all orders with status and payment columns" className="w-full h-auto block" width={1440} height={1000} loading="lazy" />
-            </div>
-            <div className="hidden sm:block absolute -bottom-8 -left-6 w-36 rounded-2xl border-4 border-zinc-800 overflow-hidden shadow-2xl">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/landing/mobile-pay.png" alt="Customer paying an order by card on a phone" className="w-full h-auto block" width={390} height={844} loading="lazy" />
-            </div>
+          <div className="mt-12">
+            <PricingSection plans={PLANS} trialDays={TRIAL_DAYS} portalUrl={portalUrl} />
           </div>
-        </div>
-      </section>
-
-      {/* ── How it works ── */}
-      <section id="how" className="scroll-mt-20 max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-        <div className="text-center max-w-2xl mx-auto">
-          <p className="text-amber-400 text-sm font-bold uppercase tracking-wider">How it works</p>
-          <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Live in an afternoon.</h2>
-        </div>
-        <ol className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {STEPS.map(({ icon: Icon, title, body }, i) => (
-            <li key={title} className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-6">
-              <div className="flex items-center gap-3">
-                <span className="w-8 h-8 rounded-full bg-amber-400 text-zinc-950 font-black text-sm flex items-center justify-center">{i + 1}</span>
-                <Icon className="w-5 h-5 text-zinc-500" />
-              </div>
-              <h3 className="mt-4 font-bold">{title}</h3>
-              <p className="mt-2 text-sm text-zinc-400">{body}</p>
-            </li>
-          ))}
-        </ol>
-      </section>
-
-      {/* ── Pricing ── */}
-      <section id="pricing" className="scroll-mt-20 border-t border-zinc-900 bg-gradient-to-b from-zinc-900/40 to-transparent">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-20 sm:py-28">
-          <div className="text-center max-w-2xl mx-auto mb-10">
-            <p className="text-amber-400 text-sm font-bold uppercase tracking-wider">Pricing</p>
-            <h2 className="mt-3 text-3xl sm:text-4xl font-black tracking-tight">Simple plans. {TRIAL_DAYS} days free.</h2>
-            <p className="mt-4 text-zinc-400">Pick a plan for the size of your customer base. Upgrade or cancel any time.</p>
-          </div>
-          <PricingSection plans={PLANS} trialDays={TRIAL_DAYS} portalUrl={portalUrl} />
         </div>
       </section>
 
       {/* ── FAQ ── */}
-      <section id="faq" className="scroll-mt-20 max-w-3xl mx-auto px-4 sm:px-6 py-20">
-        <h2 className="text-3xl font-black tracking-tight text-center">Questions</h2>
-        <div className="mt-10 divide-y divide-zinc-800 border-y border-zinc-800">
+      <section id="faq" className="scroll-mt-6 max-w-4xl mx-auto px-4 sm:px-8 py-20 sm:py-24">
+        <h2 className="font-display text-[32px] sm:text-[40px] leading-[1.06] tracking-[-0.015em]">Questions</h2>
+        <div className="mt-8 border-t border-zinc-400">
           {FAQ.map(({ q, a }) => (
-            <details key={q} className="group py-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-white">
+            <details key={q} className="group border-b border-zinc-300">
+              <summary className="flex cursor-pointer list-none items-center justify-between gap-6 py-5 font-semibold text-[16px] hover:text-amber-700">
                 {q}
-                <span className="text-amber-400 text-xl leading-none transition-transform group-open:rotate-45" aria-hidden>+</span>
+                <Plus aria-hidden className="w-4 h-4 shrink-0 text-amber-700 transition-transform duration-200 group-open:rotate-45" strokeWidth={2} />
               </summary>
-              <p className="mt-3 text-sm text-zinc-400 leading-relaxed">{a}</p>
+              <p className="pb-6 -mt-1 text-[15px] leading-relaxed text-zinc-700 max-w-[42rem]">{a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      {/* ── Final CTA ── */}
-      <section className="max-w-6xl mx-auto px-4 sm:px-6 pb-20">
-        <div className="rounded-2xl bg-amber-400 text-zinc-950 px-6 sm:px-12 py-12 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-black tracking-tight">Ready to stop taking orders by email?</h2>
-            <p className="mt-2 text-zinc-800">Start your {TRIAL_DAYS}-day free trial today.</p>
-          </div>
-          <a href="#pricing" className="shrink-0 inline-flex items-center gap-2 bg-zinc-950 hover:bg-zinc-800 text-amber-400 font-bold px-6 py-3 rounded-lg">
+      {/* ── Close ── */}
+      <section className="bg-wall text-label">
+        <div className="max-w-7xl mx-auto px-4 sm:px-8 py-16 sm:py-20 flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <h2 className="font-display text-[34px] sm:text-[46px] leading-[1.04] tracking-[-0.02em] max-w-2xl [text-wrap:balance]">
+            Stop taking reorders by email.
+          </h2>
+          <a href="#pricing" className="shrink-0 inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-300 text-zinc-950 font-semibold px-6 py-3.5 rounded-[2px] transition-colors">
             Choose a plan <ArrowRight className="w-4 h-4" />
           </a>
         </div>
+        <footer className="border-t border-white/10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-8 py-7 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 text-[13px] text-blue-200">
+            <div className="flex items-baseline gap-2.5">
+              <span className="font-display text-lg text-label leading-none">GSS</span>
+              <span>Trade ordering portal · prices in AUD incl. GST</span>
+            </div>
+            <div className="flex items-center gap-6">
+              <Link href="/login" className="hover:text-white">Customer sign in</Link>
+              {portalUrl && <a href={portalUrl} className="hover:text-white">Manage billing</a>}
+              <a href="#pricing" className="hover:text-white">Pricing</a>
+            </div>
+          </div>
+        </footer>
       </section>
-
-      <footer className="border-t border-zinc-900">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-zinc-500">
-          <div className="flex items-center gap-2">
-            <span className="bg-amber-400 text-zinc-950 font-black px-1.5 py-0.5 rounded text-[10px]">GSS</span>
-            <span>© GSS Order Portal. Prices in AUD incl. GST.</span>
-          </div>
-          <div className="flex items-center gap-5">
-            <Link href="/login" className="hover:text-zinc-300">Customer sign in</Link>
-            {portalUrl && <a href={portalUrl} className="hover:text-zinc-300">Manage billing</a>}
-            <a href="#pricing" className="hover:text-zinc-300">Pricing</a>
-          </div>
-        </div>
-      </footer>
     </div>
+  );
+}
+
+/** A lettered mark that ties a part of the specimen label to its explanation */
+function Mark({ children, large = false, className = '' }: { children: React.ReactNode; large?: boolean; className?: string }) {
+  return (
+    <span
+      aria-hidden={!large}
+      className={`inline-flex items-center justify-center rounded-full border border-[#7c5f24] text-[#634b1b] font-semibold leading-none align-middle ${
+        large ? 'w-8 h-8 text-sm' : 'w-[18px] h-[18px] text-[11px] mr-1.5'
+      } ${className}`}
+    >
+      {children}
+    </span>
   );
 }

@@ -25,19 +25,19 @@ import {
 
 const CUSTOMER_NAV = [
   { name: 'Dashboard',             href: '/',        icon: LayoutDashboard },
-  { name: 'Product Catalog',       href: '/catalog', icon: Boxes,        badge: 'Shop' },
-  { name: 'Cart & Checkout',       href: '/cart',    icon: ShoppingCart, badge: 'Cart' },
+  { name: 'Product Catalog',       href: '/catalog', icon: Boxes },
+  { name: 'Cart & Checkout',       href: '/cart',    icon: ShoppingCart },
   { name: 'Order History',         href: '/order',   icon: Package },
   { name: 'Artwork & Proof Vault', href: '/vault',   icon: FolderLock },
   { name: 'Team & Permissions',    href: '/team',    icon: Users },
 ];
 
 const ADMIN_NAV = [
-  { name: 'Staff Overview',    href: '/admin',           icon: Gauge,      badge: 'Staff' },
-  { name: 'Companies',         href: '/admin/companies', icon: Building2,  badge: 'Staff' },
-  { name: 'All Orders',        href: '/admin/orders',    icon: Package,    badge: 'Staff' },
-  { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck, badge: 'Staff' },
-  { name: 'Subscriptions',     href: '/admin/subscriptions', icon: CreditCard, badge: 'Staff' },
+  { name: 'Staff Overview',    href: '/admin',           icon: Gauge },
+  { name: 'Companies',         href: '/admin/companies', icon: Building2 },
+  { name: 'All Orders',        href: '/admin/orders',    icon: Package },
+  { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck },
+  { name: 'Subscriptions',     href: '/admin/subscriptions', icon: CreditCard },
 ];
 
 // ─── Shared nav item ─────────────────────────────────────────────────────────
@@ -61,19 +61,20 @@ function NavItem({
       href={item.href}
       onClick={onLinkClick}
       title={isCollapsed ? item.name : undefined}
-      className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-md text-xs font-medium transition-colors ${
+      aria-current={isActive ? 'page' : undefined}
+      className={`flex items-center ${isCollapsed ? 'justify-center px-2' : 'justify-between px-3'} py-2.5 rounded-sm text-[13px] transition-colors ${
         isActive
-          ? 'bg-amber-400 text-zinc-950 font-bold shadow-sm'
-          : 'text-zinc-300 hover:bg-zinc-900 hover:text-white'
+          ? 'bg-label text-ink font-semibold shadow-[0_1px_2px_rgba(8,14,32,0.35)]'
+          : 'text-blue-100 hover:bg-wall-soft hover:text-white'
       }`}
     >
-      <div className="flex items-center space-x-2.5">
-        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-zinc-950' : 'text-amber-400'}`} />
+      <div className="flex items-center gap-2.5 min-w-0">
+        <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-amber-600' : 'text-brass-light'}`} strokeWidth={1.75} />
         {!isCollapsed && <span className="truncate">{item.name}</span>}
       </div>
       {!isCollapsed && badge && (
-        <span className={`text-[10px] px-1.5 py-0.5 rounded font-mono shrink-0 ${
-          isActive ? 'bg-amber-500 text-zinc-950 font-bold' : 'bg-zinc-900 text-amber-400 border border-zinc-800'
+        <span className={`accession text-xs min-w-[1.25rem] text-center px-1.5 py-0.5 rounded-sm shrink-0 ${
+          isActive ? 'bg-ink text-label' : 'bg-brass-light text-ink'
         }`}>
           {badge}
         </span>
@@ -97,31 +98,20 @@ function NavContent({
   return (
     <>
       {/* Brand Header */}
-      <div className="p-5 border-b border-zinc-800 flex items-center justify-between overflow-hidden shrink-0">
-        <div className="flex items-center space-x-3">
-          <div className="bg-amber-400 text-zinc-950 font-black px-2.5 py-1.5 rounded text-sm tracking-wider shadow-sm shrink-0">
-            GSS
-          </div>
-          {!isCollapsed && (
-            <div className="truncate">
-              <h1 className="font-bold text-white text-sm tracking-wide">GSS E-COMMERCE</h1>
-              <p className="text-[11px] text-amber-400/80 font-mono">B2B Packaging Store</p>
-            </div>
-          )}
-        </div>
+      <div className="px-5 py-5 border-b border-white/10 flex items-center overflow-hidden shrink-0">
+        <Link href="/" className="flex items-baseline gap-2.5 min-w-0" onClick={onLinkClick}>
+          <span className="font-display text-[26px] leading-none text-label tracking-tight shrink-0">GSS</span>
+          {!isCollapsed && <span className="text-xs text-brass-light uppercase tracking-[0.16em] truncate">Trade Orders</span>}
+        </Link>
       </div>
 
       {/* Account Info Card */}
       {!isCollapsed && (
-        <div className="mx-4 my-4 p-3 rounded bg-zinc-900 border border-zinc-800 shadow-inner shrink-0">
-          <div className="flex items-center space-x-2 text-xs text-zinc-400 mb-1">
-            <Building2 className="w-3.5 h-3.5 text-amber-400 shrink-0" />
-            <span className="font-semibold uppercase tracking-wider text-[10px]">Active Corporate Account</span>
-          </div>
-          <div className="text-xs font-semibold text-white truncate">{companyName}</div>
-          <div className="text-[10px] text-amber-400/90 font-mono mt-1 flex justify-between">
+        <div className="mx-4 my-4 px-3 py-2.5 rounded-sm bg-wall-deep/60 border border-white/10 shrink-0">
+          <div className="text-[13px] font-semibold text-white truncate" title={companyName}>{companyName}</div>
+          <div className="accession text-xs text-blue-200 mt-1 flex justify-between gap-2">
             <span>{paymentTerms}</span>
-            {creditLimit > 0 && <span>Limit: {formatAUD(creditLimit)}</span>}
+            {creditLimit > 0 && <span>Limit {formatAUD(creditLimit)}</span>}
           </div>
         </div>
       )}
@@ -129,8 +119,8 @@ function NavContent({
       {/* Navigation Links */}
       <nav className="flex-1 px-3 space-y-1 mt-2 overflow-y-auto">
         {!isCollapsed && (
-          <div className="px-3 py-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">
-            Storefront &amp; Orders
+          <div className="px-3 pt-1 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-[0.14em]">
+            Ordering
           </div>
         )}
         {CUSTOMER_NAV.map((item) => {
@@ -151,11 +141,11 @@ function NavContent({
         {isStaff && (
           <>
             {!isCollapsed ? (
-              <div className="px-3 pt-3 pb-2 text-[10px] font-semibold text-zinc-500 uppercase tracking-wider border-t border-zinc-800 mt-2">
-                Internal Admin
+              <div className="px-3 pt-4 pb-2 text-xs font-semibold text-blue-300 uppercase tracking-[0.14em] border-t border-white/10 mt-3">
+                GSS Staff
               </div>
             ) : (
-              <div className="border-t border-zinc-800 my-2" />
+              <div className="border-t border-white/10 my-2" />
             )}
             {ADMIN_NAV.map((item) => {
               const isActive = item.href === '/admin' ? pathname === '/admin' : pathname.startsWith(item.href);
@@ -174,23 +164,7 @@ function NavContent({
         )}
       </nav>
 
-      {/* Footer */}
-      {!isCollapsed ? (
-        <div className="p-4 border-t border-zinc-800 text-xs text-zinc-400 bg-zinc-950 shrink-0">
-          <div className="flex items-center justify-between text-[11px] mb-1">
-            <span className="flex items-center space-x-1.5">
-              <span className="w-2 h-2 rounded-full bg-amber-400 inline-block animate-pulse" />
-              <span className="text-zinc-300">System Gateway</span>
-            </span>
-            <span className="text-amber-400 font-mono font-semibold">Online</span>
-          </div>
-          <p className="text-[10px] text-zinc-500">Instant Purchase Orders</p>
-        </div>
-      ) : (
-        <div className="p-4 border-t border-zinc-800 flex justify-center text-amber-400 shrink-0" title="Gateway Online">
-          <span className="w-2.5 h-2.5 rounded-full bg-amber-400 animate-pulse" />
-        </div>
-      )}
+      <div className="h-4 shrink-0" />
     </>
   );
 }
@@ -212,7 +186,7 @@ export default function SideNav() {
       {/* ── Mobile hamburger button (visible < lg) ── */}
       <button
         onClick={() => setMobileOpen(true)}
-        className="lg:hidden fixed top-4 left-4 z-40 bg-zinc-900 text-amber-400 p-2 rounded-lg border border-zinc-700 shadow-md"
+        className="lg:hidden fixed top-3 left-3 z-40 bg-wall text-brass-light p-2.5 rounded-sm shadow-[0_2px_6px_rgba(8,14,32,0.3)]"
         aria-label="Open navigation"
       >
         <Menu className="w-5 h-5" />
@@ -221,20 +195,20 @@ export default function SideNav() {
       {/* ── Mobile overlay ── */}
       {mobileOpen && (
         <div
-          className="lg:hidden fixed inset-0 bg-zinc-950/70 z-40 backdrop-blur-sm"
+          className="lg:hidden fixed inset-0 bg-wall-deep/70 z-40"
           onClick={() => setMobileOpen(false)}
         />
       )}
 
       {/* ── Mobile drawer ── */}
       <aside
-        className={`lg:hidden fixed top-0 left-0 h-full w-72 bg-zinc-950 text-zinc-300 flex flex-col border-r border-zinc-800 z-50 transition-transform duration-300 ${
+        className={`lg:hidden fixed top-0 left-0 h-full w-72 bg-wall text-blue-100 flex flex-col z-50 transition-transform duration-300 ease-out ${
           mobileOpen ? 'translate-x-0' : '-translate-x-full'
         }`}
       >
         <button
           onClick={() => setMobileOpen(false)}
-          className="absolute top-4 right-4 text-zinc-400 hover:text-white"
+          className="absolute top-5 right-4 text-blue-200 hover:text-white"
           aria-label="Close navigation"
         >
           <X className="w-5 h-5" />
@@ -244,15 +218,16 @@ export default function SideNav() {
 
       {/* ── Desktop sidebar (visible >= lg) ── */}
       <aside
-        className={`hidden lg:flex flex-col bg-zinc-950 text-zinc-300 min-h-screen border-r border-zinc-800 shrink-0 transition-all duration-300 relative ${
+        className={`hidden lg:flex flex-col bg-wall text-blue-100 min-h-screen shrink-0 transition-[width] duration-300 ease-out relative ${
           isCollapsed ? 'w-20' : 'w-64'
         }`}
       >
         {/* Collapse toggle */}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-          className="absolute -right-3 top-6 bg-amber-400 text-zinc-950 p-1 rounded-full border border-zinc-900 shadow-md hover:bg-amber-300 z-20"
+          className="absolute -right-3 top-6 bg-label text-ink p-1 rounded-full border border-zinc-300 shadow-[0_1px_3px_rgba(8,14,32,0.25)] hover:bg-white z-20"
           title={isCollapsed ? 'Expand' : 'Collapse'}
+          aria-label={isCollapsed ? 'Expand navigation' : 'Collapse navigation'}
         >
           {isCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
         </button>

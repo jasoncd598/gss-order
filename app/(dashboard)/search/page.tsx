@@ -55,7 +55,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                       <span className="font-mono font-bold text-zinc-900 w-32 shrink-0">{o.ref}</span>
                       <span className="flex-1 min-w-0 truncate text-zinc-700">{o.detail}</span>
                       <span className="text-zinc-400 hidden sm:inline">{formatDate(o.date)}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border shrink-0 ${orderStatusStyles(o.status)}`}>{o.status}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border shrink-0 ${orderStatusStyles(o.status)}`}>{o.status}</span>
                     </Link>
                   </li>
                 ))}
@@ -74,7 +74,7 @@ export default async function SearchPage({ searchParams }: { searchParams: Promi
                     <Link href={`/vault?q=${encodeURIComponent(a.plateRef)}`} className="px-5 py-3 flex items-center gap-4 text-xs hover:bg-zinc-50">
                       <span className="font-mono text-amber-700 w-32 shrink-0">{a.plateRef} · {a.version}</span>
                       <span className="flex-1 min-w-0 truncate text-zinc-800 font-medium">{a.name}</span>
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border shrink-0 ${artworkStatusStyles(a.status)}`}>{a.status}</span>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border shrink-0 ${artworkStatusStyles(a.status)}`}>{a.status}</span>
                     </Link>
                   </li>
                 ))}

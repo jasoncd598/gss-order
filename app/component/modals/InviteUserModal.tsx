@@ -68,30 +68,30 @@ export default function InviteUserModal({
       {variant === 'primary' ? (
         <button
           onClick={() => setOpen(true)}
-          className="inline-flex items-center space-x-2 bg-zinc-900 hover:bg-zinc-800 text-amber-400 px-4 py-2 rounded text-xs font-bold transition-colors"
+          className="inline-flex items-center space-x-2 bg-wall hover:bg-wall-soft text-brass-light px-4 py-2 rounded text-xs font-bold transition-colors"
         >
           <UserPlus className="w-3.5 h-3.5" />
           <span>Invite Team Member</span>
         </button>
       ) : (
-        <button onClick={() => setOpen(true)} className="text-[11px] font-semibold text-amber-600 hover:text-amber-800">
+        <button onClick={() => setOpen(true)} className="text-xs font-semibold text-amber-600 hover:text-amber-800">
           + Add User
         </button>
       )}
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={handleClose} />
+          <div className="absolute inset-0 bg-wall-deep/70" onClick={handleClose} />
 
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100">
               <div className="flex items-center space-x-2">
-                <div className="bg-zinc-900 text-amber-400 p-1.5 rounded">
+                <div className="bg-wall text-brass-light p-1.5 rounded">
                   <UserPlus className="w-3.5 h-3.5" />
                 </div>
                 <div>
                   <h2 className="font-bold text-zinc-900 text-sm">Invite Team Member</h2>
-                  {companyName && <p className="text-[11px] text-zinc-400">{companyName}</p>}
+                  {companyName && <p className="text-xs text-zinc-400">{companyName}</p>}
                 </div>
               </div>
               <button onClick={handleClose} className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400" aria-label="Close">
@@ -137,7 +137,7 @@ export default function InviteUserModal({
                         />
                         <div>
                           <div className="font-semibold text-zinc-900 text-xs">{r}</div>
-                          <div className="text-zinc-400 text-[10px]">{ROLE_DESCRIPTIONS[r]}</div>
+                          <div className="text-zinc-400 text-xs">{ROLE_DESCRIPTIONS[r]}</div>
                         </div>
                       </label>
                     ))}
@@ -176,18 +176,18 @@ export default function InviteUserModal({
                     readOnly
                     value={link}
                     onFocus={(e) => e.currentTarget.select()}
-                    className="flex-1 min-w-0 border border-zinc-300 rounded px-3 py-2 text-[11px] font-mono text-zinc-700 bg-zinc-50"
+                    className="flex-1 min-w-0 border border-zinc-300 rounded px-3 py-2 text-xs font-mono text-zinc-700 bg-zinc-50"
                     aria-label="Invitation link"
                   />
                   <button
                     onClick={copy}
-                    className="shrink-0 inline-flex items-center gap-1.5 bg-zinc-900 hover:bg-zinc-800 text-amber-400 px-3 rounded text-xs font-bold"
+                    className="shrink-0 inline-flex items-center gap-1.5 bg-wall hover:bg-wall-soft text-brass-light px-3 rounded text-xs font-bold"
                   >
                     {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     {copied ? 'Copied' : 'Copy'}
                   </button>
                 </div>
-                <p className="text-[10px] text-zinc-400 mt-2">Expires in 14 days. You can revoke it from the Team page.</p>
+                <p className="text-xs text-zinc-400 mt-2">Expires in 14 days. You can revoke it from the Team page.</p>
                 <button
                   onClick={handleClose}
                   className="mt-5 w-full bg-amber-400 hover:bg-amber-300 text-zinc-950 font-bold py-2 rounded-lg text-sm transition-colors"

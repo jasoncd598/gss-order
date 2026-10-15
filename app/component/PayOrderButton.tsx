@@ -31,7 +31,7 @@ export default function PayOrderButton({ orderId, label = 'Pay by Card' }: { ord
         {pending ? <Loader2 className="w-4 h-4 animate-spin" /> : <CreditCard className="w-4 h-4" />}
         <span>{pending ? 'Opening secure checkout…' : label}</span>
       </button>
-      {error && <p className="text-[11px] text-red-600">{error}</p>}
+      {error && <p className="text-xs text-red-600">{error}</p>}
     </div>
   );
 }

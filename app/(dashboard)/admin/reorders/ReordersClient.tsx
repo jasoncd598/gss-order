@@ -8,10 +8,10 @@ import type { ReorderRequest, ReorderStatus } from '../../../lib/types';
 import { approveReorderRequestAction, rejectReorderRequestAction } from '../../../lib/actions';
 
 const STATUS_STYLES: Record<ReorderStatus, string> = {
-  Pending:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  Approved:  'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Rejected:  'bg-red-50 text-red-700 border-red-200',
-  Cancelled: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+  Pending:   'stamp stamp-ochre',
+  Approved:  'stamp stamp-green',
+  Rejected:  'stamp stamp-red',
+  Cancelled: 'stamp stamp-grey',
 };
 
 const STATUS_ICON: Record<ReorderStatus, React.ReactNode> = {
@@ -65,7 +65,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
           </div>
           <p className="text-xs text-zinc-500">{requests.length} total requests · {pendingCount} awaiting action</p>
         </div>
-        <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
+        <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">
           STAFF ONLY
         </span>
       </div>
@@ -82,7 +82,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
               onClick={() => setFilter(s)}
               className={`bg-white border rounded-lg p-4 shadow-sm text-left transition-all hover:shadow-md ${border} ${filter === s ? 'ring-2 ring-amber-400' : ''}`}
             >
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500 mb-1">{s === 'All' ? 'Total' : s}</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-1">{s === 'All' ? 'Total' : s}</div>
               <div className={`text-2xl font-black ${color}`}>{count}</div>
             </button>
           );
@@ -114,7 +114,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-zinc-900 text-sm font-mono">{req.ref}</span>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_STYLES[req.status]}`}>
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-bold border ${STATUS_STYLES[req.status]}`}>
                           {STATUS_ICON[req.status]}
                           <span className="ml-1">{req.status}</span>
                         </span>
@@ -122,7 +122,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
                       <div className="text-xs text-zinc-700 font-medium mt-0.5 truncate">
                         {first?.productName}{req.items.length > 1 ? ` + ${req.items.length - 1} more` : ''}
                       </div>
-                      <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap mt-1 text-[11px] text-zinc-400 font-mono">
+                      <div className="flex items-center gap-x-3 gap-y-0.5 flex-wrap mt-1 text-xs text-zinc-400 font-mono">
                         <span>{req.companyName}</span>
                         <span>·</span>
                         <span>{first?.plateRef}</span>
@@ -134,7 +134,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
                   <div className="flex items-center space-x-4 ml-4 shrink-0">
                     <div className="text-right hidden sm:block">
                       <div className="font-black text-zinc-900 font-mono text-sm">{formatAUD(req.total)}</div>
-                      <div className="text-[10px] text-zinc-400 font-mono">{formatDate(req.requestedAt)}</div>
+                      <div className="text-xs text-zinc-400 font-mono">{formatDate(req.requestedAt)}</div>
                     </div>
                     <ChevronDown className={`w-4 h-4 text-zinc-400 transition-transform ${expanded ? 'rotate-180' : ''}`} />
                   </div>
@@ -145,28 +145,28 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
                   <div className="border-t border-zinc-100 p-4 sm:p-5 bg-zinc-50 space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-xs font-mono">
                       <div>
-                        <span className="text-zinc-400 block text-[10px] uppercase tracking-wider">Requested By</span>
+                        <span className="text-zinc-400 block text-xs uppercase tracking-wider">Requested By</span>
                         <span className="font-semibold text-zinc-800">{req.requestedBy}</span>
                       </div>
                       <div>
-                        <span className="text-zinc-400 block text-[10px] uppercase tracking-wider">Repeat Of</span>
+                        <span className="text-zinc-400 block text-xs uppercase tracking-wider">Repeat Of</span>
                         <Link href={`/order/${req.sourceOrderId}`} className="font-semibold text-amber-700 hover:underline">{req.sourceOrderRef}</Link>
                       </div>
                       <div>
-                        <span className="text-zinc-400 block text-[10px] uppercase tracking-wider">PO Reference</span>
+                        <span className="text-zinc-400 block text-xs uppercase tracking-wider">PO Reference</span>
                         <span className="font-semibold text-zinc-800">{req.poRef ?? '—'}</span>
                       </div>
                       <div>
-                        <span className="text-zinc-400 block text-[10px] uppercase tracking-wider">Total (excl. GST)</span>
+                        <span className="text-zinc-400 block text-xs uppercase tracking-wider">Total (excl. GST)</span>
                         <span className="font-semibold text-emerald-600">{formatAUD(req.total)}</span>
                       </div>
                     </div>
 
                     {/* Lines */}
-                    <div className="bg-white border border-zinc-200 rounded-lg overflow-x-auto">
+                    <div className="overflow-x-auto border-t border-zinc-300">
                       <table className="w-full min-w-[520px] whitespace-nowrap text-xs">
                         <thead>
-                          <tr className="text-[10px] uppercase tracking-wider text-zinc-400 border-b border-zinc-100">
+                          <tr className="text-xs uppercase tracking-wider text-zinc-400 border-b border-zinc-100">
                             <th className="text-left py-2 px-3">Product</th>
                             <th className="text-left py-2 px-3">Plate</th>
                             <th className="text-right py-2 px-3">Qty</th>
@@ -190,20 +190,20 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
 
                     {req.notes && (
                       <div className="bg-white border border-zinc-200 rounded-lg p-3 text-xs text-zinc-600">
-                        <span className="text-zinc-400 font-semibold text-[10px] uppercase tracking-wider block mb-1">Customer Notes</span>
+                        <span className="text-zinc-400 font-semibold text-xs uppercase tracking-wider block mb-1">Customer Notes</span>
                         {req.notes}
                       </div>
                     )}
                     {req.rejectionReason && (
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
-                        <span className="font-semibold text-[10px] uppercase tracking-wider block mb-1">Rejection Reason</span>
+                        <span className="font-semibold text-xs uppercase tracking-wider block mb-1">Rejection Reason</span>
                         {req.rejectionReason}
                       </div>
                     )}
                     {req.createdOrderId && (
-                      <div className="text-[11px] text-zinc-500">
+                      <div className="text-xs text-zinc-500">
                         Production order created —{' '}
-                        <Link href={`/order/${req.createdOrderId}`} className="font-semibold text-amber-700 hover:underline">view order →</Link>
+                        <Link href={`/order/${req.createdOrderId}`} className="font-semibold text-amber-700 hover:underline">view order</Link>
                       </div>
                     )}
 
@@ -233,7 +233,7 @@ export default function ReordersClient({ requests: initial }: { requests: Reorde
                           <XCircle className="w-3.5 h-3.5" />
                           <span>Reject</span>
                         </button>
-                        <span className="text-[11px] text-zinc-400">Approving creates an order in production for {req.companyName}.</span>
+                        <span className="text-xs text-zinc-400">Approving creates an order in production for {req.companyName}.</span>
                       </div>
                     )}
                     {req.status === 'Pending' && rejectingId === req.id && (

@@ -37,7 +37,7 @@ export default async function NotificationsPage() {
         </div>
         <div className="flex items-center gap-3">
           {unread > 0 && (
-            <span className="px-2.5 py-1 rounded bg-amber-50 border border-amber-200 text-amber-700 text-[10px] font-bold">
+            <span className="px-2.5 py-1 rounded bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
               {unread} UNREAD
             </span>
           )}
@@ -55,7 +55,7 @@ export default async function NotificationsPage() {
         <div className="space-y-8">
           {groups.map((g) => (
             <div key={g.day}>
-              <div className="text-[11px] font-semibold uppercase tracking-wider text-zinc-400 mb-3 font-mono">{g.day}</div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-3 font-mono">{g.day}</div>
               <div className="space-y-3">
                 {g.items.map((n) => {
                   const { icon: Icon, color, bg } = NOTIFICATION_STYLE[n.type] ?? NOTIFICATION_STYLE.account;
@@ -75,7 +75,7 @@ export default async function NotificationsPage() {
                           <span className={`text-sm text-zinc-900 group-hover:text-amber-700 transition-colors ${n.read ? 'font-semibold' : 'font-bold'}`}>
                             {n.title}
                           </span>
-                          <span className="text-[10px] text-zinc-400 font-mono shrink-0">{timeLabel(n.createdAt)}</span>
+                          <span className="text-xs text-zinc-400 font-mono shrink-0">{timeLabel(n.createdAt)}</span>
                         </div>
                         {n.body && <p className="text-zinc-500 text-xs leading-relaxed">{n.body}</p>}
                       </div>

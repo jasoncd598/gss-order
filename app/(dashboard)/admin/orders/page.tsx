@@ -7,6 +7,7 @@ import { createClient } from '../../../lib/supabase/server';
 import { getAllOrdersAdmin } from '../../../lib/db';
 import { formatAUD, formatDate, paymentStatusStyles } from '../../../lib/utils';
 import OrderStatusSelect from '../../../component/admin/OrderStatusSelect';
+import Ledger from '../../../component/Ledger';
 import type { OrderStatus } from '../../../lib/types';
 
 const ALL_STATUSES: OrderStatus[] = [
@@ -35,20 +36,13 @@ export default async function AdminOrdersPage() {
           </div>
           <p className="text-xs text-zinc-500">{rows.length} orders across all companies</p>
         </div>
-        <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">STAFF ONLY</span>
+        <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">STAFF ONLY</span>
       </div>
 
-      {/* Status KPIs */}
-      <div className="grid grid-cols-3 sm:grid-cols-6 gap-3">
-        {ALL_STATUSES.map((s) => (
-          <div key={s} className="bg-white border border-zinc-200 rounded-lg p-3 shadow-sm">
-            <div className={`text-xl font-black ${s === 'Pending Approval' ? 'text-yellow-600' : s === 'Cancelled' ? 'text-red-600' : 'text-zinc-900'}`}>
-              {statusCount[s] ?? 0}
-            </div>
-            <div className="text-[10px] text-zinc-400 leading-tight mt-0.5">{s}</div>
-          </div>
-        ))}
-      </div>
+      <Ledger
+        label="Orders by status"
+        items={ALL_STATUSES.map((st) => ({ label: st, value: statusCount[st] ?? 0, warn: st === 'Pending Approval' && (statusCount[st] ?? 0) > 0 }))}
+      />
 
       {/* Table */}
       <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
@@ -60,10 +54,11 @@ export default async function AdminOrdersPage() {
         {rows.length === 0 ? (
           <div className="py-16 text-center text-zinc-400 text-sm">No orders in the system yet.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider bg-zinc-50/50">
+                <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider bg-zinc-50/50">
                   <th className="py-3 px-4">Order Ref</th>
                   <th className="py-3 px-4">Company</th>
                   <th className="py-3 px-4">Product</th>
@@ -78,28 +73,29 @@ export default async function AdminOrdersPage() {
                 {rows.map((row) => {
                   return (
                     <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-[11px]">{row.ref}</td>
+                      <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-xs">{row.ref}</td>
                       <td className="py-3.5 px-4 text-zinc-700 font-medium max-w-[160px] truncate"><Link href={`/admin/companies/${row.companyId}`} className="hover:text-amber-700 hover:underline">{row.companyName}</Link></td>
-                      <td className="py-3.5 px-4 text-zinc-600 max-w-[180px] truncate">
-                        {row.firstProduct}
+                      <td className="py-3.5 px-4 text-zinc-700 max-w-[220px]">
+                        <div className="truncate">{row.firstProduct}</div>
+                        {row.firstPlateRef && <div className="accession text-xs text-amber-700">{row.firstPlateRef}</div>}
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-500 text-[11px]">{formatDate(row.date)}</td>
+                      <td className="py-3.5 px-4 text-zinc-500 text-xs">{formatDate(row.date)}</td>
                       <td className="py-3.5 px-4">
                         <OrderStatusSelect orderId={row.id} status={row.status} />
                       </td>
-                      <td className="py-3.5 px-4 text-right font-bold font-mono text-zinc-900 text-[11px]">
+                      <td className="py-3.5 px-4 text-right font-bold font-mono text-zinc-900 text-xs">
                         {formatAUD(row.total)}
                       </td>
                       <td className="py-3.5 px-4">
                         {row.paymentStatus && (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${paymentStatusStyles(row.paymentStatus)}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${paymentStatusStyles(row.paymentStatus)}`}>
                             {row.paymentStatus}
                           </span>
                         )}
                       </td>
                       <td className="py-3.5 px-4 text-right">
-                        <Link href={`/order/${row.id}`} className="text-[11px] font-semibold text-amber-600 hover:text-amber-800 underline">
-                          View →
+                        <Link href={`/order/${row.id}`} className="text-xs font-semibold text-amber-600 hover:text-amber-800 underline">
+                          View
                         </Link>
                       </td>
                     </tr>
@@ -108,6 +104,31 @@ export default async function AdminOrdersPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Phones and small tablets: stacked records, status still editable */}
+          <ul className="md:hidden divide-y divide-zinc-200">
+            {rows.map((row) => (
+              <li key={row.id} className="px-4 py-3.5 space-y-2">
+                <div className="flex items-center justify-between gap-3">
+                  <Link href={`/order/${row.id}`} className="accession font-bold text-zinc-950 text-[13px] hover:text-amber-700">{row.ref}</Link>
+                  <span className="accession font-bold text-zinc-950 text-[13px]">{formatAUD(row.total)}</span>
+                </div>
+                <div className="text-[13px] text-zinc-800">
+                  {row.firstProduct}
+                  <div className="text-xs text-zinc-600">
+                    {row.firstPlateRef && <span className="accession text-amber-700">{row.firstPlateRef} · </span>}
+                    <Link href={`/admin/companies/${row.companyId}`} className="hover:text-amber-700">{row.companyName}</Link> · {formatDate(row.date)}
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <OrderStatusSelect orderId={row.id} status={row.status} />
+                  {row.paymentStatus && <span className={paymentStatusStyles(row.paymentStatus)}>{row.paymentStatus}</span>}
+                  <Link href={`/order/${row.id}`} className="ml-auto text-xs font-semibold text-amber-700 hover:text-amber-900 underline">View</Link>
+                </div>
+              </li>
+            ))}
+          </ul>
+          </>
         )}
       </div>
     </div>

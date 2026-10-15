@@ -81,7 +81,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         </header>
 
         {!BUSINESS.abn && (
-          <p className="mt-4 text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 print:hidden">
+          <p className="mt-4 text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-3 py-2 print:hidden">
             Supplier ABN isn&apos;t configured (BUSINESS_ABN). A tax invoice must show it.
           </p>
         )}
@@ -89,13 +89,13 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         {/* Bill to */}
         <section className="py-6 grid grid-cols-1 sm:grid-cols-2 gap-6 text-xs">
           <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Bill to</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Bill to</div>
             <div className="font-bold text-sm">{customer?.name ?? '—'}</div>
             {customer?.abn && <div className="text-zinc-600">ABN {customer.abn}</div>}
             {customer?.address && <div className="text-zinc-600">{customer.address}</div>}
           </div>
           <div className="sm:text-right">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">Payment</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Payment</div>
             <div className="font-bold text-sm">{paid ? 'Paid' : customer?.payment_terms ?? '—'}</div>
             {paid && order.paidAt && <div className="text-zinc-600">Paid by card {formatDate(order.paidAt)}</div>}
           </div>
@@ -105,7 +105,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
         <div className="overflow-x-auto">
           <table className="w-full min-w-[520px] text-xs">
             <thead>
-              <tr className="border-y border-zinc-200 text-[10px] uppercase tracking-wider text-zinc-500">
+              <tr className="border-y border-zinc-200 text-xs uppercase tracking-wider text-zinc-500">
                 <th className="py-2 pr-2 text-left">Description</th>
                 <th className="py-2 px-2 text-right">Qty</th>
                 <th className="py-2 px-2 text-right">Unit (ex GST)</th>
@@ -117,7 +117,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
                 <tr key={item.id ?? i}>
                   <td className="py-2.5 pr-2">
                     <div className="font-semibold">{item.productName}</div>
-                    <div className="text-[10px] text-zinc-500 font-mono">
+                    <div className="text-xs text-zinc-500 font-mono">
                       {[item.skuId, item.plateRef && `Plate ${item.plateRef}`, item.dimensions, item.substrate].filter(Boolean).join(' · ')}
                     </div>
                   </td>
@@ -147,7 +147,7 @@ export default async function InvoicePage({ params }: { params: Promise<{ id: st
 
         {!paid && (BUSINESS.bankDetails || BUSINESS.email) && (
           <section className="mt-8 pt-4 border-t border-zinc-200 text-xs text-zinc-600">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-zinc-400 mb-1">How to pay</div>
+            <div className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">How to pay</div>
             <p>Pay by card from this order in the portal{BUSINESS.bankDetails ? `, or by bank transfer: ${BUSINESS.bankDetails}` : ''}. Please quote <span className="font-mono font-bold">{order.invoiceRef ?? order.ref}</span>.</p>
           </section>
         )}

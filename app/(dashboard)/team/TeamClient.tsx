@@ -106,9 +106,9 @@ export default function TeamClient({
           const count = members.filter((m) => m.role === role && m.status !== 'Suspended').length;
           return (
             <div key={role} className="bg-white border border-zinc-200 rounded-lg p-3 shadow-sm">
-              <div className={`inline-flex px-2 py-0.5 rounded text-[10px] font-bold border mb-1 ${ROLE_COLORS[role]}`}>{role}</div>
+              <div className={`inline-flex px-2 py-0.5 rounded text-xs font-bold border mb-1 ${ROLE_COLORS[role]}`}>{role}</div>
               <div className="text-2xl font-black text-zinc-900">{count}</div>
-              <div className="text-[10px] text-zinc-400">active users</div>
+              <div className="text-xs text-zinc-400">active users</div>
             </div>
           );
         })}
@@ -135,7 +135,7 @@ export default function TeamClient({
           <div className="overflow-x-auto">
             <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
               <thead>
-                <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+                <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
                   <th className="py-3 px-4">Member</th>
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">Status</th>
@@ -152,14 +152,14 @@ export default function TeamClient({
                     <tr key={member.id} className={`transition-colors ${member.status === 'Suspended' ? 'bg-zinc-50/70 text-zinc-400' : 'hover:bg-zinc-50'}`}>
                       <td className="py-3.5 px-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-zinc-900 text-amber-400 text-[11px] font-bold flex items-center justify-center shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-wall text-brass-light text-xs font-bold flex items-center justify-center shrink-0">
                             {initials(member.name)}
                           </div>
                           <div>
                             <div className="font-semibold text-zinc-900">
-                              {member.name}{isSelf && <span className="ml-1.5 text-[10px] text-zinc-400 font-normal">(you)</span>}
+                              {member.name}{isSelf && <span className="ml-1.5 text-xs text-zinc-400 font-normal">(you)</span>}
                             </div>
-                            <div className="text-zinc-400 text-[10px] font-mono">{member.email}</div>
+                            <div className="text-zinc-400 text-xs font-mono">{member.email}</div>
                           </div>
                         </div>
                       </td>
@@ -170,32 +170,32 @@ export default function TeamClient({
                             disabled={busy || member.status === 'Suspended'}
                             onChange={(e) => updateMember(member.id, { role: e.target.value as UserRole })}
                             aria-label={`Role for ${member.name}`}
-                            className={`px-2 py-1 rounded text-[10px] font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 ${ROLE_COLORS[member.role]}`}
+                            className={`px-2 py-1 rounded text-xs font-bold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 ${ROLE_COLORS[member.role]}`}
                           >
                             {ROLES.map((r) => <option key={r} value={r}>{r}</option>)}
                           </select>
                         ) : (
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${ROLE_COLORS[member.role] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
+                          <span className={`px-2 py-0.5 rounded text-xs font-bold border ${ROLE_COLORS[member.role] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
                             {member.role}
                           </span>
                         )}
                       </td>
                       <td className="py-3.5 px-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_COLORS[member.status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs font-bold border ${STATUS_COLORS[member.status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
                           {member.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-500 font-mono text-[11px]">{formatDate(member.lastLogin)}</td>
+                      <td className="py-3.5 px-4 text-zinc-500 font-mono text-xs">{formatDate(member.lastLogin)}</td>
                       {canManage && (
                         <td className="py-3.5 px-4 text-right">
                           {busy ? (
                             <Loader2 className="w-3.5 h-3.5 animate-spin text-zinc-400 inline" />
                           ) : !editable ? null : member.status === 'Suspended' ? (
-                            <button onClick={() => updateMember(member.id, { status: 'Active' })} className="text-[11px] font-semibold text-emerald-600 hover:text-emerald-800">
+                            <button onClick={() => updateMember(member.id, { status: 'Active' })} className="text-xs font-semibold text-emerald-600 hover:text-emerald-800">
                               Reactivate
                             </button>
                           ) : member.status === 'Active' ? (
-                            <button onClick={() => updateMember(member.id, { status: 'Suspended' })} className="text-[11px] font-semibold text-zinc-500 hover:text-red-600">
+                            <button onClick={() => updateMember(member.id, { status: 'Suspended' })} className="text-xs font-semibold text-zinc-500 hover:text-red-600">
                               Deactivate
                             </button>
                           ) : null}
@@ -222,17 +222,17 @@ export default function TeamClient({
               <li key={inv.id} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2 text-xs">
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-zinc-900 font-mono truncate">{inv.email}</div>
-                  <div className="text-[11px] text-zinc-400">{inv.role} · expires {formatDate(inv.expiresAt)}</div>
+                  <div className="text-xs text-zinc-400">{inv.role} · expires {formatDate(inv.expiresAt)}</div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <button onClick={() => copyLink(inv)} className="inline-flex items-center gap-1 text-[11px] font-semibold text-zinc-600 hover:text-zinc-900">
+                  <button onClick={() => copyLink(inv)} className="inline-flex items-center gap-1 text-xs font-semibold text-zinc-600 hover:text-zinc-900">
                     {copiedId === inv.id ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
                     {copiedId === inv.id ? 'Copied' : 'Copy link'}
                   </button>
                   <button
                     onClick={() => revoke(inv.id)}
                     disabled={busyId === inv.id}
-                    className="text-[11px] font-semibold text-zinc-500 hover:text-red-600"
+                    className="text-xs font-semibold text-zinc-500 hover:text-red-600"
                   >
                     Revoke
                   </button>
@@ -251,7 +251,7 @@ export default function TeamClient({
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+              <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
                 <th className="py-3 px-4 text-left">Feature</th>
                 <th className="py-3 px-4 text-center">Admin</th>
                 <th className="py-3 px-4 text-center">Procurement</th>

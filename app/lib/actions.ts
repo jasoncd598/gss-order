@@ -145,7 +145,7 @@ export async function createOrderCheckoutAction(orderId: string): Promise<Checko
     const metadata = { order_id: order.id, order_ref: order.ref };
     const lineItems = [{
       quantity: 1,
-      price_data: { currency: CURRENCY, unit_amount: charge.net, product_data: { name: `Order ${order.ref}`, description: 'Packaging order (excl. GST)' } },
+      price_data: { currency: CURRENCY, unit_amount: charge.net, product_data: { name: `Order ${order.ref}`, description: 'Trade order (excl. GST)' } },
     }];
     if (charge.gst > 0) {
       lineItems.push({ quantity: 1, price_data: { currency: CURRENCY, unit_amount: charge.gst, product_data: { name: 'GST (10%)', description: 'Goods and Services Tax' } } });

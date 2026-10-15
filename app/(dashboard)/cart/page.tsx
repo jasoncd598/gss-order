@@ -87,7 +87,7 @@ export default function CartPage() {
         <p className="text-zinc-400 text-xs mb-8">
           Our production team will review and confirm within 1 business day. You&apos;ll get a notification here as it moves through production.
         </p>
-        <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-left mb-6 space-y-2 text-xs font-mono">
+        <div className="bg-zinc-50 border border-zinc-200 rounded-sm p-5 text-left mb-6 space-y-2 text-[13px]">
           <div className="flex justify-between">
             <span className="text-zinc-400">Order Reference</span>
             <span className="font-bold text-zinc-900">{orderRef}</span>
@@ -154,7 +154,7 @@ export default function CartPage() {
           {(['cart', 'review'] as const).map((s, i) => (
             <div key={s} className="flex items-center space-x-2">
               <div className={`flex items-center space-x-1.5 font-semibold ${step === s ? 'text-zinc-900' : s === 'cart' && step === 'review' ? 'text-emerald-600' : 'text-zinc-400'}`}>
-                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-black border ${step === s ? 'bg-amber-400 border-amber-400 text-zinc-950' : s === 'cart' && step === 'review' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 text-zinc-400'}`}>
+                <div className={`w-5 h-5 rounded-full flex items-center justify-center text-xs font-black border ${step === s ? 'bg-amber-400 border-amber-400 text-zinc-950' : s === 'cart' && step === 'review' ? 'bg-emerald-500 border-emerald-500 text-white' : 'border-zinc-300 text-zinc-400'}`}>
                   {s === 'cart' && step === 'review' ? '✓' : i + 1}
                 </div>
                 <span className="capitalize hidden sm:block">{s === 'cart' ? 'Items' : 'Review'}</span>
@@ -189,7 +189,7 @@ export default function CartPage() {
                     <div className="flex justify-between items-start">
                       <div>
                         <h3 className="font-bold text-zinc-900 text-sm leading-tight">{item.name}</h3>
-                        <p className="text-amber-600 font-mono text-[11px] mt-0.5">{item.plateRef}</p>
+                        <p className="accession text-amber-700 text-xs mt-0.5">{item.plateRef}</p>
                       </div>
                       {step === 'cart' && (
                         <button onClick={() => removeItem(item.artId)} className="text-zinc-300 hover:text-red-500 transition-colors ml-2 shrink-0" aria-label="Remove">
@@ -197,7 +197,7 @@ export default function CartPage() {
                         </button>
                       )}
                     </div>
-                    <div className="flex flex-wrap gap-x-4 mt-2 text-[11px] font-mono text-zinc-500">
+                    <div className="flex flex-wrap gap-x-4 mt-2 text-xs text-zinc-600">
                       <span>{item.dimensions}</span>
                       <span className="hidden sm:block">·</span>
                       <span>{item.substrate}</span>
@@ -223,12 +223,12 @@ export default function CartPage() {
                         <span className="text-xs font-mono font-bold text-zinc-700">{item.quantity.toLocaleString()} units</span>
                       )}
                       <div className="text-right">
-                        <div className="text-[10px] text-zinc-400 font-mono">{formatAUD(item.unitPrice)} ea</div>
+                        <div className="text-xs text-zinc-400 font-mono">{formatAUD(item.unitPrice)} ea</div>
                         <div className="font-bold text-zinc-900 font-mono text-sm">{formatAUD(item.unitPrice * item.quantity)}</div>
                       </div>
                     </div>
                     {step === 'cart' && (
-                      <p className="text-[10px] text-zinc-400 mt-1.5 flex items-center space-x-1">
+                      <p className="text-xs text-zinc-400 mt-1.5 flex items-center space-x-1">
                         <AlertCircle className="w-3 h-3" />
                         <span>Last run: {item.minQty.toLocaleString()} units · price confirmed at checkout</span>
                       </p>
@@ -253,7 +253,7 @@ export default function CartPage() {
             )}
 
             {step === 'review' && (
-              <div className="bg-zinc-50 border border-zinc-200 rounded-xl p-5 text-xs font-mono space-y-2">
+              <div className="bg-zinc-50 border border-zinc-200 rounded-sm p-5 text-[13px] space-y-2">
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Order Summary</h3>
                 {poRef && <div className="flex justify-between"><span className="text-zinc-400">PO Reference</span><span className="font-bold text-zinc-800">{poRef}</span></div>}
                 {deliveryNote && <div className="flex justify-between"><span className="text-zinc-400">Delivery Note</span><span className="font-semibold text-zinc-700 max-w-[200px] text-right">{deliveryNote}</span></div>}
@@ -267,21 +267,21 @@ export default function CartPage() {
           <div className="space-y-4">
             <div className="bg-white border border-zinc-200 rounded-xl p-5 shadow-sm">
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-4">Price Summary</h3>
-              <div className="space-y-2.5 text-xs font-mono">
+              <div className="space-y-2.5 text-[13px]">
                 {items.map((i) => (
                   <div key={i.artId} className="flex justify-between text-zinc-600">
                     <span className="truncate mr-2 max-w-[140px]">{i.name}</span>
-                    <span className="font-semibold text-zinc-800">{formatAUD(i.unitPrice * i.quantity)}</span>
+                    <span className="accession font-semibold text-zinc-800">{formatAUD(i.unitPrice * i.quantity)}</span>
                   </div>
                 ))}
                 <div className="border-t border-zinc-100 pt-2.5 flex justify-between text-zinc-600">
-                  <span>Subtotal</span><span className="font-semibold">{formatAUD(subtotal)}</span>
+                  <span>Subtotal</span><span className="accession font-semibold">{formatAUD(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-zinc-500">
-                  <span>GST (10%)</span><span>{formatAUD(gst)}</span>
+                  <span>GST (10%)</span><span className="accession">{formatAUD(gst)}</span>
                 </div>
                 <div className="border-t-2 border-zinc-200 pt-2.5 flex justify-between font-black text-zinc-900 text-sm">
-                  <span>Total (AUD)</span><span>{formatAUD(total)}</span>
+                  <span>Total (AUD)</span><span className="accession">{formatAUD(total)}</span>
                 </div>
               </div>
 
@@ -308,14 +308,14 @@ export default function CartPage() {
               )}
             </div>
 
-            <div className="bg-zinc-900 rounded-xl p-4 space-y-2.5">
+            <div className="bg-wall rounded-sm p-4 space-y-2.5">
               {[
                 { icon: ShieldCheck, text: prepaid ? 'Prepaid — pay securely by card via Stripe' : `${paymentTerms} Terms — or pay by card anytime` },
-                { icon: FileText,    text: 'Invoice sent to your Xero account' },
+                { icon: FileText,    text: 'Tax invoice for every order' },
                 { icon: RefreshCw,   text: 'Artwork plates already approved' },
               ].map(({ icon: Icon, text }) => (
-                <div key={text} className="flex items-center space-x-2.5 text-[11px] text-zinc-300">
-                  <Icon className="w-4 h-4 text-amber-400 shrink-0" /><span>{text}</span>
+                <div key={text} className="flex items-center space-x-2.5 text-xs text-blue-50">
+                  <Icon className="w-4 h-4 text-brass-light shrink-0" /><span>{text}</span>
                 </div>
               ))}
             </div>

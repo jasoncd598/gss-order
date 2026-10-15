@@ -8,13 +8,13 @@ import { PLANS } from '../../../lib/billing';
 import { formatAUD, formatDate } from '../../../lib/utils';
 
 const STATUS_STYLES: Record<string, string> = {
-  active:             'bg-emerald-50 text-emerald-700 border-emerald-200',
-  trialing:           'bg-blue-50 text-blue-700 border-blue-200',
-  past_due:           'bg-red-50 text-red-700 border-red-200',
-  unpaid:             'bg-red-50 text-red-700 border-red-200',
-  incomplete:         'bg-yellow-50 text-yellow-700 border-yellow-200',
-  canceled:           'bg-zinc-100 text-zinc-500 border-zinc-200',
-  incomplete_expired: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+  active:             'stamp stamp-green',
+  trialing:           'stamp stamp-blue',
+  past_due:           'stamp stamp-red',
+  unpaid:             'stamp stamp-red',
+  incomplete:         'stamp stamp-ochre',
+  canceled:           'stamp stamp-grey',
+  incomplete_expired: 'stamp stamp-grey',
 };
 const statusLabel = (s: string) => s === 'past_due' ? 'Past due' : s.charAt(0).toUpperCase() + s.slice(1).replace('_', ' ');
 
@@ -61,7 +61,7 @@ export default async function AdminSubscriptionsPage() {
         {kpis.map((k) => (
           <div key={k.label} className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
             <div className={`text-xl font-black ${k.alert && Number(k.value) > 0 ? 'text-red-600' : 'text-zinc-900'}`}>{k.value}</div>
-            <div className="text-[10px] text-zinc-400 mt-0.5 uppercase tracking-wider">{k.label}</div>
+            <div className="text-xs text-zinc-400 mt-0.5 uppercase tracking-wider">{k.label}</div>
           </div>
         ))}
       </div>
@@ -77,7 +77,7 @@ export default async function AdminSubscriptionsPage() {
           <div className="overflow-x-auto">
             <table className="w-full min-w-[760px] whitespace-nowrap text-left text-xs">
               <thead>
-                <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider bg-zinc-50/50">
+                <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider bg-zinc-50/50">
                   <th className="py-3 px-4">Company</th>
                   <th className="py-3 px-4">Plan</th>
                   <th className="py-3 px-4">Status</th>
@@ -95,12 +95,12 @@ export default async function AdminSubscriptionsPage() {
                     <tr key={r.id} className="hover:bg-zinc-50">
                       <td className="py-3.5 px-4">
                         <div className="font-semibold text-zinc-900">{r.companyName ?? '—'}</div>
-                        <div className="text-[10px] text-zinc-400 font-mono">{r.email ?? '—'}</div>
+                        <div className="text-xs text-zinc-400 font-mono">{r.email ?? '—'}</div>
                       </td>
                       <td className="py-3.5 px-4 font-semibold text-zinc-700">{plan?.name ?? r.plan} <span className="text-zinc-400 font-normal">· {r.interval === 'year' ? 'yearly' : 'monthly'}</span></td>
                       <td className="py-3.5 px-4">
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${STATUS_STYLES[r.status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>{statusLabel(r.status)}</span>
-                        {r.cancelAtPeriodEnd && r.status !== 'canceled' && <span className="ml-1.5 text-[10px] text-red-600 font-semibold">Cancels at period end</span>}
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${STATUS_STYLES[r.status] ?? 'stamp stamp-grey'}`}>{statusLabel(r.status)}</span>
+                        {r.cancelAtPeriodEnd && r.status !== 'canceled' && <span className="ml-1.5 text-xs text-red-600 font-semibold">Cancels at period end</span>}
                       </td>
                       <td className="py-3.5 px-4 text-right font-mono font-bold text-zinc-900">{amount !== null ? `${formatAUD(amount)}/${r.interval === 'year' ? 'yr' : 'mo'}` : '—'}</td>
                       <td className="py-3.5 px-4 text-zinc-500">{date ? `${r.status === 'trialing' ? 'Trial ends ' : r.cancelAtPeriodEnd ? 'Ends ' : 'Renews '}${formatDate(date)}` : '—'}</td>

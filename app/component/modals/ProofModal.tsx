@@ -85,14 +85,14 @@ export default function ProofModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-label={art.name}>
-      <div className="absolute inset-0 bg-zinc-950/80 backdrop-blur-sm" onClick={onClose} />
+      <div className="absolute inset-0 bg-wall-deep/70" onClick={onClose} />
       <div className="relative bg-white rounded-2xl shadow-2xl w-full max-w-3xl max-h-[92vh] flex flex-col overflow-hidden">
         <div className="flex items-start justify-between px-5 py-3.5 border-b border-zinc-100 gap-3">
           <div className="min-w-0">
             <h3 className="font-bold text-zinc-900 text-sm truncate">{art.name}</h3>
-            <p className="text-amber-600 font-mono text-[11px] mt-0.5 flex items-center gap-2 flex-wrap">
+            <p className="text-amber-600 font-mono text-xs mt-0.5 flex items-center gap-2 flex-wrap">
               <span>{art.plateRef} · {art.version}</span>
-              <span className={`px-1.5 py-0.5 rounded border font-sans font-bold text-[10px] ${artworkStatusStyles(art.status)}`}>{art.status}</span>
+              <span className={`px-1.5 py-0.5 rounded border font-sans font-bold text-xs ${artworkStatusStyles(art.status)}`}>{art.status}</span>
             </p>
           </div>
           <button onClick={onClose} className="p-1.5 rounded-lg hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 shrink-0" aria-label="Close">
@@ -116,7 +116,7 @@ export default function ProofModal({
           <div className="px-5 py-4 bg-zinc-50 grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs font-mono">
             {[['Dimensions', art.dimensions], ['Substrate', art.substrate], ['Colour', art.colorProfile]].map(([k, v]) => (
               <div key={k}>
-                <span className="text-zinc-400 block text-[10px] uppercase tracking-wider mb-0.5">{k}</span>
+                <span className="text-zinc-400 block text-xs uppercase tracking-wider mb-0.5">{k}</span>
                 <span className="font-semibold text-zinc-800">{v || '—'}</span>
               </div>
             ))}
@@ -124,7 +124,7 @@ export default function ProofModal({
 
           {art.status === 'Revision Required' && art.reviewComment && (
             <div className="mx-5 mt-4 bg-red-50 border border-red-200 rounded-lg p-3 text-xs text-red-700">
-              <span className="font-semibold text-[10px] uppercase tracking-wider block mb-0.5">Changes requested</span>
+              <span className="font-semibold text-xs uppercase tracking-wider block mb-0.5">Changes requested</span>
               {art.reviewComment}
             </div>
           )}
@@ -148,7 +148,7 @@ export default function ProofModal({
         </div>
 
         <div className="px-5 py-3 border-t border-zinc-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-          <span className="text-[11px] text-zinc-400 font-mono">
+          <span className="text-xs text-zinc-400 font-mono">
             {[art.uploadedBy, art.uploadedAt && formatDate(art.uploadedAt), art.fileSize].filter(Boolean).join(' · ')}
           </span>
           <div className="flex items-center gap-2 flex-wrap">
@@ -176,7 +176,7 @@ export default function ProofModal({
           </div>
         </div>
         {awaitingReview && !canReview && (
-          <p className="px-5 pb-3 -mt-1 text-[10px] text-zinc-400">Only Admins and Procurement Managers can approve proofs.</p>
+          <p className="px-5 pb-3 -mt-1 text-xs text-zinc-400">Only Admins and Procurement Managers can approve proofs.</p>
         )}
       </div>
     </div>

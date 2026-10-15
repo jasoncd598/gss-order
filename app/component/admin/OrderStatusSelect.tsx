@@ -35,7 +35,7 @@ export default function OrderStatusSelect({ orderId, status }: { orderId: string
         onChange={(e) => change(e.target.value as OrderStatus)}
         aria-label="Order status"
         title={error ?? undefined}
-        className={`px-2 py-1 rounded text-[10px] font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 ${orderStatusStyles(current)} ${error ? 'ring-1 ring-red-400' : ''}`}
+        className={`px-2 py-1 rounded text-xs font-semibold border cursor-pointer focus:outline-none focus:ring-1 focus:ring-amber-400 ${orderStatusStyles(current)} ${error ? 'ring-1 ring-red-400' : ''}`}
       >
         {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
       </select>

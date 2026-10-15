@@ -111,7 +111,7 @@ export default function ArtworkThumb({
         )}
       </svg>
       {fileBadge && (
-        <span className="absolute bottom-2 left-2 text-[9px] font-bold font-mono px-1.5 py-0.5 rounded bg-zinc-900 text-amber-400">
+        <span className="absolute bottom-2 left-2 text-xs font-bold font-mono px-1.5 py-0.5 rounded bg-wall text-brass-light">
           {fileBadge}
         </span>
       )}

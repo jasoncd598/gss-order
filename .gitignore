@@ -39,3 +39,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Impeccable working files (captures, decision answers, drafts); the design record is committed
+.impeccable/review/
+.impeccable/questions/
+.impeccable/decision/
+.impeccable/briefs-src/
+.claude/skills/impeccable/scripts/bin/

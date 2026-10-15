@@ -64,7 +64,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
             </p>
           </div>
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="bg-zinc-900 text-amber-400 px-3 py-1.5 rounded text-xs font-mono font-semibold flex items-center space-x-1.5">
+            <div className="bg-wall text-brass-light px-3 py-1.5 rounded-sm text-xs font-semibold flex items-center space-x-1.5">
               <ShieldCheck className="w-4 h-4" />
               <span>{paymentTerms} Terms</span>
             </div>
@@ -78,7 +78,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
         {items.length === 0 ? (
           <div className="bg-white border border-dashed border-zinc-300 rounded-xl py-16 px-6 text-center">
             <Boxes className="w-10 h-10 text-zinc-300 mx-auto mb-3" />
-            <h3 className="font-semibold text-zinc-700">Your catalog is empty</h3>
+            <h2 className="font-semibold text-zinc-700">Your catalog is empty</h2>
             <p className="text-xs text-zinc-400 mt-1 max-w-md mx-auto">
               Products appear here once our studio has uploaded and you&apos;ve approved their artwork.
               Already ordered with us? Reorder any past order from Order History.
@@ -112,7 +112,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
                     key={f}
                     onClick={() => setFilter(f)}
                     className={`px-3.5 py-1.5 rounded text-xs font-semibold whitespace-nowrap transition-colors ${
-                      filter === f ? 'bg-zinc-900 text-amber-400 shadow-sm' : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
+                      filter === f ? 'bg-wall text-brass-light shadow-sm' : 'bg-white text-zinc-600 border border-zinc-200 hover:bg-zinc-100'
                     }`}
                   >
                     {f}
@@ -136,33 +136,33 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
                         <span className="absolute inset-0 bg-zinc-950/0 group-hover:bg-zinc-950/30 transition-colors flex items-center justify-center">
                           <ZoomIn className="w-8 h-8 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
                         </span>
-                        <span className="absolute top-2 left-2 text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-900/80 text-amber-400">
+                        <span className="absolute top-2 left-2 text-xs font-mono px-2 py-0.5 rounded-sm bg-wall text-brass-light">
                           {i.plateRef} · {i.version}
                         </span>
-                        <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border ${artworkStatusStyles(i.status)}`}>
+                        <span className={`absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded border ${artworkStatusStyles(i.status)}`}>
                           {i.status}
                         </span>
                       </button>
 
                       <div className="p-4 flex flex-col flex-1">
-                        <h3 className="font-bold text-zinc-900 text-sm leading-tight mb-2">{i.name}</h3>
+                        <h2 className="font-bold text-zinc-900 text-sm leading-tight mb-2">{i.name}</h2>
 
-                        <div className="bg-zinc-50 rounded-lg p-2.5 text-[10px] font-mono space-y-1 mb-3">
-                          <div className="flex justify-between gap-2"><span className="text-zinc-400">Dimensions</span><span className="text-zinc-700 font-semibold truncate">{i.dimensions || '—'}</span></div>
-                          <div className="flex justify-between gap-2"><span className="text-zinc-400">Substrate</span><span className="text-zinc-700 font-semibold truncate max-w-[150px]" title={i.substrate}>{i.substrate || '—'}</span></div>
-                          <div className="flex justify-between gap-2"><span className="text-zinc-400">Colour</span><span className="text-zinc-700 font-semibold truncate max-w-[150px]">{i.colorProfile || '—'}</span></div>
+                        <div className="bg-zinc-50 rounded-sm p-2.5 text-xs space-y-1 mb-3">
+                          <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Dimensions</span><span className="text-zinc-800 font-semibold text-right">{i.dimensions || '—'}</span></div>
+                          <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Substrate</span><span className="text-zinc-800 font-semibold text-right">{i.substrate || '—'}</span></div>
+                          <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Colour</span><span className="text-zinc-800 font-semibold text-right">{i.colorProfile || '—'}</span></div>
                         </div>
 
-                        <div className="grid grid-cols-2 gap-3 text-xs font-mono mb-3">
+                        <div className="grid grid-cols-2 gap-3 text-xs mb-3">
                           <div>
-                            <span className="text-[10px] text-zinc-400 block uppercase tracking-wider">Last Run</span>
-                            <span className="font-bold text-zinc-900">{i.lastQuantity?.toLocaleString() ?? '—'}</span>
-                            {i.lastOrdered && <span className="block text-[10px] text-zinc-400">{formatDate(i.lastOrdered)}</span>}
+                            <span className="text-xs text-zinc-400 block uppercase tracking-wider">Last Run</span>
+                            <span className="accession font-bold text-zinc-900">{i.lastQuantity?.toLocaleString() ?? '—'}</span>
+                            {i.lastOrdered && <span className="block text-xs text-zinc-500">{formatDate(i.lastOrdered)}</span>}
                           </div>
                           <div>
-                            <span className="text-[10px] text-zinc-400 block uppercase tracking-wider">Unit Rate</span>
+                            <span className="text-xs text-zinc-400 block uppercase tracking-wider">Unit Rate</span>
                             {i.unitPrice !== null
-                              ? <span className="font-bold text-emerald-600">{formatAUD(i.unitPrice)} ea{i.minQuantity && i.minQuantity > 1 && <span className="block text-[10px] text-zinc-400 font-normal">Min {i.minQuantity.toLocaleString()}</span>}</span>
+                              ? <span className="accession font-bold text-emerald-700">{formatAUD(i.unitPrice)} ea{i.minQuantity && i.minQuantity > 1 && <span className="block text-xs text-zinc-400 font-normal">Min {i.minQuantity.toLocaleString()}</span>}</span>
                               : <span className="font-semibold text-zinc-500">Price on request</span>}
                           </div>
                         </div>
@@ -178,7 +178,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
                               <span>{i.status !== 'Approved' ? 'Proof Pending' : 'Request Quote'}</span>
                             </span>
                           ) : !canOrder ? (
-                            <span className="text-[11px] text-zinc-400">View only</span>
+                            <span className="text-xs text-zinc-400">View only</span>
                           ) : (
                             <button
                               onClick={() => add(i)}

@@ -119,7 +119,7 @@ export default function VaultClient({
         )}
 
         {notice && (
-          <div className="bg-zinc-900 text-zinc-100 rounded-lg px-4 py-2.5 text-xs flex justify-between items-center">
+          <div className="bg-wall text-blue-50 rounded-lg px-4 py-2.5 text-xs flex justify-between items-center">
             <span>{notice}</span>
             <button onClick={() => setNotice(null)} className="text-zinc-400 hover:text-white">Dismiss</button>
           </div>
@@ -142,8 +142,8 @@ export default function VaultClient({
               <button
                 key={s}
                 onClick={() => setFilter(s)}
-                className={`px-3 py-1.5 rounded text-[11px] font-semibold whitespace-nowrap transition-colors ${
-                  filter === s ? 'bg-zinc-900 text-amber-400' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+                className={`px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap transition-colors ${
+                  filter === s ? 'bg-wall text-brass-light' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
                 }`}
               >
                 {s}
@@ -156,9 +156,9 @@ export default function VaultClient({
         {filtered.length === 0 ? (
           <div className="bg-white border border-dashed border-zinc-300 rounded-lg py-16 text-center">
             <FolderLock className="w-10 h-10 text-zinc-300 mx-auto mb-2" />
-            <h3 className="font-semibold text-zinc-600 text-sm">
+            <h2 className="font-semibold text-zinc-600 text-sm">
               {artwork.length === 0 ? 'Your vault is empty' : 'No artwork matches'}
-            </h3>
+            </h2>
             <p className="text-xs text-zinc-400 mt-1">
               {artwork.length === 0
                 ? 'Proofs, plates and print-ready files appear here as soon as our studio uploads them.'
@@ -178,39 +178,39 @@ export default function VaultClient({
                     <span className="absolute inset-0 bg-zinc-950/0 group-hover:bg-zinc-950/30 flex items-center justify-center transition-colors">
                       <Eye className="w-7 h-7 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-lg" />
                     </span>
-                    <span className={`absolute top-2 right-2 text-[10px] font-bold px-2 py-0.5 rounded border backdrop-blur-sm ${artworkStatusStyles(art.status)}`}>
+                    <span className={`absolute top-2 right-2 text-xs font-bold px-2 py-0.5 rounded border backdrop-blur-sm ${artworkStatusStyles(art.status)}`}>
                       {art.status}
                     </span>
                   </button>
                   <div className="p-4 flex flex-col flex-1">
                     <div className="mb-2">
-                      <h3 className="font-bold text-zinc-900 text-sm leading-tight">{art.name}</h3>
-                      <p className="text-amber-600 text-[11px] font-mono mt-0.5">{art.plateRef} · {art.version}</p>
+                      <h2 className="font-bold text-zinc-900 text-sm leading-tight">{art.name}</h2>
+                      <p className="accession text-amber-700 text-xs mt-0.5">{art.plateRef} · {art.version}</p>
                     </div>
-                    <div className="bg-zinc-50 rounded p-2.5 text-[10px] font-mono space-y-1 mb-3">
-                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Dimensions</span><span className="text-zinc-700 font-semibold truncate">{art.dimensions || '—'}</span></div>
-                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Substrate</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.substrate || '—'}</span></div>
-                      <div className="flex justify-between gap-2"><span className="text-zinc-400">Colour</span><span className="text-zinc-700 font-semibold truncate max-w-[140px]">{art.colorProfile || '—'}</span></div>
+                    <div className="bg-zinc-50 rounded-sm p-2.5 text-xs space-y-1 mb-3">
+                      <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Dimensions</span><span className="text-zinc-800 font-semibold text-right">{art.dimensions || '—'}</span></div>
+                      <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Substrate</span><span className="text-zinc-800 font-semibold text-right">{art.substrate || '—'}</span></div>
+                      <div className="flex justify-between gap-2"><span className="text-zinc-500 shrink-0">Colour</span><span className="text-zinc-800 font-semibold text-right">{art.colorProfile || '—'}</span></div>
                     </div>
                     {art.status === 'Revision Required' && art.reviewComment && (
-                      <p className="text-[11px] text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1.5 mb-3 line-clamp-2">“{art.reviewComment}”</p>
+                      <p className="text-xs text-red-600 bg-red-50 border border-red-100 rounded px-2 py-1.5 mb-3 line-clamp-2">“{art.reviewComment}”</p>
                     )}
-                    <div className="text-[10px] text-zinc-400 mb-3 mt-auto">
+                    <div className="text-xs text-zinc-500 mb-3 mt-auto">
                       By <span className="text-zinc-600 font-semibold">{art.uploadedBy}</span> · {formatDate(art.uploadedAt)}{art.fileSize ? ` · ${art.fileSize}` : ''}
                     </div>
                     <div className="flex items-center gap-2 pt-3 border-t border-zinc-100">
-                      <button onClick={() => setProofArt(art)} className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-[11px] font-semibold transition-colors ${
+                      <button onClick={() => setProofArt(art)} className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-xs font-semibold transition-colors ${
                         art.status === 'Pending Review' && canReview ? 'bg-amber-400 hover:bg-amber-500 text-zinc-950' : 'bg-zinc-100 hover:bg-zinc-200 text-zinc-700'
                       }`}>
                         <Eye className="w-3.5 h-3.5" /><span>{art.status === 'Pending Review' && canReview ? 'Review' : 'View'}</span>
                       </button>
-                      <button onClick={() => download(art.id)} disabled={busyId === art.id} className="flex-1 flex items-center justify-center space-x-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-1.5 rounded text-[11px] font-semibold transition-colors">
+                      <button onClick={() => download(art.id)} disabled={busyId === art.id} className="flex-1 flex items-center justify-center space-x-1.5 bg-zinc-100 hover:bg-zinc-200 text-zinc-700 py-1.5 rounded text-xs font-semibold transition-colors">
                         {busyId === art.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}<span>Download</span>
                       </button>
                       {art.status === 'Approved' && canOrder && price && (
                         <button
                           onClick={() => handleReorder(art)}
-                          className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-[11px] font-bold transition-colors ${
+                          className={`flex-1 flex items-center justify-center space-x-1.5 py-1.5 rounded text-xs font-bold transition-colors ${
                             isJust ? 'bg-emerald-500 text-white' : inCart ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-amber-400 hover:bg-amber-500 text-zinc-950'
                           }`}
                         >

@@ -1,6 +1,215 @@
 @import "tailwindcss";
 
-/* League Spartan (loaded in app/layout.tsx) is the app-wide sans font */
+/*
+ * The Collection Catalogue — GSS design tokens.
+ *
+ * The existing utility scales are re-pointed at the collection palette so every
+ * screen inherits the world: zinc → archival board & ink, amber → cast brass,
+ * blue/indigo/sky → enamel blue, emerald → verdigris, red → stamp red,
+ * yellow → ochre, purple → plum. New names (wall, board, label, brass, stamp)
+ * are for code written against the world directly.
+ */
 @theme {
-  --font-sans: var(--font-spartan), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-hanken), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bodoni), "Bodoni 72", Didot, serif;
+  --font-mono: var(--font-courier), "Courier New", ui-monospace, monospace;
+
+  /* World names */
+  --color-wall: #1c2b5a;          /* enamel-blue gallery wall */
+  --color-wall-deep: #131e40;
+  --color-wall-soft: #2a3b6e;
+  --color-board: #e4e2dc;         /* warm archival board ground */
+  --color-label: #f4f2ec;         /* catalogue label stock */
+  --color-ink: #12110f;
+  --color-brass: #b38b3b;
+  --color-brass-light: #d4b06a;
+  --color-stamp: #a5352a;
+
+  /* Archival board & ink (was zinc). Warm museum-board greys per the direction
+     contract; 400 and up pass WCAG AA for text on white, label stock and board. */
+  --color-zinc-50: #f6f5f2;
+  --color-zinc-100: #e4e2dc;
+  --color-zinc-200: #d4d1c9;
+  --color-zinc-300: #bcb8ae;
+  --color-zinc-400: #5f5c55;
+  --color-zinc-500: #56534c;
+  --color-zinc-600: #46443e;
+  --color-zinc-700: #35332e;
+  --color-zinc-800: #262521;
+  --color-zinc-900: #1a1916;
+  --color-zinc-950: #12110f;
+
+  /* Cast brass (was amber) */
+  --color-amber-50: #f8f3e6;
+  --color-amber-100: #f0e4c6;
+  --color-amber-200: #e3cd97;
+  --color-amber-300: #d4b06a;
+  --color-amber-400: #b38b3b;
+  --color-amber-500: #9a752f;
+  --color-amber-600: #7c5f24;
+  --color-amber-700: #634b1b;
+  --color-amber-800: #4a3814;
+  --color-amber-900: #33270d;
+
+  /* Enamel blue (was blue / indigo / sky) */
+  --color-blue-50: #eef1f8;
+  --color-blue-100: #dbe1f0;
+  --color-blue-200: #b7c3e0;
+  --color-blue-300: #8a9dc9;
+  --color-blue-400: #5c74ad;
+  --color-blue-500: #3b5492;
+  --color-blue-600: #2a4079;
+  --color-blue-700: #1c2b5a;
+  --color-blue-800: #152148;
+  --color-blue-900: #0f1834;
+  --color-indigo-50: #eef1f8;
+  --color-indigo-100: #dbe1f0;
+  --color-indigo-200: #b7c3e0;
+  --color-indigo-400: #5c74ad;
+  --color-indigo-500: #3b5492;
+  --color-indigo-600: #2a4079;
+  --color-indigo-700: #1c2b5a;
+  --color-sky-50: #eef1f8;
+  --color-sky-100: #dbe1f0;
+  --color-sky-500: #3b5492;
+  --color-sky-600: #2a4079;
+  --color-sky-700: #1c2b5a;
+
+  /* Verdigris (was emerald) */
+  --color-emerald-50: #edf3ef;
+  --color-emerald-100: #d6e5db;
+  --color-emerald-200: #aecbb8;
+  --color-emerald-300: #81ad91;
+  --color-emerald-400: #5a8e6e;
+  --color-emerald-500: #437558;
+  --color-emerald-600: #355e47;
+  --color-emerald-700: #2a4b39;
+  --color-emerald-800: #1f382b;
+
+  /* Stamp red (was red) */
+  --color-red-50: #f8ecea;
+  --color-red-100: #f0d5d1;
+  --color-red-200: #e2aca4;
+  --color-red-300: #cf7f73;
+  --color-red-400: #bb5a4c;
+  --color-red-500: #a5352a;
+  --color-red-600: #8c2c23;
+  --color-red-700: #73241c;
+  --color-red-800: #591c16;
+
+  /* Ochre (was yellow) */
+  --color-yellow-50: #f8f1e1;
+  --color-yellow-100: #f0e1bd;
+  --color-yellow-200: #e2c686;
+  --color-yellow-300: #d1a752;
+  --color-yellow-500: #a8741a;
+  --color-yellow-600: #8c6015;
+  --color-yellow-700: #714d11;
+
+  /* Plum (was purple) */
+  --color-purple-50: #f3eef3;
+  --color-purple-100: #e6dbe6;
+  --color-purple-200: #ccb6cc;
+  --color-purple-500: #6b4a6e;
+  --color-purple-600: #5a3d5d;
+  --color-purple-700: #4a314c;
+
+  /* Catalogue cards have crisp, near-square corners */
+  --radius-sm: 2px;
+  --radius: 2px;
+  --radius-md: 2px;
+  --radius-lg: 3px;
+  --radius-xl: 4px;
+  --radius-2xl: 6px;
+}
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  ::selection {
+    background: #d4b06a;
+    color: #13120f;
+  }
+  * {
+    caret-color: #9a752f;
+    scrollbar-color: #bcb8ae transparent;
+  }
+  /* Placeholders readable on white and label stock (WCAG AA) */
+  input::placeholder,
+  textarea::placeholder {
+    color: #5f5c55;
+    opacity: 1;
+  }
+  :focus-visible {
+    outline: 2px solid #b38b3b;
+    outline-offset: 2px;
+  }
+  a {
+    text-underline-offset: 3px;
+  }
+  /* Page titles are set like catalogue headings */
+  h1 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+  }
+  /* Refs, quantities and money line up in columns */
+  .font-mono {
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+/* Unlayered on purpose: these win over the Tailwind badge utilities at the call sites */
+/*
+   * Registration stamp — the portal's signature move. Every status reads as an
+   * inked stamp in its state colour, set when the event happened.
+   */
+  .stamp {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.125rem 0.45rem;
+    border: 1.5px solid currentColor;
+    border-radius: 2px;
+    font-family: var(--font-sans);
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1.35;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, currentColor 18%, transparent);
+  }
+  .stamp-ochre    { color: #8c6015; background: #f8f1e1; }
+  .stamp-blue     { color: #2a4079; background: #eef1f8; }
+  .stamp-plum     { color: #5a3d5d; background: #f3eef3; }
+  .stamp-green    { color: #355e47; background: #edf3ef; }
+  .stamp-grey     { color: #46443e; background: #f6f5f2; }
+  .stamp-brass    { color: #634b1b; background: #f8f3e6; }
+  .stamp-red      { color: #8c2c23; background: #f8ecea; }
+
+  /* Typed accession label: plate refs and catalogue numbers */
+  .accession {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 0.02em;
+  }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Signature interaction: a registration stamp pressed onto a catalogue label */
+@keyframes stamp-press {
+  0%   { opacity: 0; transform: rotate(-11deg) scale(1.55); filter: blur(2px); }
+  60%  { opacity: 1; transform: rotate(-6deg) scale(0.97); filter: blur(0); }
+  100% { opacity: 1; transform: rotate(-6deg) scale(1); }
+}
+.hero-stamp {
+  transform: rotate(-6deg);
+  animation: stamp-press 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }

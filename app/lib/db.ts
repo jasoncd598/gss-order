@@ -291,6 +291,7 @@ export interface AdminOrderRow {
   companyId: string;
   companyName: string;
   firstProduct: string;
+  firstPlateRef: string | null;
   paymentStatus?: PaymentStatus;
 }
 
@@ -304,11 +305,11 @@ export const MOCK_ADMIN_COMPANIES: AdminCompany[] = [
 const MOCK_ADMIN_ORDERS: AdminOrderRow[] = [
   ...MOCK_ORDERS.map((o) => ({
     id: o.id, ref: o.ref, date: o.date, status: o.status, total: o.total, paymentStatus: o.paymentStatus,
-    companyId: 'cmp-001', companyName: 'Acme Packaging Pty Ltd', firstProduct: o.items[0]?.productName ?? '—',
+    companyId: 'cmp-001', companyName: 'Acme Packaging Pty Ltd', firstProduct: o.items[0]?.productName ?? '—', firstPlateRef: o.items[0]?.plateRef ?? null,
   })),
-  { id: 'ord-bb-01', ref: 'ORD-2026-8790', date: '2026-10-05', status: 'In Production',    total: 5700,  paymentStatus: 'Unpaid', companyId: 'cmp-002', companyName: 'BrightBox Retail Solutions', firstProduct: 'Hand-Painted Ceramic Plate – Lavender & Bees' },
-  { id: 'ord-ns-01', ref: 'ORD-2026-8655', date: '2026-09-30', status: 'Delivered',        total: 4160,  paymentStatus: 'Paid',   companyId: 'cmp-003', companyName: 'NorthShore Naturals',        firstProduct: 'Hand-Painted Ceramic Plate – Peacock' },
-  { id: 'ord-tl-01', ref: 'ORD-2026-8410', date: '2026-09-20', status: 'Pending Approval', total: 18000, paymentStatus: 'Unpaid', companyId: 'cmp-004', companyName: 'TradeLink Wholesale Group',  firstProduct: 'Cast Brass Works Plate – Blue Enamel' },
+  { id: 'ord-bb-01', ref: 'ORD-2026-8790', date: '2026-10-05', status: 'In Production',    total: 5700,  paymentStatus: 'Unpaid', companyId: 'cmp-002', companyName: 'BrightBox Retail Solutions', firstProduct: 'Hand-Painted Ceramic Plate – Lavender & Bees', firstPlateRef: 'PLT-3301-E' },
+  { id: 'ord-ns-01', ref: 'ORD-2026-8655', date: '2026-09-30', status: 'Delivered',        total: 4160,  paymentStatus: 'Paid',   companyId: 'cmp-003', companyName: 'NorthShore Naturals',        firstProduct: 'Hand-Painted Ceramic Plate – Peacock', firstPlateRef: 'PLT-4470-G' },
+  { id: 'ord-tl-01', ref: 'ORD-2026-8410', date: '2026-09-20', status: 'Pending Approval', total: 18000, paymentStatus: 'Unpaid', companyId: 'cmp-004', companyName: 'TradeLink Wholesale Group',  firstProduct: 'Cast Brass Works Plate – Blue Enamel', firstPlateRef: 'PLT-8812-B' },
 ];
 
 const COMPANY_COLUMNS = 'id, name, abn, industry, address, contact_phone, payment_terms, credit_limit, current_owing, total_spend, status, created_at';
@@ -354,7 +355,7 @@ export async function getAllOrdersAdmin(supabase: SupabaseClient): Promise<Admin
 
   const { data, error } = await supabase
     .from('orders')
-    .select('id, ref, date, status, total, payment_status, company_id, companies ( name ), order_items ( product_name )')
+    .select('id, ref, date, status, total, payment_status, company_id, companies ( name ), order_items ( product_name, plate_ref )')
     .order('date', { ascending: false });
 
   if (error) { console.error('getAllOrdersAdmin:', error.message); return []; }
@@ -362,7 +363,7 @@ export async function getAllOrdersAdmin(supabase: SupabaseClient): Promise<Admin
   type Row = {
     id: string; ref: string; date: string; status: OrderStatus; total: number; payment_status: PaymentStatus | null; company_id: string;
     companies: { name: string } | { name: string }[] | null;
-    order_items: { product_name: string }[] | null;
+    order_items: { product_name: string; plate_ref: string | null }[] | null;
   };
   return (data as unknown as Row[]).map((r) => {
     const company = Array.isArray(r.companies) ? r.companies[0] : r.companies;
@@ -372,6 +373,7 @@ export async function getAllOrdersAdmin(supabase: SupabaseClient): Promise<Admin
       companyId: r.company_id,
       companyName: company?.name ?? '—',
       firstProduct: r.order_items?.[0]?.product_name ?? '—',
+      firstPlateRef: r.order_items?.[0]?.plate_ref ?? null,
     };
   });
 }

@@ -70,7 +70,7 @@ export default function ReorderModal({ order }: { order: Order }) {
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           {/* Overlay */}
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={handleClose} />
+          <div className="absolute inset-0 bg-wall-deep/70" onClick={handleClose} />
 
           {/* Modal */}
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -82,7 +82,7 @@ export default function ReorderModal({ order }: { order: Order }) {
                 </div>
                 <div>
                   <h2 className="font-bold text-zinc-900 text-sm">Reorder Request</h2>
-                  <p className="text-[11px] text-zinc-400 font-mono">{order.ref}</p>
+                  <p className="text-xs text-zinc-400 font-mono">{order.ref}</p>
                 </div>
               </div>
               <button onClick={handleClose} className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700">
@@ -101,15 +101,15 @@ export default function ReorderModal({ order }: { order: Order }) {
                         <div className="flex justify-between items-start mb-2">
                           <div>
                             <div className="font-semibold text-zinc-900 text-xs">{item.productName}</div>
-                            <div className="text-zinc-400 text-[10px] font-mono">{item.plateRef} · {item.substrate}</div>
+                            <div className="text-zinc-400 text-xs font-mono">{item.plateRef} · {item.substrate}</div>
                           </div>
                           <div className="text-right">
                             <div className="text-emerald-600 font-bold text-xs font-mono">{formatAUD(item.unitPrice)} ea</div>
-                            <div className="text-[10px] text-zinc-400">last run {item.quantity.toLocaleString()}</div>
+                            <div className="text-xs text-zinc-400">last run {item.quantity.toLocaleString()}</div>
                           </div>
                         </div>
                         <div className="flex items-center space-x-3">
-                          <label className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider">Qty</label>
+                          <label className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Qty</label>
                           <div className="flex items-center border border-zinc-300 rounded overflow-hidden">
                             <button
                               type="button"
@@ -133,7 +133,7 @@ export default function ReorderModal({ order }: { order: Order }) {
                               +
                             </button>
                           </div>
-                          <span className="text-zinc-500 text-[11px] font-mono">
+                          <span className="text-zinc-500 text-xs font-mono">
                             = {formatAUD(qtyOf(item) * item.unitPrice)}
                           </span>
                         </div>
@@ -141,7 +141,7 @@ export default function ReorderModal({ order }: { order: Order }) {
                     ))}
                   </div>
                   {order.items.length > 1 && (
-                    <p className="text-[10px] text-zinc-400 mt-2">Set a line to 0 to leave it out of this reorder.</p>
+                    <p className="text-xs text-zinc-400 mt-2">Set a line to 0 to leave it out of this reorder.</p>
                   )}
                 </div>
 
@@ -155,7 +155,7 @@ export default function ReorderModal({ order }: { order: Order }) {
                   <span>{showDetails ? 'Hide' : 'Show'} previous order specs</span>
                 </button>
                 {showDetails && (
-                  <div className="bg-zinc-50 border border-zinc-200 rounded p-3 text-[11px] font-mono text-zinc-500 space-y-1">
+                  <div className="bg-zinc-50 border border-zinc-200 rounded p-3 text-xs font-mono text-zinc-500 space-y-1">
                     <div>Original Date: {order.date}</div>
                     {order.purchaseOrderRef && <div>Previous PO: {order.purchaseOrderRef}</div>}
                     {order.items.map((i) => (
@@ -200,11 +200,11 @@ export default function ReorderModal({ order }: { order: Order }) {
                 )}
 
                 {/* Total */}
-                <div className="bg-zinc-900 rounded-lg p-4 flex items-center justify-between gap-3">
+                <div className="bg-wall rounded-sm p-4 flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-zinc-400 text-[10px] uppercase tracking-wider font-semibold">Estimated Total</div>
-                    <div className="text-amber-400 text-xl font-black font-mono">{formatAUD(total)}</div>
-                    <div className="text-zinc-500 text-[10px] font-mono">{paymentTerms} terms · AUD excl. GST</div>
+                    <div className="text-blue-200 text-xs uppercase tracking-[0.12em] font-semibold">Estimated Total</div>
+                    <div className="text-brass-light text-xl font-bold font-mono">{formatAUD(total)}</div>
+                    <div className="text-blue-200 text-xs">{paymentTerms} terms · AUD excl. GST</div>
                   </div>
                   <button
                     type="submit"

@@ -87,7 +87,7 @@ export default async function OrderDetailPage({
         <div>
           <div className="flex items-center space-x-3 mb-1">
             <h1 className="text-xl font-bold text-zinc-900 font-mono">{order.ref}</h1>
-            <span className={`px-2.5 py-0.5 rounded text-[11px] font-bold border ${orderStatusStyles(order.status)}`}>
+            <span className={`px-2.5 py-0.5 rounded text-xs font-bold border ${orderStatusStyles(order.status)}`}>
               {order.status}
             </span>
           </div>
@@ -98,7 +98,7 @@ export default async function OrderDetailPage({
         <div className="flex items-center gap-3 flex-wrap">
           {isStaff && (
             <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 rounded px-2.5 py-1.5">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-amber-800">Staff · Status</span>
+              <span className="text-xs font-bold uppercase tracking-wider text-amber-800">Staff · Status</span>
               <OrderStatusSelect orderId={order.id} status={order.status} />
             </div>
           )}
@@ -120,7 +120,7 @@ export default async function OrderDetailPage({
               }`}>
                 {step.done ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Clock className="w-3.5 h-3.5" />}
               </div>
-              <span className={`text-[10px] font-semibold mt-2 text-center ${step.done ? 'text-zinc-800' : 'text-zinc-400'}`}>
+              <span className={`text-xs font-semibold mt-2 text-center ${step.done ? 'text-zinc-800' : 'text-zinc-400'}`}>
                 {step.label}
               </span>
             </div>
@@ -136,9 +136,9 @@ export default async function OrderDetailPage({
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Order Items</h2>
           </div>
           <div className="overflow-x-auto">
-          <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
+          <table className="w-full min-w-[560px] text-xs">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+              <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
                 <th className="py-2.5 px-4 text-left">Product</th>
                 <th className="py-2.5 px-4 text-left">Specs</th>
                 <th className="py-2.5 px-4 text-right">Qty</th>
@@ -151,23 +151,23 @@ export default async function OrderDetailPage({
                 <tr key={item.skuId} className="hover:bg-zinc-50">
                   <td className="py-3.5 px-4">
                     <div className="font-semibold text-zinc-900">{item.productName}</div>
-                    <div className="text-zinc-400 font-mono text-[10px]">{item.skuId}</div>
+                    <div className="text-zinc-400 font-mono text-xs">{item.skuId}</div>
                   </td>
-                  <td className="py-3.5 px-4 text-zinc-500 font-mono text-[10px]">
+                  <td className="py-3.5 px-4 text-zinc-600 text-xs leading-relaxed">
                     <div>{item.dimensions}</div>
                     <div>{item.substrate}</div>
-                    <div className="text-amber-600 font-semibold">Plate: {item.plateRef}</div>
+                    <div className="accession text-amber-700 font-semibold">Plate {item.plateRef}</div>
                   </td>
-                  <td className="py-3.5 px-4 text-right font-mono text-zinc-700">{item.quantity.toLocaleString()}</td>
-                  <td className="py-3.5 px-4 text-right font-mono text-zinc-600">{formatAUD(item.unitPrice)}</td>
-                  <td className="py-3.5 px-4 text-right font-bold text-zinc-900">{formatAUD(item.lineTotal)}</td>
+                  <td className="py-3.5 px-4 text-right font-mono text-zinc-700 whitespace-nowrap">{item.quantity.toLocaleString()}</td>
+                  <td className="py-3.5 px-4 text-right font-mono text-zinc-600 whitespace-nowrap">{formatAUD(item.unitPrice)}</td>
+                  <td className="py-3.5 px-4 text-right font-mono font-bold text-zinc-900 whitespace-nowrap">{formatAUD(item.lineTotal)}</td>
                 </tr>
               ))}
             </tbody>
             <tfoot>
               <tr className="border-t-2 border-zinc-200 bg-zinc-50">
-                <td colSpan={4} className="py-3 px-4 font-bold text-zinc-700 text-right uppercase tracking-wider text-[10px]">Order Total</td>
-                <td className="py-3 px-4 text-right font-black text-zinc-900 text-sm">{formatAUD(order.total)}</td>
+                <td colSpan={4} className="py-3 px-4 font-bold text-zinc-700 text-right uppercase tracking-wider text-xs">Order Total</td>
+                <td className="py-3 px-4 text-right font-mono font-bold text-zinc-900 text-sm whitespace-nowrap">{formatAUD(order.total)}</td>
               </tr>
             </tfoot>
           </table>
@@ -183,28 +183,28 @@ export default async function OrderDetailPage({
                   <CreditCard className="w-4 h-4 text-amber-500" />
                   <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Payment</h3>
                 </div>
-                <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${paymentStatusStyles(order.paymentStatus)}`}>
+                <span className={`px-2 py-0.5 rounded text-xs font-bold border ${paymentStatusStyles(order.paymentStatus)}`}>
                   {order.paymentStatus}
                 </span>
               </div>
               {paymentNotice === 'paid' && (
-                <p className="text-[11px] text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2.5 py-2 mb-3">Payment received — thank you.</p>
+                <p className="text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 rounded px-2.5 py-2 mb-3">Payment received — thank you.</p>
               )}
               {paymentNotice === 'processing' && (
-                <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-2 mb-3">Your payment is processing. We&apos;ll notify you when it clears.</p>
+                <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded px-2.5 py-2 mb-3">Your payment is processing. We&apos;ll notify you when it clears.</p>
               )}
               {paymentNotice === 'cancelled' && order.paymentStatus === 'Unpaid' && (
-                <p className="text-[11px] text-zinc-600 bg-zinc-50 border border-zinc-200 rounded px-2.5 py-2 mb-3">Payment cancelled — nothing was charged.</p>
+                <p className="text-xs text-zinc-600 bg-zinc-50 border border-zinc-200 rounded px-2.5 py-2 mb-3">Payment cancelled — nothing was charged.</p>
               )}
-              <div className="space-y-2 text-xs font-mono">
+              <div className="space-y-2 text-[13px]">
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Total inc. GST</span>
-                  <span className="font-semibold text-zinc-800">{formatAUD(order.total * (1 + GST_RATE))}</span>
+                  <span className="accession font-semibold text-zinc-800">{formatAUD(order.total * (1 + GST_RATE))}</span>
                 </div>
                 {order.paymentStatus === 'Paid' && order.amountPaid !== undefined && (
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Paid</span>
-                    <span className="font-semibold text-emerald-600">{formatAUD(order.amountPaid)}{order.paidAt ? ` · ${formatDate(order.paidAt)}` : ''}</span>
+                    <span className="accession font-semibold text-emerald-600">{formatAUD(order.amountPaid)}{order.paidAt ? ` · ${formatDate(order.paidAt)}` : ''}</span>
                   </div>
                 )}
               </div>
@@ -222,28 +222,28 @@ export default async function OrderDetailPage({
                 <Truck className="w-4 h-4 text-emerald-500" />
                 <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Delivery</h3>
               </div>
-              <div className="space-y-2 text-xs font-mono">
+              <div className="space-y-2 text-[13px]">
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Courier</span>
-                  <span className="font-semibold text-zinc-800">{order.courier}</span>
+                  <span className="accession font-semibold text-zinc-800">{order.courier}</span>
                 </div>
                 {order.trackingNumber && (
                   <div className="flex justify-between">
                     <span className="text-zinc-400">Tracking</span>
-                    <span className="font-semibold text-amber-600">{order.trackingNumber}</span>
+                    <span className="accession font-semibold text-amber-600">{order.trackingNumber}</span>
                   </div>
                 )}
                 {order.estimatedDelivery && (
                   <div className="flex justify-between">
                     <span className="text-zinc-400">ETA</span>
-                    <span className="font-semibold text-zinc-800">{formatDate(order.estimatedDelivery)}</span>
+                    <span className="accession font-semibold text-zinc-800">{formatDate(order.estimatedDelivery)}</span>
                   </div>
                 )}
               </div>
               {order.notes && (
                 <div className="mt-3 pt-3 border-t border-zinc-100 flex items-start space-x-1.5">
                   <MapPin className="w-3 h-3 text-zinc-400 shrink-0 mt-0.5" />
-                  <p className="text-[11px] text-zinc-500">{order.notes}</p>
+                  <p className="text-xs text-zinc-500">{order.notes}</p>
                 </div>
               )}
             </div>
@@ -254,36 +254,36 @@ export default async function OrderDetailPage({
               <FileText className="w-4 h-4 text-indigo-500" />
               <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-600">References</h3>
             </div>
-            <div className="space-y-2 text-xs font-mono">
+            <div className="space-y-2 text-[13px]">
               {order.invoiceRef && (
                 <div className="flex justify-between">
                   <span className="text-zinc-400">Invoice</span>
-                  <span className="font-semibold text-indigo-600">{order.invoiceRef}</span>
+                  <span className="accession font-semibold text-indigo-600">{order.invoiceRef}</span>
                 </div>
               )}
               {order.purchaseOrderRef && (
                 <div className="flex justify-between">
                   <span className="text-zinc-400">PO Ref</span>
-                  <span className="font-semibold text-zinc-800">{order.purchaseOrderRef}</span>
+                  <span className="accession font-semibold text-zinc-800">{order.purchaseOrderRef}</span>
                 </div>
               )}
               <div className="flex justify-between">
                 <span className="text-zinc-400">Order Date</span>
-                <span className="font-semibold text-zinc-800">{formatDate(order.date)}</span>
+                <span className="accession font-semibold text-zinc-800">{formatDate(order.date)}</span>
               </div>
             </div>
           </div>
 
-          <div className="bg-zinc-900 rounded-lg p-4">
-            <h3 className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-3">Quick Actions</h3>
+          <div className="bg-wall rounded-sm p-4">
+            <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-blue-200 mb-3">Quick Actions</h3>
             <div className="space-y-2">
-              <Link href={`/invoice/${order.id}`} target="_blank" className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
-                <FileText className="w-3.5 h-3.5 text-amber-400" />
+              <Link href={`/invoice/${order.id}`} target="_blank" className="w-full flex items-center space-x-2 text-[13px] font-medium text-blue-50 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-2.5 rounded-sm transition-colors">
+                <FileText className="w-3.5 h-3.5 text-brass-light" />
                 <span>{order.invoiceRef ? 'Download Invoice PDF' : 'Print Order Confirmation'}</span>
               </Link>
               {!isStaff && order.items[0]?.plateRef && (
-                <Link href={`/vault?q=${encodeURIComponent(order.items[0].plateRef)}`} className="w-full flex items-center space-x-2 text-xs font-medium text-zinc-300 hover:text-white bg-zinc-800 hover:bg-zinc-700 px-3 py-2 rounded transition-colors">
-                  <FileText className="w-3.5 h-3.5 text-amber-400" />
+                <Link href={`/vault?q=${encodeURIComponent(order.items[0].plateRef)}`} className="w-full flex items-center space-x-2 text-[13px] font-medium text-blue-50 hover:text-white bg-white/10 hover:bg-white/15 px-3 py-2.5 rounded-sm transition-colors">
+                  <FileText className="w-3.5 h-3.5 text-brass-light" />
                   <span>View Artwork Proof</span>
                 </Link>
               )}

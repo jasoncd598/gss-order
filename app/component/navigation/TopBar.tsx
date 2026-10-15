@@ -72,7 +72,7 @@ export default function TopBar({ displayName, role, email, notifications: initia
     .slice(0, 2);
 
   return (
-    <header className="bg-white border-b border-zinc-200 h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 shadow-sm lg:pl-6 pl-16">
+    <header className="bg-label border-b border-zinc-300 h-16 px-4 sm:px-6 flex items-center justify-between shrink-0 lg:pl-6 pl-16">
       {/* Search */}
       <form onSubmit={submitSearch} role="search" className="flex items-center flex-1 max-w-xs sm:max-w-md">
         <div className="relative w-full">
@@ -81,19 +81,19 @@ export default function TopBar({ displayName, role, email, notifications: initia
             type="search"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search SKU, Order #, Plate Ref…"
+            placeholder="Search orders, plate refs, products…"
             aria-label="Search orders and artwork"
-            className="w-full pl-9 pr-4 py-1.5 bg-zinc-50 border border-zinc-300 rounded text-xs focus:outline-none focus:ring-1 focus:ring-amber-500 focus:bg-white text-zinc-800"
+            className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-300 rounded-sm text-[13px] placeholder:text-zinc-500 focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 text-zinc-900"
           />
         </div>
       </form>
 
       <div className="flex items-center space-x-2 sm:space-x-3 ml-3">
         {/* Cart badge */}
-        <Link href="/cart" className="relative p-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded border border-zinc-200 transition-colors" aria-label="Cart">
+        <Link href="/cart" className="relative p-2 text-zinc-700 hover:text-zinc-950 hover:bg-white rounded-sm border border-zinc-300 transition-colors" aria-label="Cart">
           <ShoppingCart className="w-4 h-4" />
           {count > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-amber-500 text-zinc-950 text-[9px] font-black rounded-full flex items-center justify-center">
+            <span className="accession absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-300 text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
               {count}
             </span>
           )}
@@ -103,26 +103,26 @@ export default function TopBar({ displayName, role, email, notifications: initia
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => { setNotifOpen(!notifOpen); setProfileOpen(false); }}
-            className="p-2 text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded border border-zinc-200 relative transition-colors"
+            className="p-2 text-zinc-700 hover:text-zinc-950 hover:bg-white rounded-sm border border-zinc-300 relative transition-colors"
             aria-label="Notifications"
           >
             <Bell className="w-4 h-4" />
             {unreadCount > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-amber-500 text-zinc-950 text-[9px] font-black rounded-full flex items-center justify-center">
+              <span className="accession absolute -top-1 -right-1 min-w-[18px] h-[18px] px-1 bg-amber-300 text-zinc-950 text-xs font-bold rounded-full flex items-center justify-center">
                 {unreadCount}
               </span>
             )}
           </button>
 
           {notifOpen && (
-            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-zinc-200 rounded-xl shadow-2xl z-50 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-80 sm:w-96 bg-white border border-zinc-300 rounded-sm shadow-[0_12px_32px_-8px_rgba(19,18,15,0.28)] z-50 overflow-hidden">
               <div className="px-4 py-3 border-b border-zinc-100 flex items-center justify-between">
                 <div>
                   <span className="font-bold text-zinc-900 text-sm">Notifications</span>
-                  {unreadCount > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-[10px] font-bold">{unreadCount} new</span>}
+                  {unreadCount > 0 && <span className="ml-2 px-1.5 py-0.5 rounded-full bg-amber-100 text-amber-800 text-xs font-bold">{unreadCount} new</span>}
                 </div>
                 {unreadCount > 0 && (
-                  <button onClick={() => markRead()} className="text-[11px] text-amber-600 hover:text-amber-800 font-semibold">
+                  <button onClick={() => markRead()} className="text-xs text-amber-600 hover:text-amber-800 font-semibold">
                     Mark all read
                   </button>
                 )}
@@ -148,16 +148,16 @@ export default function TopBar({ displayName, role, email, notifications: initia
                           <span className={`text-xs text-zinc-900 ${!n.read ? 'font-bold' : 'font-semibold'}`}>{n.title}</span>
                           {!n.read && <span className="w-2 h-2 rounded-full bg-amber-400 shrink-0 mt-1 ml-2" />}
                         </div>
-                        {n.body && <p className="text-[11px] text-zinc-500 mt-0.5 leading-relaxed line-clamp-2">{n.body}</p>}
-                        <span className="text-[10px] text-zinc-400 font-mono" suppressHydrationWarning>{timeAgo(n.createdAt)}</span>
+                        {n.body && <p className="text-xs text-zinc-500 mt-0.5 leading-relaxed line-clamp-2">{n.body}</p>}
+                        <span className="text-xs text-zinc-400 font-mono" suppressHydrationWarning>{timeAgo(n.createdAt)}</span>
                       </div>
                     </Link>
                   );
                 })}
               </div>
               <div className="px-4 py-2.5 border-t border-zinc-100 bg-zinc-50">
-                <Link href="/notifications" onClick={() => setNotifOpen(false)} className="text-[11px] text-amber-600 hover:text-amber-800 font-semibold w-full text-center block">
-                  View all activity →
+                <Link href="/notifications" onClick={() => setNotifOpen(false)} className="text-xs text-amber-600 hover:text-amber-800 font-semibold w-full text-center block">
+                  View all activity
                 </Link>
               </div>
             </div>
@@ -170,23 +170,23 @@ export default function TopBar({ displayName, role, email, notifications: initia
         <div className="relative" ref={profileRef}>
           <button
             onClick={() => { setProfileOpen(!profileOpen); setNotifOpen(false); }}
-            className="flex items-center space-x-2 text-xs hover:bg-zinc-50 rounded-lg px-2 py-1.5 transition-colors"
+            className="flex items-center space-x-2 text-xs hover:bg-white rounded-sm px-2 py-1.5 transition-colors"
           >
-            <div className="bg-zinc-900 text-amber-400 font-bold p-1.5 rounded shrink-0 w-8 h-8 flex items-center justify-center text-[11px]">
+            <div className="bg-wall text-brass-light font-semibold rounded-full shrink-0 w-8 h-8 flex items-center justify-center text-xs tracking-wide">
               {initials || <UserCheck className="w-4 h-4" />}
             </div>
             <div className="hidden sm:block text-left">
-              <p className="font-semibold text-zinc-900 leading-tight">{displayName}</p>
-              <p className="text-[10px] text-zinc-500 font-mono leading-tight">{role}</p>
+              <p className="font-semibold text-zinc-900 leading-tight text-[13px]">{displayName}</p>
+              <p className="text-xs text-zinc-600 leading-tight">{role}</p>
             </div>
             <ChevronDown className="w-3.5 h-3.5 text-zinc-400 hidden sm:block" />
           </button>
 
           {profileOpen && (
-            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-zinc-200 rounded-xl shadow-2xl z-50 py-1.5 overflow-hidden">
+            <div className="absolute right-0 top-full mt-2 w-56 bg-white border border-zinc-300 rounded-sm shadow-[0_12px_32px_-8px_rgba(19,18,15,0.28)] z-50 py-1.5 overflow-hidden">
               <div className="px-4 py-2.5 border-b border-zinc-100">
                 <p className="font-semibold text-zinc-900 text-xs">{displayName}</p>
-                <p className="text-[10px] text-zinc-400 font-mono truncate">{email}</p>
+                <p className="text-xs text-zinc-400 font-mono truncate">{email}</p>
               </div>
               <Link href="/account" onClick={() => setProfileOpen(false)} className="flex items-center space-x-2.5 px-4 py-2.5 text-xs text-zinc-700 hover:bg-zinc-50 transition-colors">
                 <Settings className="w-3.5 h-3.5 text-zinc-400" />

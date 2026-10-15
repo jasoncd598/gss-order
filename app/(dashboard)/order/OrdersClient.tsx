@@ -72,8 +72,8 @@ export default function OrdersClient({
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className={`px-3 py-1.5 rounded text-[11px] font-semibold whitespace-nowrap transition-colors ${
-                statusFilter === s ? 'bg-zinc-900 text-amber-400' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
+              className={`px-3 py-1.5 rounded text-xs font-semibold whitespace-nowrap transition-colors ${
+                statusFilter === s ? 'bg-wall text-brass-light' : 'bg-white border border-zinc-200 text-zinc-600 hover:bg-zinc-50'
               }`}
             >
               {s}
@@ -95,10 +95,10 @@ export default function OrdersClient({
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="overflow-x-auto">
+          <div className="hidden md:block overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 font-semibold uppercase text-[10px] tracking-wider">
+              <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 font-semibold uppercase text-xs tracking-wider">
                 <th className="py-3 px-4">Order Ref</th>
                 <th className="py-3 px-4">Product / SKU</th>
                 <th className="py-3 px-4">Plate Ref</th>
@@ -118,30 +118,30 @@ export default function OrdersClient({
               ) : (
                 filtered.map((order) => (
                   <tr key={order.id} className="hover:bg-zinc-50 transition-colors group">
-                    <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-[11px]">{order.ref}</td>
+                    <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-xs">{order.ref}</td>
                     <td className="py-3.5 px-4 max-w-[200px]">
                       <div className="font-medium text-zinc-800 truncate">{order.items[0]?.productName}</div>
-                      {order.items.length > 1 && <span className="text-zinc-400 text-[10px]">+{order.items.length - 1} more</span>}
+                      {order.items.length > 1 && <span className="text-zinc-400 text-xs">+{order.items.length - 1} more</span>}
                     </td>
-                    <td className="py-3.5 px-4 text-zinc-500 font-mono text-[11px]">{order.items[0]?.plateRef}</td>
-                    <td className="py-3.5 px-4 text-zinc-700 font-mono text-[11px]">{order.items[0]?.quantity.toLocaleString()} units</td>
-                    <td className="py-3.5 px-4 text-zinc-500 text-[11px]">{formatDate(order.date)}</td>
+                    <td className="py-3.5 px-4 accession text-amber-700 text-xs">{order.items[0]?.plateRef}</td>
+                    <td className="py-3.5 px-4 text-zinc-700 font-mono text-xs">{order.items[0]?.quantity.toLocaleString()} units</td>
+                    <td className="py-3.5 px-4 text-zinc-500 text-xs">{formatDate(order.date)}</td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${orderStatusStyles(order.status)}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${orderStatusStyles(order.status)}`}>
                         {order.status}
                       </span>
                     </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-[11px]">{formatAUD(order.total)}</td>
+                    <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-xs">{formatAUD(order.total)}</td>
                     <td className="py-3.5 px-4">
                       {order.paymentStatus && (
-                        <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${paymentStatusStyles(order.paymentStatus)}`}>
+                        <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${paymentStatusStyles(order.paymentStatus)}`}>
                           {order.paymentStatus}
                         </span>
                       )}
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Link href={`/order/${order.id}`} className="text-[10px] font-semibold text-zinc-600 hover:text-zinc-900 flex items-center space-x-1 underline">
+                      <div className="flex items-center justify-end">
+                        <Link href={`/order/${order.id}`} className="text-xs font-semibold text-zinc-600 hover:text-zinc-900 flex items-center space-x-1 underline">
                           <span>View</span><ChevronRight className="w-3 h-3" />
                         </Link>
                       </div>
@@ -152,10 +152,37 @@ export default function OrdersClient({
             </tbody>
           </table>
           </div>
+
+          {/* Phones and small tablets: each order as a stacked record */}
+          <ul className="md:hidden divide-y divide-zinc-200">
+            {filtered.length === 0 ? (
+              <li className="py-10 text-center text-zinc-500 text-xs">No orders match your search.</li>
+            ) : filtered.map((order) => (
+              <li key={order.id}>
+                <Link href={`/order/${order.id}`} className="block px-4 py-3.5 hover:bg-zinc-50">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="accession font-bold text-zinc-950 text-[13px]">{order.ref}</span>
+                    <span className={orderStatusStyles(order.status)}>{order.status}</span>
+                  </div>
+                  <div className="mt-1.5 text-[13px] text-zinc-800">
+                    {order.items[0]?.productName}
+                    {order.items.length > 1 && <span className="text-zinc-500 text-xs"> +{order.items.length - 1} more</span>}
+                  </div>
+                  <div className="mt-1 text-xs text-zinc-600">
+                    <span className="accession text-amber-700">{order.items[0]?.plateRef}</span> · <span className="accession">{order.items[0]?.quantity.toLocaleString()}</span> units · {formatDate(order.date)}
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    {order.paymentStatus ? <span className={paymentStatusStyles(order.paymentStatus)}>{order.paymentStatus}</span> : <span />}
+                    <span className="accession font-bold text-zinc-950 text-[13px]">{formatAUD(order.total)}</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
-      <p className="text-center text-zinc-400 text-[11px] font-mono">
+      <p className="text-center text-zinc-600 text-xs">
         Showing {filtered.length} of {orders.length} orders
       </p>
     </div>

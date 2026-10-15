@@ -78,14 +78,14 @@ export default function ArtworkUploadModal({ companyId, demo = false }: { compan
     <>
       <button
         onClick={() => { reset(); setOpen(true); }}
-        className="inline-flex items-center gap-1.5 text-[11px] font-semibold text-amber-600 hover:text-amber-800"
+        className="inline-flex items-center gap-1.5 text-xs font-semibold text-amber-600 hover:text-amber-800"
       >
         <Upload className="w-3.5 h-3.5" /> Upload Artwork
       </button>
 
       {open && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-zinc-950/60 backdrop-blur-sm" onClick={() => !pending && setOpen(false)} />
+          <div className="absolute inset-0 bg-wall-deep/70" onClick={() => !pending && setOpen(false)} />
           <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-100 sticky top-0 bg-white z-10">
               <h2 className="font-bold text-zinc-900 text-sm">Upload Artwork / Proof</h2>
@@ -113,7 +113,7 @@ export default function ArtworkUploadModal({ companyId, demo = false }: { compan
                 <label className={`flex flex-col items-center justify-center border-2 border-dashed rounded-lg py-6 cursor-pointer transition-colors ${file ? 'border-amber-300 bg-amber-50' : 'border-zinc-300 hover:bg-zinc-50'}`}>
                   <FileUp className="w-6 h-6 text-zinc-400 mb-1" />
                   <span className="text-xs font-semibold text-zinc-700">{file ? file.name : 'Choose a file'}</span>
-                  <span className="text-[10px] text-zinc-400">{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : `PDF, PNG, JPG, SVG, AI, EPS · up to ${MAX_MB} MB`}</span>
+                  <span className="text-xs text-zinc-400">{file ? `${(file.size / 1024 / 1024).toFixed(1)} MB` : `PDF, PNG, JPG, SVG, AI, EPS · up to ${MAX_MB} MB`}</span>
                   <input type="file" accept={ACCEPT} className="sr-only" onChange={(e) => pick(e.target.files?.[0] ?? null)} />
                 </label>
 

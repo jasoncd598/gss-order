@@ -45,7 +45,7 @@ export default function CompanyStatusActions({ companyId, status: initial }: { c
         )}
         {status === 'Active' && confirming && (
           <>
-            <span className="text-[11px] text-zinc-500">Block all ordering for this company?</span>
+            <span className="text-xs text-zinc-500">Block all ordering for this company?</span>
             <button
               onClick={() => apply('Suspended')}
               disabled={pending}
@@ -59,7 +59,7 @@ export default function CompanyStatusActions({ companyId, status: initial }: { c
           </>
         )}
       </div>
-      {error && <span className="text-[11px] text-red-600">{error}</span>}
+      {error && <span className="text-xs text-red-600">{error}</span>}
     </div>
   );
 }

@@ -1,4 +1,5 @@
-import { Package, RefreshCw, FileCheck, DollarSign, ArrowRight, TrendingUp, Clock } from 'lucide-react';
+import { Package, RefreshCw, ArrowRight, Clock } from 'lucide-react';
+import Ledger from '../component/Ledger';
 import Link from 'next/link';
 import { createClient } from '../lib/supabase/server';
 import { getOrdersByCompany, getDashboardStats } from '../lib/db';
@@ -44,84 +45,17 @@ export default async function OverviewPage() {
         </Link>
       </div>
 
-      {/* KPI Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-          <div className="flex justify-between items-center text-zinc-500 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Active Orders</span>
-            <Package className="w-4 h-4 text-blue-500" />
-          </div>
-          <div className="text-2xl font-black text-zinc-900">{stats.activeOrders}</div>
-          <p className="text-[11px] text-zinc-500 mt-1 font-mono">{stats.totalOrders} total orders</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-          <div className="flex justify-between items-center text-zinc-500 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">Approved Plates</span>
-            <FileCheck className="w-4 h-4 text-indigo-500" />
-          </div>
-          <div className="text-2xl font-black text-zinc-900">{stats.approvedArtwork}</div>
-          <p className="text-[11px] text-zinc-500 mt-1 font-mono">Ready for instant run</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-          <div className="flex justify-between items-center text-zinc-500 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">YTD Spend</span>
-            <TrendingUp className="w-4 h-4 text-emerald-500" />
-          </div>
-          <div className="text-2xl font-black text-zinc-900">{formatAUD(stats.ytdSpend)}</div>
-          <p className="text-[11px] text-zinc-500 mt-1 font-mono">FY{new Date().getFullYear()}/{String(new Date().getFullYear()+1).slice(2)} Account</p>
-        </div>
-
-        <div className="bg-white p-4 rounded-lg border border-zinc-200 shadow-sm">
-          <div className="flex justify-between items-center text-zinc-500 mb-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider">{paymentTerms} Credit</span>
-            <DollarSign className="w-4 h-4 text-amber-500" />
-          </div>
-          <div className="text-2xl font-black text-zinc-900">{formatAUD(creditUsed)}</div>
-          {creditLimit > 0 ? (
-            <div className="mt-2">
-              <div className="flex justify-between text-[10px] text-zinc-400 mb-1">
-                <span>Used</span>
-                <span>{creditPct}% of {formatAUD(creditLimit)}</span>
-              </div>
-              <div className="w-full h-1.5 bg-zinc-100 rounded-full">
-                <div className="h-1.5 bg-amber-400 rounded-full" style={{ width: `${Math.min(creditPct, 100)}%` }} />
-              </div>
-            </div>
-          ) : (
-            <p className="text-[11px] text-zinc-400 mt-1 font-mono">No credit limit set</p>
-          )}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Link href="/order" className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg p-4 flex items-center space-x-3 transition-colors group">
-          <div className="bg-amber-400/10 text-amber-400 p-2 rounded"><Package className="w-5 h-5" /></div>
-          <div>
-            <div className="text-white font-bold text-sm">Order History</div>
-            <div className="text-zinc-400 text-[11px]">View all {stats.totalOrders} orders</div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-amber-400 ml-auto transition-colors" />
-        </Link>
-        <Link href="/vault" className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg p-4 flex items-center space-x-3 transition-colors group">
-          <div className="bg-amber-400/10 text-amber-400 p-2 rounded"><FileCheck className="w-5 h-5" /></div>
-          <div>
-            <div className="text-white font-bold text-sm">Artwork Vault</div>
-            <div className="text-zinc-400 text-[11px]">{stats.approvedArtwork} approved plates</div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-amber-400 ml-auto transition-colors" />
-        </Link>
-        <Link href="/team" className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 rounded-lg p-4 flex items-center space-x-3 transition-colors group">
-          <div className="bg-amber-400/10 text-amber-400 p-2 rounded"><RefreshCw className="w-5 h-5" /></div>
-          <div>
-            <div className="text-white font-bold text-sm">Team &amp; Permissions</div>
-            <div className="text-zinc-400 text-[11px]">Manage your team</div>
-          </div>
-          <ArrowRight className="w-4 h-4 text-zinc-600 group-hover:text-amber-400 ml-auto transition-colors" />
-        </Link>
-      </div>
+      <Ledger
+        label="Account summary"
+        items={[
+          { label: 'Active orders', value: stats.activeOrders, note: `${stats.totalOrders} orders in total`, href: '/order' },
+          { label: 'Approved plates', value: stats.approvedArtwork, note: 'Ready to reorder', href: '/vault' },
+          { label: 'Spend this year', value: formatAUD(stats.ytdSpend), note: `FY${new Date().getFullYear()}/${String(new Date().getFullYear() + 1).slice(2)}` },
+          creditLimit > 0
+            ? { label: `${paymentTerms} credit used`, value: formatAUD(creditUsed), note: `${creditPct}% of ${formatAUD(creditLimit)}`, warn: creditPct >= 90 }
+            : { label: 'Payment terms', value: paymentTerms, note: 'No credit limit set' },
+        ]}
+      />
 
       {/* Recent Orders */}
       {recent.length > 0 ? (
@@ -135,10 +69,10 @@ export default async function OverviewPage() {
               <span>View All</span><ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="overflow-x-auto">
+          <div className="hidden sm:block overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-zinc-100 bg-zinc-50/50 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+              <tr className="border-b border-zinc-100 bg-zinc-50/50 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
                 <th className="py-2.5 px-4">Order Ref</th>
                 <th className="py-2.5 px-4">Product</th>
                 <th className="py-2.5 px-4">Date</th>
@@ -150,23 +84,45 @@ export default async function OverviewPage() {
             <tbody className="divide-y divide-zinc-100 text-zinc-700">
               {recent.map((order) => (
                 <tr key={order.id} className="hover:bg-zinc-50 transition-colors">
-                  <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-[11px]">{order.ref}</td>
-                  <td className="py-3.5 px-4 font-medium text-zinc-800 max-w-[200px] truncate">{order.items[0]?.productName}</td>
-                  <td className="py-3.5 px-4 text-zinc-500 text-[11px]">{formatDate(order.date)}</td>
+                  <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-xs">{order.ref}</td>
+                  <td className="py-3.5 px-4 max-w-[240px]">
+                    <div className="font-medium text-zinc-800 truncate">{order.items[0]?.productName}</div>
+                    {order.items[0]?.plateRef && <div className="accession text-xs text-amber-700">{order.items[0].plateRef}</div>}
+                  </td>
+                  <td className="py-3.5 px-4 text-zinc-500 text-xs">{formatDate(order.date)}</td>
                   <td className="py-3.5 px-4">
-                    <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${orderStatusStyles(order.status)}`}>
+                    <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${orderStatusStyles(order.status)}`}>
                       {order.status}
                     </span>
                   </td>
-                  <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-[11px]">{formatAUD(order.total)}</td>
+                  <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-xs">{formatAUD(order.total)}</td>
                   <td className="py-3.5 px-4 text-right">
-                    <Link href={`/order/${order.id}`} className="text-[10px] font-semibold text-amber-600 hover:text-amber-800 underline">View →</Link>
+                    <Link href={`/order/${order.id}`} className="text-xs font-semibold text-amber-600 hover:text-amber-800 underline">View</Link>
                   </td>
                 </tr>
               ))}
             </tbody>
           </table>
           </div>
+
+          {/* Phones: each order as a stacked record */}
+          <ul className="sm:hidden divide-y divide-zinc-200">
+            {recent.map((order) => (
+              <li key={order.id}>
+                <Link href={`/order/${order.id}`} className="block px-4 py-3.5 hover:bg-zinc-50">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="accession font-bold text-zinc-950 text-[13px]">{order.ref}</span>
+                    <span className={orderStatusStyles(order.status)}>{order.status}</span>
+                  </div>
+                  <div className="mt-1.5 text-[13px] text-zinc-800">{order.items[0]?.productName}</div>
+                  <div className="mt-1 flex items-center justify-between text-xs text-zinc-600">
+                    <span className="accession text-amber-700">{order.items[0]?.plateRef}</span>
+                    <span className="accession font-bold text-zinc-950 text-[13px]">{formatAUD(order.total)}</span>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm p-12 text-center">

@@ -8,10 +8,10 @@ import type { ReorderRequest, ReorderStatus } from '../../lib/types';
 import { cancelReorderRequestAction } from '../../lib/actions';
 
 const STATUS_STYLES: Record<ReorderStatus, string> = {
-  Pending:   'bg-yellow-50 text-yellow-700 border-yellow-200',
-  Approved:  'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Rejected:  'bg-red-50 text-red-700 border-red-200',
-  Cancelled: 'bg-zinc-100 text-zinc-500 border-zinc-200',
+  Pending:   'stamp stamp-ochre',
+  Approved:  'stamp stamp-green',
+  Rejected:  'stamp stamp-red',
+  Cancelled: 'stamp stamp-grey',
 };
 
 const STATUS_LABEL: Record<ReorderStatus, string> = {
@@ -49,7 +49,7 @@ export default function ReorderRequestsPanel({ requests: initial }: { requests: 
       <div className="px-5 py-3 border-b border-zinc-100 bg-zinc-50 flex items-center space-x-2">
         <RefreshCw className="w-4 h-4 text-amber-500" />
         <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Reorder Requests</h2>
-        <span className="text-[10px] text-zinc-400">
+        <span className="text-xs text-zinc-400">
           {requests.filter((r) => r.status === 'Pending').length} awaiting review
         </span>
       </div>
@@ -59,7 +59,7 @@ export default function ReorderRequestsPanel({ requests: initial }: { requests: 
           <li key={r.id} className="px-5 py-3 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 text-xs">
             <div className="flex items-center gap-2 sm:w-56 shrink-0">
               <span className="font-mono font-bold text-zinc-900">{r.ref}</span>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${STATUS_STYLES[r.status]}`}>
+              <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${STATUS_STYLES[r.status]}`}>
                 {STATUS_LABEL[r.status]}
               </span>
             </div>
@@ -67,7 +67,7 @@ export default function ReorderRequestsPanel({ requests: initial }: { requests: 
               <div className="text-zinc-800 font-medium truncate">
                 {r.items[0]?.productName}{r.items.length > 1 ? ` + ${r.items.length - 1} more` : ''}
               </div>
-              <div className="text-[11px] text-zinc-400">
+              <div className="text-xs text-zinc-400">
                 Repeat of {r.sourceOrderRef} · {formatDate(r.requestedAt)} · {r.requestedBy}
                 {r.rejectionReason && <span className="text-red-600"> · {r.rejectionReason}</span>}
               </div>
@@ -75,15 +75,15 @@ export default function ReorderRequestsPanel({ requests: initial }: { requests: 
             <div className="flex items-center gap-3 sm:justify-end">
               <span className="font-mono font-bold text-zinc-900">{formatAUD(r.total)}</span>
               {r.status === 'Approved' && r.createdOrderId && (
-                <Link href={`/order/${r.createdOrderId}`} className="text-[11px] font-semibold text-amber-600 hover:text-amber-800 underline">
-                  Track order →
+                <Link href={`/order/${r.createdOrderId}`} className="text-xs font-semibold text-amber-600 hover:text-amber-800 underline">
+                  Track order
                 </Link>
               )}
               {r.status === 'Pending' && (
                 <button
                   onClick={() => cancel(r.id)}
                   disabled={busyId === r.id}
-                  className="text-[11px] font-semibold text-zinc-500 hover:text-red-600 inline-flex items-center gap-1"
+                  className="text-xs font-semibold text-zinc-500 hover:text-red-600 inline-flex items-center gap-1"
                 >
                   {busyId === r.id && <Loader2 className="w-3 h-3 animate-spin" />}
                   Cancel

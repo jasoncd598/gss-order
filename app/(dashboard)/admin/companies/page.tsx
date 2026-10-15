@@ -9,9 +9,9 @@ import { formatAUD } from '../../../lib/utils';
 import CompanyFormModal from '../../../component/admin/CompanyFormModal';
 
 const STATUS_COLORS: Record<string, string> = {
-  Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
-  Suspended: 'bg-red-50 text-red-700 border-red-200',
-  Pending:   'bg-yellow-50 text-yellow-700 border-yellow-200',
+  Active:    'stamp stamp-green',
+  Suspended: 'stamp stamp-red',
+  Pending:   'stamp stamp-ochre',
 };
 
 export default async function AdminCompaniesPage() {
@@ -34,7 +34,7 @@ export default async function AdminCompaniesPage() {
           <p className="text-xs text-zinc-500">{companies.length} registered company accounts</p>
         </div>
         <div className="flex items-center space-x-2">
-          <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">STAFF ONLY</span>
+          <span className="px-2.5 py-1 rounded bg-amber-100 text-amber-800 text-xs font-bold border border-amber-200">STAFF ONLY</span>
           <CompanyFormModal />
         </div>
       </div>
@@ -49,11 +49,11 @@ export default async function AdminCompaniesPage() {
         ].map((k) => (
           <div key={k.label} className={`bg-white border rounded-lg p-4 shadow-sm ${k.warn ? 'border-red-200' : 'border-zinc-200'}`}>
             <div className="flex justify-between items-start mb-1">
-              <span className="text-[10px] font-semibold uppercase tracking-wider text-zinc-500">{k.label}</span>
+              <span className="text-xs font-semibold uppercase tracking-wider text-zinc-500">{k.label}</span>
               {k.warn && <AlertTriangle className="w-3.5 h-3.5 text-red-500" />}
             </div>
             <div className={`text-2xl font-black ${k.warn ? 'text-red-600' : 'text-zinc-900'}`}>{k.value}</div>
-            <div className="text-[10px] text-zinc-400 mt-0.5">{k.sub}</div>
+            <div className="text-xs text-zinc-400 mt-0.5">{k.sub}</div>
           </div>
         ))}
       </div>
@@ -66,7 +66,7 @@ export default async function AdminCompaniesPage() {
           <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-400 font-semibold uppercase text-[10px] tracking-wider">
+              <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
                 <th className="py-3 px-4">Company</th>
                 <th className="py-3 px-4">ABN</th>
                 <th className="py-3 px-4">Terms</th>
@@ -85,13 +85,13 @@ export default async function AdminCompaniesPage() {
                   <tr key={co.id} className="hover:bg-zinc-50 transition-colors">
                     <td className="py-3.5 px-4">
                       <div className="font-semibold text-zinc-900">{co.name}</div>
-                      <div className="text-zinc-400 text-[10px] font-mono">{co.industry ?? '—'}</div>
+                      <div className="text-zinc-400 text-xs font-mono">{co.industry ?? '—'}</div>
                     </td>
-                    <td className="py-3.5 px-4 text-zinc-500 font-mono text-[11px]">{co.abn ?? '—'}</td>
-                    <td className="py-3.5 px-4 text-zinc-600 font-mono text-[11px]">{co.payment_terms}</td>
+                    <td className="py-3.5 px-4 text-zinc-500 font-mono text-xs">{co.abn ?? '—'}</td>
+                    <td className="py-3.5 px-4 text-zinc-600 font-mono text-xs">{co.payment_terms}</td>
                     <td className="py-3.5 px-4 text-right font-mono text-zinc-700">{formatAUD(co.credit_limit)}</td>
                     <td className="py-3.5 px-4 text-right">
-                      <div className={`font-bold font-mono text-[11px] ${over ? 'text-red-600' : 'text-zinc-900'}`}>
+                      <div className={`font-bold font-mono text-xs ${over ? 'text-red-600' : 'text-zinc-900'}`}>
                         {formatAUD(co.current_owing)}
                       </div>
                       <div className="w-16 h-1 bg-zinc-100 rounded-full mt-1 ml-auto">
@@ -99,17 +99,17 @@ export default async function AdminCompaniesPage() {
                           style={{ width: `${Math.min(pct, 100)}%` }} />
                       </div>
                     </td>
-                    <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-right font-bold text-zinc-900 font-mono text-xs">
                       {formatAUD(co.total_spend)}
                     </td>
                     <td className="py-3.5 px-4">
-                      <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${STATUS_COLORS[co.status] ?? 'bg-zinc-100 text-zinc-600 border-zinc-200'}`}>
+                      <span className={`px-2 py-0.5 rounded text-xs font-bold border ${STATUS_COLORS[co.status] ?? 'stamp stamp-grey'}`}>
                         {co.status}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 text-right">
-                      <Link href={`/admin/companies/${co.id}`} className="text-[11px] font-semibold text-amber-600 hover:text-amber-800 underline">
-                        Manage →
+                      <Link href={`/admin/companies/${co.id}`} className="text-xs font-semibold text-amber-600 hover:text-amber-800 underline">
+                        Manage
                       </Link>
                     </td>
                   </tr>
