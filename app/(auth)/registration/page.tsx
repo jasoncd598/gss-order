@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Building2, UserPlus, ChevronRight, ChevronLeft, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import { createClient } from '../../lib/supabase/client';
 
@@ -18,6 +18,7 @@ export default function RegistrationPage() {
 }
 
 function Registration() {
+  const router = useRouter();
   const inviteToken = useSearchParams().get('invite');
   // undefined = loading, null = invalid/expired
   const [invite, setInvite] = useState<InviteInfo | null | undefined>(inviteToken ? undefined : null);
@@ -69,7 +70,7 @@ function Registration() {
     setLoading(true);
     const supabase = createClient();
 
-    const { error: signUpError } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -88,13 +89,20 @@ function Registration() {
       },
     });
 
-    setLoading(false);
-
     if (signUpError) {
+      setLoading(false);
       setError(signUpError.message);
       return;
     }
 
+    // Email confirmation off in Supabase → already signed in, go straight in (same as login)
+    if (data.session) {
+      router.push('/');
+      router.refresh();
+      return;
+    }
+
+    setLoading(false);
     setDone(true);
   }
 
@@ -275,7 +283,7 @@ function Registration() {
 
         <div className="mt-4 mx-4 p-3 rounded-lg bg-zinc-900/50 border border-zinc-800 flex items-start space-x-3">
           <Building2 className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-          <p className="text-zinc-400 text-[11px]">Access is reviewed by our team. You&apos;ll receive email confirmation within 1 business day once your account is approved.</p>
+          <p className="text-zinc-400 text-[11px]">Access is reviewed by our team. You can browse straight away; ordering unlocks once your company account is approved (usually within 1 business day).</p>
         </div>
       </div>
     </div>
