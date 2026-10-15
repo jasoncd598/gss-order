@@ -15,6 +15,7 @@ import {
   Building2,
   ShieldCheck,
   CreditCard,
+  History,
   ChevronLeft,
   ChevronRight,
   Boxes,
@@ -38,6 +39,7 @@ const ADMIN_NAV = [
   { name: 'All Orders',        href: '/admin/orders',    icon: Package },
   { name: 'Reorder Requests',  href: '/admin/reorders',  icon: ShieldCheck },
   { name: 'Subscriptions',     href: '/admin/subscriptions', icon: CreditCard },
+  { name: 'Audit Log',         href: '/admin/audit',     icon: History },
 ];
 
 // ─── Shared nav item ─────────────────────────────────────────────────────────

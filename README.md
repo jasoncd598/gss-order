@@ -32,15 +32,19 @@
    BUSINESS_EMAIL=accounts@your-domain.com.au
    BUSINESS_PHONE="..."
    BUSINESS_BANK_DETAILS="BSB 000-000 · Acc 0000 0000"
-   # DEMO_MODE=true   # optional: skip login and show sample data (screenshots only — never in production)
+   # Error tracking (optional) — a Sentry project DSN; without it errors only go to the Vercel logs
+   # SENTRY_DSN=https://<key>@o0.ingest.sentry.io/<project>
+   # NEXT_PUBLIC_SENTRY_DSN=https://<key>@o0.ingest.sentry.io/<project>   # same DSN, for browser errors
+   # DEMO_MODE=true   # optional: skip login and show sample data (screenshots / tests; ignored on Vercel production)
    ```
 2. **Database** — run the files in `supabase/migrations/` in order in the Supabase SQL editor
-   (`000` → `008`). They are idempotent. `003` is the core security layer; `004` adds invitations,
+   (`000` → `009`). They are idempotent. `003` is the core security layer; `004` adds invitations,
    the private `artwork` storage bucket, proof approval, server-priced ordering and notifications.
 3. **First staff user** — sign up in the portal, then in the SQL editor:
    ```sql
    update public.profiles set is_staff = true where email = 'you@example.com';
    ```
+   Staff must then turn on two-factor sign-in (**Account → Security**) before the admin pages open.
 4. `npm install && npm run dev`
 
 ### How accounts work
@@ -121,10 +125,36 @@ stays `/`); signed-in users still get their dashboard. The page sells the portal
 - Provisioning a portal for a new subscriber is manual for now (the success page promises it within
   1 business day).
 
-### Tests
-`npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
-escalation guards, reorders, invitations, storage access, proof approval, server pricing and
-notifications, payment state, email delivery, product pricing and subscriptions (137 checks).
+### Security
+- **Staff two-factor sign-in** — authenticator-app codes (Supabase Auth MFA, TOTP). Staff rights in the
+  database (`is_staff()`) only apply to a session that passed the code step (`aal2`), so a stolen staff
+  password alone opens nothing. Staff without two-factor are sent to **Account → Security** to set it up;
+  customers can turn it on too, and are then asked for a code at every sign-in (`/two-factor`).
+- **Audit log** — database triggers record who changed prices, order and payment statuses, company approval
+  and terms, user roles and access, proof decisions and invitations, with old → new values. Append-only
+  (nobody, including the server, can edit or delete entries). Staff read it at **Admin → Audit Log**.
+- **Rate limits** — Postgres-backed counters (they hold across serverless instances) on plan sign-up checkout
+  (per IP), card payment sessions, orders, reorder requests and invitations (per user). Sign-in, sign-up and
+  password-reset attempts are limited by Supabase Auth (**Authentication → Rate Limits**).
+- **Hardening** — security headers on every response (no framing, `nosniff`, HSTS, referrer and permissions
+  policies); sign-in redirects only to same-site paths; payment and invite links are built only for this
+  site's own hosts; demo mode can't switch on in a Vercel production deployment; the cron secret is
+  compared in constant time.
+
+### Tests, CI and monitoring
+- `npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
+  escalation guards, reorders, invitations, storage access, proof approval, server pricing and
+  notifications, payment state, email delivery, product pricing, subscriptions, staff two-factor,
+  rate limits and the audit log (161 checks).
+- `npm run test:e2e` runs Playwright browser tests of the key flows on desktop and phone sizes, in demo
+  mode: landing page and sign-in, reorder from the catalogue to a placed order, card payment and tax
+  invoice, proof approval, staff reorder approval, admin pages and the audit log, and the security headers.
+- **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push and pull request: lint, type check,
+  database tests, production build, browser tests (report uploaded on failure). No secrets needed.
+- **Error tracking** — `instrumentation.ts` reports every uncaught server error (pages, server actions,
+  route handlers, proxy) and `instrumentation-client.ts` / the error boundary report browser errors, to
+  Sentry when `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` are set (no SDK; only the error, path and route are
+  sent — never headers, cookies or form data). Without a DSN they still appear in the Vercel logs.
 
 ---
 
@@ -142,7 +172,9 @@ notifications, payment state, email delivery, product pricing and subscriptions 
 | Order status workflow | Staff status changes → customer notifications |
 | Email notifications | Every notification + invitations, via Resend (see Notifications) |
 | Responsive | Mobile drawer nav, scrollable tables, print-friendly invoices |
-| Data separation between companies | Postgres RLS; `npm run test:db` proves it (137 checks) |
+| Data separation between companies | Postgres RLS; `npm run test:db` proves it (161 checks) |
+| Security | Staff two-factor, audit log, rate limits, security headers (see Security) |
+| Testing and monitoring | DB tests + Playwright browser tests in GitHub Actions CI; Sentry error tracking |
 | Third-party integrations | Stripe card payments (Phase 2 item, done); Resend email |
 | Built for future integrations | `invoice_ref` / payment fields ready for Xero sync; per-order pages ready for QR codes |
 
@@ -152,7 +184,9 @@ notifications, payment state, email delivery, product pricing and subscriptions 
 
 Everything in code is done. These steps need your accounts, data or decisions:
 
-1. **Supabase** — run migrations `000` → `007` in the SQL editor; promote the first staff user (see Setup).
+1. **Supabase** — run migrations `000` → `009` in the SQL editor; promote the first staff user (see Setup).
+   After `009`, staff rights need two-factor: each staff member signs in, opens **Account → Security** and
+   sets up an authenticator app. Check **Authentication → Rate Limits** (sign-in / sign-up / reset attempts).
    Set **Authentication → SMTP** to your email provider so sign-up / password-reset emails come from your domain,
    and set **Authentication → URL Configuration → Site URL** to the production URL.
 2. **Stripe** — create the webhook destination (`https://<domain>/api/stripe/webhook`, the three
@@ -166,7 +200,12 @@ Everything in code is done. These steps need your accounts, data or decisions:
 5. **Business details** — fill in the `BUSINESS_*` variables (ABN is required on tax invoices).
 6. **Data migration** — review the existing Airtable base and map its customers, orders and artwork
    onto these tables (needs access to the base).
-7. **Test pass** — place a Prepaid-company order and pay with `4242 4242 4242 4242`; confirm the order
+7. **Monitoring** — create a free Sentry project (platform: Next.js) and add its DSN as `SENTRY_DSN` and
+   `NEXT_PUBLIC_SENTRY_DSN` in Vercel. In GitHub, make the **CI** check required on `master` (Settings → Branches).
+8. **Backups** — open Supabase **Database → Backups** and confirm what your plan keeps. The Pro plan includes
+   daily backups (Point-in-Time Recovery is an add-on); on the Free plan, take your own regular dump
+   (`supabase db dump`) and store it somewhere private. Do a test restore into a spare project once.
+9. **Test pass** — place a Prepaid-company order and pay with `4242 4242 4242 4242`; confirm the order
    shows **Paid** and the emails arrive.
 
 ---

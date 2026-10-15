@@ -1,8 +1,9 @@
 'use server';
 
-import { headers } from 'next/headers';
 import { createSubscriptionCheckout, isPlanId, type BillingInterval } from './billing';
 import { isDemoMode } from './demo';
+import { requestOrigin } from './site';
+import { RATE_LIMITED, clientKey, underLimit } from './rateLimit';
 
 export interface StartTrialResult {
   url?: string;
@@ -13,9 +14,9 @@ export interface StartTrialResult {
 export async function startTrialAction(plan: string, interval: string): Promise<StartTrialResult> {
   if (!isPlanId(plan) || (interval !== 'month' && interval !== 'year')) return { error: 'Unknown plan' };
   if (isDemoMode) return { error: 'Sign-ups are disabled in demo mode.' };
+  if (!(await underLimit('trialCheckout', await clientKey()))) return { error: RATE_LIMITED };
 
-  const h = await headers();
-  const origin = h.get('origin') ?? `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('host')}`;
+  const origin = await requestOrigin();
   try {
     return { url: await createSubscriptionCheckout(plan, interval as BillingInterval, origin) };
   } catch (err) {

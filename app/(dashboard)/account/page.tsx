@@ -5,6 +5,8 @@ export const instant = false;
 import AccountClient from './AccountClient';
 import { isDemoMode } from '../../lib/demo';
 
-export default function AccountPage() {
-  return <AccountClient demo={isDemoMode} />;
+export default async function AccountPage({ searchParams }: { searchParams: Promise<{ mfa?: string }> }) {
+  // ?mfa=required — a staff member sent here to set up two-factor before using admin
+  const { mfa } = await searchParams;
+  return <AccountClient demo={isDemoMode} mfaRequired={mfa === 'required'} />;
 }

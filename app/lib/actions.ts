@@ -1,10 +1,11 @@
 'use server';
 
 import { refresh } from 'next/cache';
-import { headers } from 'next/headers';
 import { createClient } from './supabase/server';
 import { ARTWORK_BUCKET, isUuid } from './db';
 import { isDemoMode } from './demo';
+import { requestOrigin } from './site';
+import { RATE_LIMITED, underLimit } from './rateLimit';
 import { CURRENCY, getStripe, orderChargeCents, recordCheckoutSession } from './stripe';
 import { queueEmailDelivery, sendInvitationEmail } from './email';
 import type { ArtworkStatus, OrderStatus, UserRole } from './types';
@@ -76,6 +77,8 @@ export async function placeOrderAction(input: PlaceOrderInput): Promise<PlaceOrd
 
   const blocked = orderingBlockedReason(profile);
   if (blocked) return { success: false, error: blocked };
+  if (!(await underLimit('reorder', user.id))) return { success: false, error: RATE_LIMITED };
+  if (!(await underLimit('placeOrder', user.id))) return { success: false, error: RATE_LIMITED };
 
   const { data, error } = await supabase.rpc('place_order', {
     p_items:  input.items.map((i) => ({ plate_ref: i.plateRef, quantity: Math.floor(i.quantity) })),
@@ -114,6 +117,7 @@ export async function createOrderCheckoutAction(orderId: string): Promise<Checko
   if (!profile?.is_staff && !PAYING_ROLES.includes(profile?.role)) {
     return { success: false, error: 'Your role does not allow paying orders. Ask your company admin.' };
   }
+  if (!(await underLimit('orderCheckout', user.id))) return { success: false, error: RATE_LIMITED };
 
   // RLS: customers only see their own company's orders
   const { data: order } = await supabase
@@ -141,7 +145,7 @@ export async function createOrderCheckoutAction(orderId: string): Promise<Checko
       }
     }
 
-    const base = await origin();
+    const base = await requestOrigin();
     const metadata = { order_id: order.id, order_ref: order.ref };
     const lineItems = [{
       quantity: 1,
@@ -306,11 +310,6 @@ export async function setCompanyStatusAction(companyId: string, status: string):
 
 const ROLES: UserRole[] = ['Admin', 'Procurement Manager', 'Finance', 'Viewer'];
 
-async function origin() {
-  const h = await headers();
-  return h.get('origin') ?? `${h.get('x-forwarded-proto') ?? 'https'}://${h.get('host')}`;
-}
-
 export interface InviteResult extends ActionResult {
   link?: string;
   /** True when the invite link was also emailed to the invitee */
@@ -320,10 +319,14 @@ export interface InviteResult extends ActionResult {
 /** Company Admin invites to own company; staff pass companyId to invite anywhere. */
 export async function createInvitationAction(email: string, role: UserRole, companyId?: string): Promise<InviteResult> {
   if (!ROLES.includes(role)) return { success: false, error: 'Invalid role' };
-  const base = await origin();
+  const base = await requestOrigin();
   if (isDemoMode) return { success: true, link: `${base}/registration?invite=00000000-0000-4000-8000-000000000001` };
 
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return { success: false, error: 'Not authenticated' };
+  if (!(await underLimit('invite', user.id))) return { success: false, error: RATE_LIMITED };
+
   const { data, error } = await supabase.rpc('create_invitation', {
     p_email: email, p_role: role, p_company_id: companyId && isUuid(companyId) ? companyId : null,
   });

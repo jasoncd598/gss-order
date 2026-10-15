@@ -57,7 +57,25 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 3. Protect /admin/* — only staff can access
+  // 3. Two-factor: an account with an authenticator app set up must enter its
+  //    code before using the portal (session at aal1 → the code step).
+  let aal: { currentLevel: string | null; nextLevel: string | null } | null = null;
+  if (user && !isPublic) {
+    ({ data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel());
+    const needsCode = aal?.nextLevel === 'aal2' && aal.currentLevel !== 'aal2';
+    if (needsCode && pathname !== '/two-factor') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/two-factor';
+      url.search = `?next=${encodeURIComponent(pathname + request.nextUrl.search)}`;
+      return NextResponse.redirect(url);
+    }
+    if (!needsCode && pathname === '/two-factor') {
+      return NextResponse.redirect(new URL('/', request.url));
+    }
+  }
+
+  // 4. Protect /admin/* — only staff can access, and staff must use two-factor
+  //    (the database also ignores staff rights without it — migration 009)
   if (user && pathname.startsWith('/admin')) {
     const { data: profile } = await supabase
       .from('profiles')
@@ -68,6 +86,12 @@ export async function updateSession(request: NextRequest) {
     if (!profile?.is_staff) {
       const url = request.nextUrl.clone();
       url.pathname = '/';
+      return NextResponse.redirect(url);
+    }
+    if (aal?.currentLevel !== 'aal2') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/account';
+      url.search = '?mfa=required';
       return NextResponse.redirect(url);
     }
   }

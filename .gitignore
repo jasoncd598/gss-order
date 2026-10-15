@@ -46,3 +46,8 @@ next-env.d.ts
 .impeccable/decision/
 .impeccable/briefs-src/
 .claude/skills/impeccable/scripts/bin/
+
+# Playwright
+/test-results/
+/playwright-report/
+/blob-report/

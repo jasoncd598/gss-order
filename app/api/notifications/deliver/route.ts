@@ -1,4 +1,7 @@
+import { createHash, timingSafeEqual } from 'node:crypto';
 import { deliverPendingEmails, emailEnabled } from '../../../lib/email';
+
+const digest = (v: string) => createHash('sha256').update(v).digest();
 
 /**
  * Sends any notification emails that are still pending. Emails normally go out
@@ -12,7 +15,7 @@ import { deliverPendingEmails, emailEnabled } from '../../../lib/email';
 async function handle(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret) return new Response('CRON_SECRET is not set', { status: 503 });
-  if (request.headers.get('authorization') !== `Bearer ${secret}`) {
+  if (!timingSafeEqual(digest(request.headers.get('authorization') ?? ''), digest(`Bearer ${secret}`))) {
     return new Response('Unauthorized', { status: 401 });
   }
   if (!emailEnabled()) return Response.json({ enabled: false });

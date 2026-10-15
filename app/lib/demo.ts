@@ -3,9 +3,10 @@ import type { User } from '@supabase/supabase-js';
 /**
  * Demo mode — set DEMO_MODE=true in .env.local to bypass Supabase auth and
  * browse every screen (customer + staff admin) against mock data.
- * Intended for screenshots and client walkthroughs only. Never enable in production.
+ * Intended for screenshots and client walkthroughs only. It is ignored in a
+ * Vercel production deployment, so a stray DEMO_MODE=true can't open the site.
  */
-export const isDemoMode = process.env.DEMO_MODE === 'true';
+export const isDemoMode = process.env.DEMO_MODE === 'true' && process.env.VERCEL_ENV !== 'production';
 
 export const DEMO_USER = {
   id: '00000000-0000-0000-0000-000000000001',

@@ -563,3 +563,60 @@ export async function getSubscriptions(supabase: SupabaseClient): Promise<Subscr
     currentPeriodEnd: r.current_period_end, createdAt: r.created_at,
   }));
 }
+
+// ─── Audit log (staff) ───────────────────────────────────────────────────────
+
+export type AuditArea = 'product_prices' | 'orders' | 'companies' | 'profiles' | 'artwork_files' | 'company_invitations';
+
+export interface AuditEntry {
+  id: number;
+  at: string;
+  actorEmail: string | null;
+  /** 'user' = a signed-in person; 'system' = the server (e.g. a Stripe payment webhook) */
+  actorKind: 'user' | 'system';
+  area: AuditArea;
+  recordId: string | null;
+  label: string | null;
+  companyId: string | null;
+  companyName: string | null;
+  action: 'insert' | 'update' | 'delete';
+  /** update: { column: { from, to } }; insert / delete: { column: value } */
+  changes: Record<string, unknown>;
+}
+
+const MOCK_AUDIT: AuditEntry[] = [
+  { id: 6, at: '2026-10-14T23:12:00Z', actorEmail: 'staff@gss.com.au', actorKind: 'user', area: 'orders', recordId: 'ord-1', label: 'ORD-29402', companyId: 'c1', companyName: 'Acme Packaging Pty Ltd', action: 'update', changes: { status: { from: 'In Production', to: 'Quality Check' } } },
+  { id: 5, at: '2026-10-14T05:40:00Z', actorEmail: null, actorKind: 'system', area: 'orders', recordId: 'ord-2', label: 'ORD-29388', companyId: 'c1', companyName: 'Acme Packaging Pty Ltd', action: 'update', changes: { payment_status: { from: 'Unpaid', to: 'Paid' }, amount_paid: { from: null, to: 1840.5 } } },
+  { id: 4, at: '2026-10-13T22:05:00Z', actorEmail: 'staff@gss.com.au', actorKind: 'user', area: 'product_prices', recordId: 'pp-1', label: 'PLT-4471', companyId: 'c1', companyName: 'Acme Packaging Pty Ltd', action: 'update', changes: { unit_price: { from: 1.25, to: 1.18 } } },
+  { id: 3, at: '2026-10-12T01:30:00Z', actorEmail: 's.jenkins@gss-demo.com.au', actorKind: 'user', area: 'profiles', recordId: 'u-2', label: 'Tom Nguyen', companyId: 'c1', companyName: 'Acme Packaging Pty Ltd', action: 'update', changes: { role: { from: 'Viewer', to: 'Procurement Manager' } } },
+  { id: 2, at: '2026-10-11T03:15:00Z', actorEmail: 'staff@gss.com.au', actorKind: 'user', area: 'companies', recordId: 'c2', label: 'Harbour Signs Co', companyId: 'c2', companyName: 'Harbour Signs Co', action: 'update', changes: { status: { from: 'Pending', to: 'Active' }, credit_limit: { from: 0, to: 10000 } } },
+  { id: 1, at: '2026-10-10T00:48:00Z', actorEmail: 's.jenkins@gss-demo.com.au', actorKind: 'user', area: 'company_invitations', recordId: 'inv-1', label: 'accounts@acme.com.au', companyId: 'c1', companyName: 'Acme Packaging Pty Ltd', action: 'insert', changes: { email: 'accounts@acme.com.au', role: 'Finance', status: 'Pending' } },
+];
+
+/** Latest audit entries, newest first. Only staff can read them (RLS, migration 009). */
+export async function getAuditLog(supabase: SupabaseClient, area?: AuditArea, limit = 200): Promise<AuditEntry[]> {
+  if (isDemoMode) return area ? MOCK_AUDIT.filter((e) => e.area === area) : MOCK_AUDIT;
+
+  let query = supabase
+    .from('audit_log')
+    .select('id, at, actor_email, actor_kind, table_name, record_id, label, company_id, action, changes')
+    .order('at', { ascending: false })
+    .limit(limit);
+  if (area) query = query.eq('table_name', area);
+  const { data, error } = await query;
+  if (error) { console.error('getAuditLog:', error.message); return []; }
+
+  // The log keeps no foreign keys (entries outlive deleted rows), so look names up
+  const companyIds = [...new Set(data.map((r) => r.company_id).filter(Boolean))];
+  const { data: companies } = companyIds.length
+    ? await supabase.from('companies').select('id, name').in('id', companyIds)
+    : { data: [] };
+  const companyName = new Map((companies ?? []).map((c) => [c.id, c.name as string]));
+
+  return data.map((r) => ({
+    id: r.id, at: r.at, actorEmail: r.actor_email, actorKind: r.actor_kind === 'system' ? 'system' : 'user',
+    area: r.table_name as AuditArea, recordId: r.record_id, label: r.label, companyId: r.company_id,
+    companyName: companyName.get(r.company_id) ?? null,
+    action: r.action as AuditEntry['action'], changes: (r.changes ?? {}) as Record<string, unknown>,
+  }));
+}

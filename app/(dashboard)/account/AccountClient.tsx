@@ -5,6 +5,7 @@ import { UserCheck, Lock, CheckCircle2, Eye, EyeOff, AlertCircle, Loader2, LogOu
 import { useUser } from '../../lib/userContext';
 import { updateProfileAction } from '../../lib/actions';
 import { createClient } from '../../lib/supabase/client';
+import TwoFactorSettings from '../../component/TwoFactorSettings';
 
 type Tab = 'profile' | 'security';
 
@@ -17,9 +18,9 @@ function Status({ ok, error }: { ok?: string | null; error?: string | null }) {
   return null;
 }
 
-export default function AccountClient({ demo }: { demo: boolean }) {
-  const { displayName, firstName, lastName, email, role, companyName } = useUser();
-  const [tab, setTab] = useState<Tab>('profile');
+export default function AccountClient({ demo, mfaRequired = false }: { demo: boolean; mfaRequired?: boolean }) {
+  const { displayName, firstName, lastName, email, role, companyName, isStaff } = useUser();
+  const [tab, setTab] = useState<Tab>(mfaRequired ? 'security' : 'profile');
 
   // Profile
   const [first, setFirst] = useState(firstName);
@@ -155,6 +156,8 @@ export default function AccountClient({ demo }: { demo: boolean }) {
 
       {tab === 'security' && (
         <div className="space-y-4">
+          <TwoFactorSettings demo={demo} isStaff={isStaff} required={mfaRequired} />
+
           <form onSubmit={changePassword} className="bg-white border border-zinc-200 rounded-xl p-6 shadow-sm space-y-4">
             <h2 className="text-sm font-bold text-zinc-800">Change Password</h2>
             <div>

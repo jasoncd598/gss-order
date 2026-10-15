@@ -1,10 +1,17 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { AlertTriangle, RotateCcw } from 'lucide-react';
+import { reportError } from '../lib/errorReport';
 
 /** Shown when a dashboard page throws — keeps the sidebar and top bar usable. */
 export default function DashboardError({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
+  // Server errors (with a digest) were already reported by instrumentation.ts
+  useEffect(() => {
+    if (!error.digest) void reportError(error, { kind: 'browser', path: window.location.pathname }, process.env.NEXT_PUBLIC_SENTRY_DSN);
+  }, [error]);
+
   return (
     <div className="max-w-lg mx-auto mt-16 text-center bg-white border border-zinc-200 rounded-xl p-10 shadow-sm">
       <div className="w-14 h-14 bg-red-50 border border-red-200 rounded-full flex items-center justify-center mx-auto mb-4">

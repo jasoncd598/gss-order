@@ -30,6 +30,7 @@ await db.exec(`
   create table auth.users (id uuid primary key, email text, raw_user_meta_data jsonb);
   create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
   create function auth.role() returns text language sql stable as $$ select nullif(current_setting('request.jwt.claim.role', true), '') $$;
+  create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims', true), ''), '{}')::jsonb $$;
   grant usage on schema auth to anon, authenticated, service_role;
   grant usage on schema public to anon, authenticated, service_role;
   alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
@@ -60,12 +61,15 @@ const [A1, A2, B1, S] = [U(1), U(2), U(3), U(4)];
 async function signup(id, email, meta) {
   await db.query(`insert into auth.users (id, email, raw_user_meta_data) values ($1, $2, $3)`, [id, email, meta]);
 }
+// Sessions are two-factor (aal2) unless a test sets AAL = 'aal1' — staff powers need aal2 (migration 009)
+let AAL = 'aal2';
 async function as(uid, sql, params = []) {
   await db.exec('reset role');
-  await db.query(`select set_config('request.jwt.claim.sub', $1, false), set_config('request.jwt.claim.role', 'authenticated', false)`, [uid]);
+  await db.query(`select set_config('request.jwt.claim.sub', $1, false), set_config('request.jwt.claim.role', 'authenticated', false), set_config('request.jwt.claims', $2, false)`,
+    [uid, JSON.stringify({ sub: uid, role: 'authenticated', aal: AAL })]);
   await db.exec('set role authenticated');
   try { return await db.query(sql, params); }
-  finally { await db.exec(`reset role; select set_config('request.jwt.claim.sub', '', false), set_config('request.jwt.claim.role', '', false)`); }
+  finally { await db.exec(`reset role; select set_config('request.jwt.claim.sub', '', false), set_config('request.jwt.claim.role', '', false), set_config('request.jwt.claims', '', false)`); }
 }
 async function asErr(uid, sql, params = []) {
   try { const r = await as(uid, sql, params); return { rows: r.rows, affected: r.affectedRows }; } catch (e) { return { err: e.message }; }
@@ -352,6 +356,67 @@ ok('customers cannot read subscriptions', (await as(A1, `select * from subscript
 ok('customers cannot insert subscriptions', !!(await asErr(A1, `insert into subscriptions (stripe_subscription_id, stripe_customer_id, plan, billing_interval, status) values ('sub_x','cus_x','scale','year','active')`)).err);
 ok('staff cannot edit subscriptions (Stripe is the source of truth)', (await asErr(S, `update subscriptions set status='active', plan='scale'`)).affected === 0);
 ok('duplicate Stripe subscription id rejected', !!(await su(`insert into subscriptions (stripe_subscription_id, stripe_customer_id, plan, billing_interval, status) values ('sub_test_1','cus_y','starter','month','active')`).then(() => null, (e) => e.message)));
+
+// ════════════════════════════════════════════════════════════════════════════
+// Migration 009 — rate limits, audit log, staff two-factor
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\n── 009 ──');
+await apply('009_security_audit_mfa.sql');
+await apply('009_security_audit_mfa.sql');
+
+// Staff two-factor
+ok('staff with two-factor session sees all orders', (await as(S, `select * from orders`)).rows.length > 1);
+AAL = 'aal1';
+ok('staff with password-only session is not staff', (await as(S, `select is_staff() s`)).rows[0].s === false);
+ok('password-only staff sees no other companies\' orders', (await as(S, `select * from orders`)).rows.length === 0);
+ok('password-only staff cannot set prices', !!(await asErr(S, `insert into product_prices (company_id, plate_ref, product_name, unit_price) values ($1,'PLT-AAL','X',1)`, [compA])).err);
+ok('password-only staff cannot read the audit log', (await as(S, `select * from audit_log`)).rows.length === 0);
+AAL = 'aal2';
+
+// Rate limits
+const hit = async () => { await db.exec('set role service_role'); try { return (await db.query(`select hit_rate_limit('t:1', 3, 60) ok`)).rows[0].ok; } finally { await db.exec('reset role'); } };
+const hits = [await hit(), await hit(), await hit(), await hit()];
+ok('rate limit allows 3 then blocks the 4th', hits.join() === 'true,true,true,false', hits.join());
+ok('customers cannot call the rate limiter', !!(await asErr(A1, `select hit_rate_limit('t:1', 3, 60)`)).err);
+ok('customers cannot read rate limit counters', !!(await asErr(A1, `select * from rate_limits`)).err);
+
+// Audit log
+const auditFor = async (table) => (await su(`select * from audit_log where table_name=$1 order by id desc`, [table])).rows;
+await as(S, `update product_prices set unit_price=0.35 where plate_ref='PLT-NEW'`);
+const pa = (await auditFor('product_prices'))[0];
+ok('price change logged with who and old/new value', pa?.actor_id === S && pa.actor_email === 'staff@gss.test' && pa.action === 'update'
+  && Number(pa.changes.unit_price?.from) === 0.3 && Number(pa.changes.unit_price?.to) === 0.35 && pa.company_id === compA, JSON.stringify(pa?.changes));
+await as(S, `delete from product_prices where plate_ref='PLT-NEW'`);
+ok('price removal logged', (await auditFor('product_prices'))[0]?.action === 'delete');
+ok('price entries labelled with the plate ref', (await auditFor('product_prices')).every((r) => r.label === 'PLT-NEW' || r.label === 'PLT-1'));
+
+const ord = (await su(`select id, status from orders where company_id=$1 and status <> 'In Production' limit 1`, [compA])).rows[0];
+await as(S, `update orders set status='In Production' where id=$1`, [ord.id]);
+const oa = (await auditFor('orders'))[0];
+ok('order status change logged', oa?.record_id === ord.id && oa.changes.status?.to === 'In Production', JSON.stringify(oa?.changes));
+ok('audit entry labelled with the order ref', !!oa?.label && oa.label === (await su(`select ref from orders where id=$1`, [ord.id])).rows[0].ref);
+const nOrd = (await auditFor('orders')).length;
+await as(S, `update orders set notes='internal note' where id=$1`, [ord.id]);
+ok('untracked column change is not logged', (await auditFor('orders')).length === nOrd);
+
+await su(`update orders set payment_status='Paid' where id=$1`, [ord.id]);
+ok('server/webhook changes logged as system', (await auditFor('orders'))[0]?.actor_kind === 'system');
+
+await asErr(S, `update profiles set role='Finance' where id=$1`, [A2]);
+const ra = (await auditFor('profiles'))[0];
+ok('role change logged', ra?.changes.role?.to === 'Finance', JSON.stringify(ra?.changes));
+await as(S, `update companies set credit_limit=5000 where id=$1`, [compA]);
+ok('company terms change logged', Number((await auditFor('companies'))[0]?.changes.credit_limit?.to) === 5000);
+
+ok('staff can read the audit log', (await as(S, `select * from audit_log`)).rows.length >= 5);
+ok('customers cannot read the audit log', (await as(A1, `select * from audit_log`)).rows.length === 0);
+ok('customers cannot write the audit log', !!(await asErr(A1, `insert into audit_log (actor_kind, table_name, action) values ('user','x','update')`)).err);
+const stEdit = await asErr(S, `update audit_log set actor_email='x'`);
+ok('staff cannot edit the audit log', !!stEdit.err || stEdit.affected === 0);
+await db.exec('set role service_role');
+const svcDel = await db.query(`delete from audit_log`).then(() => null, (e) => e.message);
+await db.exec('reset role');
+ok('even the server cannot delete audit entries', !!svcDel);
 
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);
