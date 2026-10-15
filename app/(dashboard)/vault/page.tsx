@@ -25,7 +25,8 @@ export default async function VaultPage({ searchParams }: { searchParams: Promis
   // Reorder prices come from the database (last order of each plate)
   const prices: Record<string, VaultPrice> = {};
   for (const c of catalog) {
-    if (c.unitPrice !== null && c.lastQuantity) prices[c.artworkId] = { unitPrice: c.unitPrice, lastQuantity: c.lastQuantity };
+    const qty = c.minQuantity ?? c.lastQuantity;
+    if (c.unitPrice !== null && qty) prices[c.artworkId] = { unitPrice: c.unitPrice, lastQuantity: qty };
   }
 
   return <VaultClient artwork={artwork} prices={prices} canReview={approver} canOrder={approver} initialSearch={q?.slice(0, 100) ?? ''} />;

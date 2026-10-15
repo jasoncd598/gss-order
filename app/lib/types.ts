@@ -102,6 +102,18 @@ export interface CatalogItem {
   unitPrice: number | null;
   lastQuantity: number | null;
   lastOrdered: string | null;
+  /** Set when staff have fixed a price for this plate */
+  minQuantity: number | null;
+}
+
+/** Staff pricing view: one row per plate a company has artwork or a price for */
+export interface ProductPricingRow {
+  plateRef: string;
+  /** Artwork name, or the price's product name if no artwork exists */
+  name: string;
+  hasApprovedArtwork: boolean;
+  fixed: { productName: string; skuId: string | null; unitPrice: number; minQuantity: number; updatedAt: string } | null;
+  lastOrder: { unitPrice: number; date: string } | null;
 }
 
 export interface Invitation {

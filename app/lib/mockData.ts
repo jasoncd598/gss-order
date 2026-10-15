@@ -393,6 +393,7 @@ export const MOCK_CATALOG: CatalogItem[] = MOCK_ARTWORK
     unitPrice: LAST_PRICE[a.id]?.[0] ?? null,
     lastQuantity: LAST_PRICE[a.id]?.[1] ?? null,
     lastOrdered: LAST_PRICE[a.id]?.[2] ?? null,
+    minQuantity: null,
   }));
 
 // ─── Invitations ──────────────────────────────────────────────────────────────

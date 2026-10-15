@@ -38,7 +38,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
     addItem({
       artId: i.artworkId, name: i.name, plateRef: i.plateRef, substrate: i.substrate,
       dimensions: i.dimensions, colorProfile: i.colorProfile,
-      unitPrice: i.unitPrice!, minQty: i.lastQuantity ?? 1, previewUrl: i.previewUrl,
+      unitPrice: i.unitPrice!, minQty: i.minQuantity ?? i.lastQuantity ?? 1, previewUrl: i.previewUrl,
     });
     setJustAdded(i.artworkId);
     setTimeout(() => setJustAdded(null), 2500);
@@ -162,7 +162,7 @@ export default function CatalogClient({ items }: { items: CatalogItem[] }) {
                           <div>
                             <span className="text-[10px] text-zinc-400 block uppercase tracking-wider">Unit Rate</span>
                             {i.unitPrice !== null
-                              ? <span className="font-bold text-emerald-600">{formatAUD(i.unitPrice)} ea</span>
+                              ? <span className="font-bold text-emerald-600">{formatAUD(i.unitPrice)} ea{i.minQuantity && i.minQuantity > 1 && <span className="block text-[10px] text-zinc-400 font-normal">Min {i.minQuantity.toLocaleString()}</span>}</span>
                               : <span className="font-semibold text-zinc-500">Price on request</span>}
                           </div>
                         </div>

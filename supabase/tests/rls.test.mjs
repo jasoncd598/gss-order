@@ -297,5 +297,40 @@ ok('service role claims a pending email exactly once', claim.rows.length === 1 &
 const po3 = await asErr(A1, `select * from place_order($1::jsonb)`, [JSON.stringify([{ plate_ref: 'PLT-1', quantity: 5 }])]);
 ok('new notifications start pending', (await su(`select count(*)::int n from notifications where title='New order ' || $1 and emailed_at is null`, [po3.rows?.[0]?.ref])).rows[0].n > 0, po3.err);
 
+// ════════════════════════════════════════════════════════════════════════════
+// Migration 007 — product pricing
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\n── 007 ──');
+await apply('007_product_pricing.sql');
+await apply('007_product_pricing.sql');
+
+const lineOf = async (ref) => (await su(`select oi.* from order_items oi join orders o on o.id=oi.order_id where o.ref=$1`, [ref])).rows[0];
+ok('fallback: no fixed price → last order price still used', Number((await as(A1, `select unit_price from get_catalog() where plate_ref='PLT-1'`)).rows[0]?.unit_price) === 1.5);
+
+const setPrice = `insert into product_prices (company_id, plate_ref, product_name, sku_id, unit_price, min_quantity) values ($1,'PLT-1','Box (contract)','SKU-C1',1.25,500)`;
+ok('customer cannot set prices', !!(await asErr(A1, setPrice, [compA])).err);
+ok('staff sets a fixed price', !(await asErr(S, setPrice, [compA])).err);
+ok('customer cannot change a price', (await asErr(A1, `update product_prices set unit_price=0.01`)).affected === 0);
+ok('customer cannot delete a price', (await asErr(A1, `delete from product_prices`)).affected === 0);
+ok('customer sees own company price', (await as(A1, `select * from product_prices`)).rows.length === 1);
+ok('other company cannot see the price', (await as(B1, `select * from product_prices`)).rows.length === 0);
+
+const cat7 = (await as(A1, `select * from get_catalog() where plate_ref='PLT-1'`)).rows[0];
+ok('catalog shows fixed price + minimum', Number(cat7?.unit_price) === 1.25 && cat7?.min_quantity === 500 && cat7?.product_name === 'Box (contract)', JSON.stringify(cat7 && { p: cat7.unit_price, m: cat7.min_quantity }));
+ok('below minimum quantity rejected', /Minimum order/.test((await asErr(A1, `select place_order($1::jsonb)`, [JSON.stringify([{ plate_ref: 'PLT-1', quantity: 499 }])])).err ?? ''));
+const po7 = await asErr(A1, `select * from place_order($1::jsonb)`, [JSON.stringify([{ plate_ref: 'PLT-1', quantity: 1000, unit_price: 0.01 }])]);
+ok('order uses fixed price (1000 × 1.25 = 1250), ignores client price', !po7.err && Number(po7.rows?.[0]?.total) === 1250, po7.err ?? po7.rows?.[0]?.total);
+const l7 = po7.rows?.[0] && await lineOf(po7.rows[0].ref);
+ok('order line takes product name / SKU from price, specs from artwork', l7?.product_name === 'Box (contract)' && l7?.sku_id === 'SKU-C1');
+
+// A plate with approved artwork but never ordered can be priced and ordered
+await su(`insert into artwork_files (company_id, name, plate_ref, version, status, dimensions) values ($1,'New Label','PLT-NEW','v1','Approved','50×30mm')`, [compA]);
+ok('never-ordered plate is not orderable without a price', /No price on file/.test((await asErr(A1, `select place_order($1::jsonb)`, [JSON.stringify([{ plate_ref: 'PLT-NEW', quantity: 10 }])])).err ?? ''));
+await as(S, `insert into product_prices (company_id, plate_ref, product_name, unit_price) values ($1,'PLT-NEW','New Label',0.3)`, [compA]);
+const poNew = await asErr(A1, `select * from place_order($1::jsonb)`, [JSON.stringify([{ plate_ref: 'PLT-NEW', quantity: 10 }])]);
+ok('priced new plate can be ordered (10 × 0.30 = 3)', !poNew.err && Number(poNew.rows?.[0]?.total) === 3, poNew.err);
+ok('specs copied from artwork', (await lineOf(poNew.rows?.[0]?.ref))?.dimensions === '50×30mm');
+ok('non-positive price rejected', !!(await asErr(S, `update product_prices set unit_price=0 where plate_ref='PLT-NEW'`)).err);
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

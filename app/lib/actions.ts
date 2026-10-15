@@ -523,6 +523,64 @@ export async function saveCompanyAction(input: CompanyInput): Promise<SaveCompan
   return { success: true, id: data.id };
 }
 
+// ─── Staff: product pricing ──────────────────────────────────────────────────
+
+export interface ProductPriceInput {
+  companyId: string;
+  plateRef: string;
+  productName: string;
+  skuId?: string;
+  unitPrice: number;
+  minQuantity: number;
+}
+
+/** Sets (or replaces) a company's fixed price for one plate. RLS: staff only. */
+export async function saveProductPriceAction(input: ProductPriceInput): Promise<ActionResult> {
+  const plateRef = input.plateRef.trim();
+  const productName = input.productName.trim();
+  if (!isUuid(input.companyId)) return { success: false, error: 'Company not found' };
+  if (!plateRef)    return { success: false, error: 'Plate reference is required' };
+  if (!productName) return { success: false, error: 'Product name is required' };
+  if (!(input.unitPrice > 0) || input.unitPrice > 1_000_000) return { success: false, error: 'Unit price must be more than $0' };
+  if (!Number.isInteger(input.minQuantity) || input.minQuantity < 1) return { success: false, error: 'Minimum quantity must be a whole number of at least 1' };
+  if (isDemoMode) return { success: true };
+
+  const { supabase, user, profile } = await getContext();
+  if (!profile?.is_staff) return { success: false, error: 'Staff only' };
+
+  const { error } = await supabase.from('product_prices').upsert({
+    company_id:   input.companyId,
+    plate_ref:    plateRef,
+    product_name: productName,
+    sku_id:       input.skuId?.trim() || null,
+    unit_price:   Math.round(input.unitPrice * 10000) / 10000,
+    min_quantity: input.minQuantity,
+    updated_at:   new Date().toISOString(),
+    updated_by:   user!.id,
+  }, { onConflict: 'company_id,plate_ref' });
+  if (error) return { success: false, error: error.message };
+
+  refresh();
+  return { success: true };
+}
+
+/** Removes a fixed price; the plate falls back to its last order price. */
+export async function deleteProductPriceAction(companyId: string, plateRef: string): Promise<ActionResult> {
+  if (!isUuid(companyId)) return { success: false, error: 'Company not found' };
+  if (isDemoMode) return { success: true };
+
+  const { supabase, profile } = await getContext();
+  if (!profile?.is_staff) return { success: false, error: 'Staff only' };
+
+  const { data, error } = await supabase.from('product_prices').delete()
+    .eq('company_id', companyId).eq('plate_ref', plateRef).select('id');
+  if (error) return { success: false, error: error.message };
+  if (!data?.length) return { success: false, error: 'Price not found' };
+
+  refresh();
+  return { success: true };
+}
+
 // ─── Notifications ───────────────────────────────────────────────────────────
 
 /** Marks the given notifications (or all unread) as read for the current user. */

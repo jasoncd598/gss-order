@@ -28,7 +28,7 @@
    # DEMO_MODE=true   # optional: skip login and show sample data (screenshots only — never in production)
    ```
 2. **Database** — run the files in `supabase/migrations/` in order in the Supabase SQL editor
-   (`000` → `006`). They are idempotent. `003` is the core security layer; `004` adds invitations,
+   (`000` → `007`). They are idempotent. `003` is the core security layer; `004` adds invitations,
    the private `artwork` storage bucket, proof approval, server-priced ordering and notifications.
 3. **First staff user** — sign up in the portal, then in the SQL editor:
    ```sql
@@ -59,9 +59,11 @@ company's Admins/Procurement Managers, who approve or request changes in the vau
 version supersedes the previous one.
 
 ### Ordering & catalog
-The catalog is the company's approved artwork, priced from the most recent order of each plate.
-Cart orders send only plate + quantity; `place_order()` prices every line in the database.
-Products never ordered show *Price on request*.
+The catalog is the company's approved artwork. Each plate is priced from its **fixed price**, set by staff
+under *Admin → Companies → (company) → Products & Pricing* (unit price ex GST, minimum quantity, product
+name, SKU), or, if none is set, from its most recent order. Cart orders send only plate + quantity;
+`place_order()` prices every line in the database and enforces the minimum. Plates with neither show
+*Price on request*.
 
 ### Notifications
 Database triggers create in-portal notifications for: new orders and reorder requests (staff),
@@ -99,7 +101,7 @@ Orders can be paid by card through Stripe Checkout (hosted page, AUD, GST as its
 ### Tests
 `npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
 escalation guards, reorders, invitations, storage access, proof approval, server pricing and
-notifications, payment state and email delivery (111 checks).
+notifications, payment state, email delivery and product pricing (128 checks).
 
 ---
 
@@ -117,7 +119,7 @@ notifications, payment state and email delivery (111 checks).
 | Order status workflow | Staff status changes → customer notifications |
 | Email notifications | Every notification + invitations, via Resend (see Notifications) |
 | Responsive | Mobile drawer nav, scrollable tables, print-friendly invoices |
-| Data separation between companies | Postgres RLS; `npm run test:db` proves it (111 checks) |
+| Data separation between companies | Postgres RLS; `npm run test:db` proves it (128 checks) |
 | Third-party integrations | Stripe card payments (Phase 2 item, done); Resend email |
 | Built for future integrations | `invoice_ref` / payment fields ready for Xero sync; per-order pages ready for QR codes |
 
@@ -127,7 +129,7 @@ notifications, payment state and email delivery (111 checks).
 
 Everything in code is done. These steps need your accounts, data or decisions:
 
-1. **Supabase** — run migrations `000` → `006` in the SQL editor; promote the first staff user (see Setup).
+1. **Supabase** — run migrations `000` → `007` in the SQL editor; promote the first staff user (see Setup).
    Set **Authentication → SMTP** to your email provider so sign-up / password-reset emails come from your domain,
    and set **Authentication → URL Configuration → Site URL** to the production URL.
 2. **Stripe** — create the webhook destination (`https://<domain>/api/stripe/webhook`, the three

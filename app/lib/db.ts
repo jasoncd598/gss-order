@@ -10,6 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Order, ArtworkFile, TeamMember, ReorderRequest, OrderStatus, ArtworkStatus,
   CatalogItem, Invitation, AppNotification, NotificationType, UserRole, PaymentStatus,
+  ProductPricingRow,
 } from './types';
 import {
   mapOrder, mapArtwork, mapTeamMember, mapReorderRequest,
@@ -106,6 +107,7 @@ export async function getCatalog(supabase: SupabaseClient): Promise<CatalogItem[
     dimensions: string | null; substrate: string | null; color_profile: string | null; preview_url: string | null;
     storage_path: string | null; mime_type: string | null;
     unit_price: number | null; last_quantity: number | null; last_ordered: string | null;
+    min_quantity: number | null;
   };
   const items = (data as Row[]).map((r) => ({
     artworkId:    r.artwork_id,
@@ -122,8 +124,57 @@ export async function getCatalog(supabase: SupabaseClient): Promise<CatalogItem[
     unitPrice:    r.unit_price === null ? null : Number(r.unit_price),
     lastQuantity: r.last_quantity,
     lastOrdered:  r.last_ordered,
+    minQuantity:  r.min_quantity,
   }));
   return withSignedPreviews(supabase, items);
+}
+
+/** Staff: every plate a company has artwork or a fixed price for, with both price sources. */
+export async function getProductPricing(supabase: SupabaseClient, companyId: string): Promise<ProductPricingRow[]> {
+  if (isDemoMode) {
+    return MOCK_CATALOG.map((c) => ({
+      plateRef: c.plateRef, name: c.name, hasApprovedArtwork: c.status === 'Approved', fixed: null,
+      lastOrder: c.unitPrice !== null && c.lastOrdered ? { unitPrice: c.unitPrice, date: c.lastOrdered } : null,
+    }));
+  }
+  if (!isUuid(companyId)) return [];
+
+  const [art, prices, lines] = await Promise.all([
+    supabase.from('artwork_files').select('name, plate_ref, status').eq('company_id', companyId).neq('status', 'Superseded'),
+    supabase.from('product_prices').select('plate_ref, product_name, sku_id, unit_price, min_quantity, updated_at').eq('company_id', companyId),
+    supabase.from('order_items')
+      .select('plate_ref, unit_price, orders!inner ( company_id, date, status, created_at )')
+      .eq('orders.company_id', companyId)
+      .neq('orders.status', 'Cancelled'),
+  ]);
+  for (const r of [art, prices, lines]) if (r.error) console.error('getProductPricing:', r.error.message);
+
+  const rows = new Map<string, ProductPricingRow>();
+  const row = (plateRef: string, name: string) => {
+    if (!rows.has(plateRef)) rows.set(plateRef, { plateRef, name, hasApprovedArtwork: false, fixed: null, lastOrder: null });
+    return rows.get(plateRef)!;
+  };
+
+  for (const a of art.data ?? []) {
+    if (!a.plate_ref) continue;
+    const r = row(a.plate_ref, a.name);
+    if (a.status === 'Approved') { r.hasApprovedArtwork = true; r.name = a.name; }
+  }
+  for (const p of prices.data ?? []) {
+    row(p.plate_ref, p.product_name).fixed = {
+      productName: p.product_name, skuId: p.sku_id, unitPrice: Number(p.unit_price),
+      minQuantity: p.min_quantity, updatedAt: p.updated_at,
+    };
+  }
+  type Line = { plate_ref: string | null; unit_price: number; orders: { date: string; created_at: string } | { date: string; created_at: string }[] };
+  for (const l of (lines.data ?? []) as unknown as Line[]) {
+    const r = l.plate_ref ? rows.get(l.plate_ref) : undefined;
+    const o = Array.isArray(l.orders) ? l.orders[0] : l.orders;
+    if (!r || !o) continue;
+    if (!r.lastOrder || o.date > r.lastOrder.date) r.lastOrder = { unitPrice: Number(l.unit_price), date: o.date };
+  }
+
+  return [...rows.values()].sort((a, b) => Number(b.hasApprovedArtwork) - Number(a.hasApprovedArtwork) || a.name.localeCompare(b.name));
 }
 
 // ─── Team ─────────────────────────────────────────────────────────────────────

@@ -8,6 +8,7 @@ import {
   getOrdersByCompanyAdmin,
   getUsersByCompany,
   getArtworkByCompany,
+  getProductPricing,
 } from '../../../../lib/db';
 import { isDemoMode } from '../../../../lib/demo';
 import { artworkStatusStyles } from '../../../../lib/utils';
@@ -18,6 +19,7 @@ import ArtworkThumb from '../../../../component/ArtworkThumb';
 import { formatAUD, formatDate, orderStatusStyles } from '../../../../lib/utils';
 import { redirect } from 'next/navigation';
 import CompanyStatusActions from '../../../../component/admin/CompanyStatusActions';
+import ProductPricingPanel from '../../../../component/admin/ProductPricingPanel';
 
 const STATUS_COLORS: Record<string, string> = {
   Active:    'bg-emerald-50 text-emerald-700 border-emerald-200',
@@ -33,11 +35,12 @@ export default async function CompanyDetailPage({
   const { id } = await params;
   const supabase = await createClient();
 
-  const [company, orders, users, artwork] = await Promise.all([
+  const [company, orders, users, artwork, pricing] = await Promise.all([
     getCompanyById(supabase, id),
     getOrdersByCompanyAdmin(supabase, id),
     getUsersByCompany(supabase, id),
     getArtworkByCompany(supabase, id),
+    getProductPricing(supabase, id),
   ]);
 
   if (!company) redirect('/admin/companies');
@@ -215,6 +218,8 @@ export default async function CompanyDetailPage({
               </div>
             )}
           </div>
+
+          <ProductPricingPanel companyId={company.id} rows={pricing} />
 
           {/* Artwork */}
           <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
