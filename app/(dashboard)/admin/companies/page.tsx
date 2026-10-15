@@ -63,7 +63,8 @@ export default async function AdminCompaniesPage() {
         {companies.length === 0 ? (
           <div className="py-16 text-center text-zinc-400 text-sm">No companies registered yet.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden xl:block overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="bg-zinc-50 border-b border-zinc-200 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
@@ -118,6 +119,32 @@ export default async function AdminCompaniesPage() {
             </tbody>
           </table>
           </div>
+
+          {/* Phones and tablets: each company as a stacked record */}
+          <ul className="xl:hidden divide-y divide-zinc-200">
+            {companies.map((co: AdminCompany) => {
+              const pct = co.credit_limit > 0 ? (co.current_owing / co.credit_limit) * 100 : 0;
+              return (
+                <li key={co.id}>
+                  <Link href={`/admin/companies/${co.id}`} className="block px-4 py-3.5 hover:bg-zinc-50">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="font-semibold text-zinc-900 text-[13px] truncate">{co.name}</div>
+                        <div className="text-xs text-zinc-500">{[co.industry, co.payment_terms, co.abn && `ABN ${co.abn}`].filter(Boolean).join(' · ')}</div>
+                      </div>
+                      <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-bold border ${STATUS_COLORS[co.status] ?? 'stamp stamp-grey'}`}>{co.status}</span>
+                    </div>
+                    <dl className="mt-2 grid grid-cols-3 gap-2 text-xs">
+                      <div><dt className="text-zinc-500">Outstanding</dt><dd className={`accession font-bold ${pct >= 100 ? 'text-red-600' : 'text-zinc-950'}`}>{formatAUD(co.current_owing)}</dd></div>
+                      <div><dt className="text-zinc-500">Credit limit</dt><dd className="accession text-zinc-800">{formatAUD(co.credit_limit)}</dd></div>
+                      <div><dt className="text-zinc-500">YTD spend</dt><dd className="accession text-zinc-800">{formatAUD(co.total_spend)}</dd></div>
+                    </dl>
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          </>
         )}
       </div>
     </div>

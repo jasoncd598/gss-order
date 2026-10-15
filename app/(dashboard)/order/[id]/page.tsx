@@ -9,7 +9,8 @@ import {
   RefreshCw, CheckCircle2, Clock, MapPin, CreditCard,
 } from 'lucide-react';
 import { createClient } from '../../../lib/supabase/server';
-import { getOrderById } from '../../../lib/db';
+import { getOrderById, getOrderDocuments } from '../../../lib/db';
+import OrderDocuments from '../../../component/OrderDocuments';
 import { formatAUD, formatDate, orderStatusStyles, paymentStatusStyles } from '../../../lib/utils';
 import ReorderModal from '../../../component/modals/ReorderModal';
 import OrderStatusSelect from '../../../component/admin/OrderStatusSelect';
@@ -54,7 +55,7 @@ export default async function OrderDetailPage({
     }
   }
 
-  const order = await getOrderById(supabase, id);
+  const [order, documents] = await Promise.all([getOrderById(supabase, id), getOrderDocuments(supabase, id)]);
 
   if (!order) {
     return (
@@ -128,9 +129,10 @@ export default async function OrderDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        <div className="xl:col-span-2 space-y-5 min-w-0">
         {/* Line items */}
-        <div className="md:col-span-2 bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
+        <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
           <div className="px-5 py-3 border-b border-zinc-100 flex items-center space-x-2">
             <Package className="w-4 h-4 text-amber-500" />
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-600">Order Items</h2>
@@ -174,8 +176,11 @@ export default async function OrderDetailPage({
           </div>
         </div>
 
-        {/* Sidebar */}
-        <div className="space-y-4">
+        <OrderDocuments orderId={order.id} companyId={order.companyId} documents={documents} isStaff={isStaff} demo={isDemoMode} />
+        </div>
+
+        {/* Sidebar — two columns on tablets, one beside the items on wide screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4 content-start">
           {order.paymentStatus && (
             <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
               <div className="flex items-center justify-between mb-3">

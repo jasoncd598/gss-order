@@ -27,6 +27,7 @@ export interface OrderItem {
 
 export interface Order {
   id: string;
+  companyId?: string;
   ref: string;
   date: string;
   status: OrderStatus;
@@ -64,6 +65,21 @@ export interface ReorderRequest {
   rejectionReason?: string;
   requestedBy: string;
   requestedAt: string;
+}
+
+export const DOCUMENT_KINDS = ['Delivery docket', 'Compliance certificate', 'Signed quote', 'Quote', 'Specification', 'Other'] as const;
+export type DocumentKind = typeof DOCUMENT_KINDS[number];
+
+/** A file staff attached to an order (migration 010) */
+export interface OrderDocument {
+  id: string;
+  orderId: string;
+  kind: DocumentKind;
+  title: string;
+  fileName: string;
+  mimeType: string | null;
+  fileSize: number | null;
+  createdAt: string;
 }
 
 export interface ArtworkFile {

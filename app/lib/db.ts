@@ -10,7 +10,7 @@ import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
   Order, ArtworkFile, TeamMember, ReorderRequest, OrderStatus, ArtworkStatus,
   CatalogItem, Invitation, AppNotification, NotificationType, UserRole, PaymentStatus,
-  ProductPricingRow,
+  ProductPricingRow, OrderDocument, DocumentKind,
 } from './types';
 import {
   mapOrder, mapArtwork, mapTeamMember, mapReorderRequest,
@@ -23,7 +23,7 @@ import {
 import { isDemoMode } from './demo';
 
 const ORDER_COLUMNS = `
-  id, ref, date, status, total, courier, tracking_number,
+  id, company_id, ref, date, status, total, courier, tracking_number,
   estimated_delivery, invoice_ref, purchase_order_ref, notes,
   payment_status, amount_paid, paid_at,
   order_items ( id, sku_id, product_name, dimensions, substrate, plate_ref, quantity, unit_price, line_total )
@@ -566,7 +566,7 @@ export async function getSubscriptions(supabase: SupabaseClient): Promise<Subscr
 
 // ─── Audit log (staff) ───────────────────────────────────────────────────────
 
-export type AuditArea = 'product_prices' | 'orders' | 'companies' | 'profiles' | 'artwork_files' | 'company_invitations';
+export type AuditArea = 'product_prices' | 'orders' | 'companies' | 'profiles' | 'artwork_files' | 'company_invitations' | 'order_documents';
 
 export interface AuditEntry {
   id: number;
@@ -618,5 +618,33 @@ export async function getAuditLog(supabase: SupabaseClient, area?: AuditArea, li
     area: r.table_name as AuditArea, recordId: r.record_id, label: r.label, companyId: r.company_id,
     companyName: companyName.get(r.company_id) ?? null,
     action: r.action as AuditEntry['action'], changes: (r.changes ?? {}) as Record<string, unknown>,
+  }));
+}
+
+// ─── Order documents ─────────────────────────────────────────────────────────
+
+export const DOCUMENTS_BUCKET = 'documents';
+
+const MOCK_DOCUMENTS: OrderDocument[] = [
+  { id: 'doc-1', orderId: 'ord-8812', kind: 'Delivery docket',        title: 'StarTrack delivery docket',        fileName: 'docket-ORD-2026-8812.pdf', mimeType: 'application/pdf', fileSize: 184_320, createdAt: '2026-10-02T03:10:00Z' },
+  { id: 'doc-2', orderId: 'ord-8812', kind: 'Compliance certificate', title: 'Material certificate — cast brass', fileName: 'cert-brass-CZ121.pdf',     mimeType: 'application/pdf', fileSize: 412_000, createdAt: '2026-09-30T05:45:00Z' },
+  { id: 'doc-3', orderId: 'ord-8740', kind: 'Signed quote',           title: 'Signed quote Q-2026-311',           fileName: 'Q-2026-311-signed.pdf',    mimeType: 'application/pdf', fileSize: 96_000,  createdAt: '2026-09-18T00:20:00Z' },
+];
+
+/** Documents on an order, newest first. RLS: own company or staff. */
+export async function getOrderDocuments(supabase: SupabaseClient, orderId: string): Promise<OrderDocument[]> {
+  if (isDemoMode) return MOCK_DOCUMENTS.filter((d) => d.orderId === orderId);
+  if (!isUuid(orderId)) return [];
+
+  const { data, error } = await supabase
+    .from('order_documents')
+    .select('id, order_id, kind, title, file_name, mime_type, file_size, created_at')
+    .eq('order_id', orderId)
+    .order('created_at', { ascending: false });
+  if (error) { console.error('getOrderDocuments:', error.message); return []; }
+
+  return data.map((d) => ({
+    id: d.id, orderId: d.order_id, kind: d.kind as DocumentKind, title: d.title, fileName: d.file_name,
+    mimeType: d.mime_type, fileSize: d.file_size, createdAt: d.created_at,
   }));
 }

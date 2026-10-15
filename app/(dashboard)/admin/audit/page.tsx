@@ -13,6 +13,7 @@ const AREAS: { id: AuditArea; label: string; one: string }[] = [
   { id: 'profiles',            label: 'Users',       one: 'User' },
   { id: 'artwork_files',       label: 'Artwork',     one: 'Artwork' },
   { id: 'company_invitations', label: 'Invitations', one: 'Invitation' },
+  { id: 'order_documents',     label: 'Documents',   one: 'Document' },
 ];
 const AREA_LABEL = Object.fromEntries(AREAS.map((a) => [a.id, a.one])) as Record<AuditArea, string>;
 
@@ -21,7 +22,7 @@ const FIELD: Record<string, string> = {
   tracking_number: 'Tracking', estimated_delivery: 'Est. delivery', plate_ref: 'Plate', product_name: 'Product',
   sku_id: 'SKU', unit_price: 'Unit price', min_quantity: 'Min. qty', name: 'Name', payment_terms: 'Terms',
   credit_limit: 'Credit limit', abn: 'ABN', role: 'Role', is_staff: 'GSS staff', company_id: 'Company',
-  review_comment: 'Comment', email: 'Email',
+  review_comment: 'Comment', email: 'Email', kind: 'Type', title: 'Title', file_name: 'File', order_id: 'Order',
 };
 
 const ACTION: Record<AuditEntry['action'], string> = { insert: 'Added', update: 'Changed', delete: 'Removed' };
@@ -42,7 +43,7 @@ function when(iso: string) {
 function Changes({ e }: { e: AuditEntry }) {
   return (
     <ul className="space-y-0.5">
-      {Object.entries(e.changes).map(([k, v]) => {
+      {Object.entries(e.changes).filter(([k]) => k !== 'order_id').map(([k, v]) => {
         const diff = e.action === 'update' && v !== null && typeof v === 'object' && 'to' in v ? (v as { from: unknown; to: unknown }) : null;
         return (
           <li key={k} className="text-xs text-zinc-700">
@@ -67,6 +68,8 @@ function Subject({ e }: { e: AuditEntry }) {
       <div className="text-xs text-zinc-500">{AREA_LABEL[e.area]}</div>
       {e.area === 'orders' && e.recordId ? (
         <Link href={`/order/${e.recordId}`} className="accession font-bold text-zinc-950 hover:text-amber-700">{label}</Link>
+      ) : e.area === 'order_documents' && typeof e.changes.order_id === 'string' ? (
+        <Link href={`/order/${e.changes.order_id}`} className="font-semibold text-zinc-950 hover:text-amber-700">{label}</Link>
       ) : (
         <div className={`font-semibold ${isRef ? 'accession text-amber-700' : 'text-zinc-950'}`}>{label}</div>
       )}
@@ -118,7 +121,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
           <div className="py-16 text-center text-zinc-500 text-sm">No changes recorded yet. Price edits, status changes, approvals and role changes appear here.</div>
         ) : (
           <>
-            <div className="hidden md:block overflow-x-auto">
+            <div className="hidden xl:block overflow-x-auto">
               <table className="w-full min-w-[760px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-zinc-100 text-zinc-500 font-semibold uppercase text-xs tracking-wider bg-zinc-50/50">
@@ -144,7 +147,7 @@ export default async function AdminAuditPage({ searchParams }: { searchParams: P
             </div>
 
             {/* Phones: each entry as a stacked record */}
-            <ul className="md:hidden divide-y divide-zinc-200">
+            <ul className="xl:hidden divide-y divide-zinc-200">
               {entries.map((e) => (
                 <li key={e.id} className="px-4 py-3.5 space-y-2">
                   <div className="flex items-start justify-between gap-3">

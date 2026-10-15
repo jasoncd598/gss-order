@@ -3,6 +3,9 @@
   "buildCommand": "next build",
   "devCommand": "next dev",
   "installCommand": "npm install",
+  "regions": [
+    "hnd1"
+  ],
   "crons": [
     {
       "path": "/api/notifications/deliver",

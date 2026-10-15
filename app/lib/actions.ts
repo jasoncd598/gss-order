@@ -2,13 +2,13 @@
 
 import { refresh } from 'next/cache';
 import { createClient } from './supabase/server';
-import { ARTWORK_BUCKET, isUuid } from './db';
+import { ARTWORK_BUCKET, DOCUMENTS_BUCKET, isUuid } from './db';
 import { isDemoMode } from './demo';
 import { requestOrigin } from './site';
 import { RATE_LIMITED, underLimit } from './rateLimit';
 import { CURRENCY, getStripe, orderChargeCents, recordCheckoutSession } from './stripe';
 import { queueEmailDelivery, sendInvitationEmail } from './email';
-import type { ArtworkStatus, OrderStatus, UserRole } from './types';
+import { DOCUMENT_KINDS, type ArtworkStatus, type DocumentKind, type OrderStatus, type UserRole } from './types';
 
 /**
  * Server Actions. Every write runs as the signed-in user, so the database
@@ -425,6 +425,78 @@ export async function getArtworkFileUrlAction(artworkId: string, download = true
   if (error || !data) return { success: false, error: error?.message ?? 'Could not create download link' };
 
   return { success: true, url: data.signedUrl };
+}
+
+// ─── Order documents ─────────────────────────────────────────────────────────
+
+/** Short-lived signed URL for an order document. Storage RLS limits customers to their own company's files. */
+export async function getOrderDocumentUrlAction(documentId: string, download = true): Promise<FileUrlResult> {
+  if (isDemoMode || !isUuid(documentId)) return { success: false, error: 'Sample documents have no file attached.' };
+
+  const supabase = await createClient();
+  const { data: doc } = await supabase
+    .from('order_documents')
+    .select('storage_path, file_name')
+    .eq('id', documentId)
+    .maybeSingle();
+  if (!doc) return { success: false, error: 'Document not found' };
+
+  const { data, error } = await supabase.storage
+    .from(DOCUMENTS_BUCKET)
+    .createSignedUrl(doc.storage_path, 5 * 60, download ? { download: doc.file_name ?? true } : undefined);
+  if (error || !data) return { success: false, error: 'Could not create the download link' };
+  return { success: true, url: data.signedUrl };
+}
+
+export interface NewOrderDocumentInput {
+  orderId: string;
+  storagePath: string;
+  fileName: string;
+  mimeType: string;
+  fileSize: number;
+  kind: DocumentKind;
+  title: string;
+}
+
+/** Staff: record a document the browser has already uploaded to storage. */
+export async function createOrderDocumentAction(input: NewOrderDocumentInput): Promise<ActionResult> {
+  if (isDemoMode) return { success: true };
+  if (!isUuid(input.orderId)) return { success: false, error: 'Order not found' };
+  if (!DOCUMENT_KINDS.includes(input.kind)) return { success: false, error: 'Choose a document type' };
+  if (!input.title.trim()) return { success: false, error: 'Give the document a title' };
+
+  const { supabase, profile } = await getContext();
+  if (!profile?.is_staff) return { success: false, error: 'Staff only' };
+
+  // company_id is set from the order by the database, which also checks the file's folder
+  const { error } = await supabase.from('order_documents').insert({
+    order_id: input.orderId, company_id: input.storagePath.split('/')[0], kind: input.kind,
+    title: input.title.trim().slice(0, 200), storage_path: input.storagePath,
+    file_name: input.fileName.slice(0, 200), mime_type: input.mimeType, file_size: input.fileSize,
+  });
+  if (error) {
+    console.error('createOrderDocumentAction:', error.message);
+    return { success: false, error: /folder|not found/i.test(error.message) ? error.message : 'Could not save the document' };
+  }
+  queueEmailDelivery();
+  refresh();
+  return { success: true };
+}
+
+/** Staff: remove a document and its file. */
+export async function deleteOrderDocumentAction(documentId: string): Promise<ActionResult> {
+  if (isDemoMode) return { success: true };
+  if (!isUuid(documentId)) return { success: false, error: 'Document not found' };
+
+  const { supabase, profile } = await getContext();
+  if (!profile?.is_staff) return { success: false, error: 'Staff only' };
+
+  const { data: doc, error } = await supabase.from('order_documents').delete().eq('id', documentId).select('storage_path').maybeSingle();
+  if (error || !doc) return { success: false, error: 'Could not remove the document' };
+  const { error: fileError } = await supabase.storage.from(DOCUMENTS_BUCKET).remove([doc.storage_path]);
+  if (fileError) console.error('deleteOrderDocumentAction: file not removed', fileError.message);
+  refresh();
+  return { success: true };
 }
 
 export interface NewArtworkInput {

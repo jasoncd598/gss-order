@@ -74,7 +74,8 @@ export default async function AdminSubscriptionsPage() {
         {rows.length === 0 ? (
           <div className="py-16 text-center text-zinc-400 text-sm">No subscriptions yet. They appear here when someone starts a plan from the homepage.</div>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden xl:block overflow-x-auto">
             <table className="w-full min-w-[760px] whitespace-nowrap text-left text-xs">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider bg-zinc-50/50">
@@ -111,6 +112,32 @@ export default async function AdminSubscriptionsPage() {
               </tbody>
             </table>
           </div>
+
+          {/* Phones and tablets: each subscriber as a stacked record */}
+          <ul className="xl:hidden divide-y divide-zinc-200">
+            {rows.map((r) => {
+              const plan = PLANS.find((p) => p.id === r.plan);
+              const amount = plan ? (r.interval === 'year' ? plan.yearly : plan.monthly) : null;
+              const date = r.status === 'trialing' ? r.trialEnd : r.currentPeriodEnd;
+              return (
+                <li key={r.id} className="px-4 py-3.5 space-y-1.5">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <div className="font-semibold text-zinc-900 text-[13px] truncate">{r.companyName ?? '—'}</div>
+                      <div className="text-xs text-zinc-500 break-all">{r.email ?? '—'}</div>
+                    </div>
+                    <span className={`shrink-0 px-2 py-0.5 rounded text-xs font-semibold border ${STATUS_STYLES[r.status] ?? 'stamp stamp-grey'}`}>{statusLabel(r.status)}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs text-zinc-600">
+                    <span>{plan?.name ?? r.plan} · {r.interval === 'year' ? 'yearly' : 'monthly'}{date ? ` · ${r.status === 'trialing' ? 'trial ends' : r.cancelAtPeriodEnd ? 'ends' : 'renews'} ${formatDate(date)}` : ''}</span>
+                    <span className="accession font-bold text-zinc-950">{amount !== null ? `${formatAUD(amount)}/${r.interval === 'year' ? 'yr' : 'mo'}` : '—'}</span>
+                  </div>
+                  {r.cancelAtPeriodEnd && r.status !== 'canceled' && <div className="text-xs text-red-600 font-semibold">Cancels at period end</div>}
+                </li>
+              );
+            })}
+          </ul>
+          </>
         )}
       </div>
     </div>

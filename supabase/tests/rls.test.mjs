@@ -418,5 +418,45 @@ const svcDel = await db.query(`delete from audit_log`).then(() => null, (e) => e
 await db.exec('reset role');
 ok('even the server cannot delete audit entries', !!svcDel);
 
+// ════════════════════════════════════════════════════════════════════════════
+// Migration 010 — order documents
+// ════════════════════════════════════════════════════════════════════════════
+console.log('\n── 010 ──');
+await apply('010_order_documents.sql');
+await apply('010_order_documents.sql');
+
+const ordA = (await su(`select id, ref from orders where company_id=$1 limit 1`, [compA])).rows[0];
+const ordB = (await su(`insert into orders (company_id, ref, total) values ($1, 'ORD-B-DOC', 10) returning id, ref`, [compB])).rows[0];
+const addDoc = (uid, order, path, extra = {}) => asErr(uid,
+  `insert into order_documents (order_id, company_id, kind, title, storage_path, file_name) values ($1, $2, $3, $4, $5, $6) returning *`,
+  [order.id, extra.company ?? compA, extra.kind ?? 'Delivery docket', extra.title ?? 'Docket 1', path, 'docket.pdf']);
+
+ok('customer cannot add a document', !!(await addDoc(A1, ordA, `${compA}/${ordA.id}/x.pdf`)).err);
+const d1 = await addDoc(S, ordA, `${compA}/${ordA.id}/d1.pdf`);
+ok('staff adds a document to an order', !d1.err && d1.rows?.[0]?.company_id === compA, d1.err);
+ok('company is taken from the order, not the request', (await addDoc(S, ordB, `${compB}/${ordB.id}/d2.pdf`, { company: compA })).rows?.[0]?.company_id === compB);
+ok('file must be in that order\'s folder', /folder/.test((await addDoc(S, ordA, `${compB}/${ordA.id}/evil.pdf`)).err ?? ''));
+ok('unknown kind rejected', !!(await addDoc(S, ordA, `${compA}/${ordA.id}/k.pdf`, { kind: 'Malware' })).err);
+ok('blank title rejected', !!(await addDoc(S, ordA, `${compA}/${ordA.id}/t.pdf`, { title: '  ' })).err);
+
+ok('customer sees own company documents only', (await as(A1, `select * from order_documents`)).rows.length === 1);
+ok('other company cannot see them', (await as(B1, `select * from order_documents where order_id=$1`, [ordA.id])).rows.length === 0);
+ok('staff sees all documents', (await as(S, `select * from order_documents`)).rows.length === 2);
+ok('customer cannot delete a document', (await asErr(A1, `delete from order_documents`)).affected === 0);
+ok('customer cannot edit a document', !!(await asErr(A1, `update order_documents set title='x'`)).err || (await asErr(A1, `update order_documents set title='x'`)).affected === 0);
+ok('company users notified of the new document', (await notifs(A1)).some((n) => n.title === `New document on ${ordA.ref}`));
+{ const r = (await su(`select label, action, company_id from audit_log where table_name='order_documents'`)).rows; ok('document added is in the audit log', r.filter((x) => x.action === 'insert' && x.label === 'Docket 1' && x.company_id === compA).length === 1, JSON.stringify(r)); }
+
+await su(`insert into storage.objects (bucket_id, name) values ('documents', $1), ('documents', $2)`, [`${compA}/${ordA.id}/d1.pdf`, `${compB}/${ordB.id}/d2.pdf`]);
+const docObjs = (await as(A1, `select name from storage.objects where bucket_id='documents'`)).rows;
+ok('customer reads only own company document files', docObjs.length === 1 && docObjs[0].name.startsWith(compA));
+ok('customer cannot upload document files', !!(await asErr(A1, `insert into storage.objects (bucket_id, name) values ('documents', $1)`, [`${compA}/${ordA.id}/up.pdf`])).err);
+ok('customer cannot delete document files', (await asErr(A1, `delete from storage.objects where bucket_id='documents'`)).affected === 0);
+const delDoc = await asErr(S, `delete from order_documents where id=$1`, [d1.rows[0].id]);
+ok('staff removes a document (logged)', delDoc.affected === 1 && (await su(`select * from audit_log where table_name='order_documents' and action='delete'`)).rows.length === 1);
+AAL = 'aal1';
+ok('password-only staff cannot add documents', !!(await addDoc(S, ordA, `${compA}/${ordA.id}/aal.pdf`)).err);
+AAL = 'aal2';
+
 console.log(`\n${pass} passed, ${fail} failed`);
 process.exit(fail ? 1 : 0);

@@ -67,6 +67,21 @@ test.describe('customer', () => {
     await expect(page.getByRole('button', { name: 'Approve Proof' })).toHaveCount(0);
   });
 
+  test('order documents: listed on the order, staff can add one', async ({ page }) => {
+    await page.goto('/order/ord-8812');
+    const docs = page.locator('section[aria-labelledby="order-docs"]');
+    await expect(docs.getByRole('heading', { name: 'Documents' })).toBeVisible();
+    await expect(docs.getByText('StarTrack delivery docket')).toBeVisible();
+    await expect(docs.getByRole('button', { name: /Download StarTrack/ })).toBeVisible();
+
+    await docs.getByRole('button', { name: 'Add document' }).click();
+    await docs.getByLabel('Document file').setInputFiles({ name: 'cert.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4 test') });
+    await docs.getByLabel('Type').selectOption('Compliance certificate');
+    await expect(docs.getByLabel('Title')).toHaveValue('cert');
+    await docs.getByRole('button', { name: 'Upload' }).click();
+    await expect(docs.getByText(/Document added/)).toBeVisible();
+  });
+
   test('order history lists past orders', async ({ page }) => {
     await page.goto('/order');
     await expect(page.getByText('ORD-2026-8740').first()).toBeVisible();

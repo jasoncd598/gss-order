@@ -7,6 +7,7 @@ import type { Order, OrderItem, ArtworkFile, TeamMember, OrderStatus, ArtworkSta
 
 export interface DbOrder {
   id: string;
+  company_id?: string | null;
   ref: string;
   date: string;
   status: string;
@@ -90,6 +91,7 @@ export interface DbReorderRequest {
 export function mapOrder(row: DbOrder): Order {
   return {
     id:                row.id,
+    companyId:         row.company_id ?? undefined,
     ref:               row.ref,
     date:              row.date,
     status:            row.status as OrderStatus,

@@ -55,14 +55,13 @@ export default async function AdminOrdersPage() {
           <div className="py-16 text-center text-zinc-400 text-sm">No orders in the system yet.</div>
         ) : (
           <>
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden xl:block overflow-x-auto">
             <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
               <thead>
                 <tr className="border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider bg-zinc-50/50">
-                  <th className="py-3 px-4">Order Ref</th>
+                  <th className="py-3 px-4">Order Ref / Date</th>
                   <th className="py-3 px-4">Company</th>
                   <th className="py-3 px-4">Product</th>
-                  <th className="py-3 px-4">Date</th>
                   <th className="py-3 px-4">Status</th>
                   <th className="py-3 px-4 text-right">Total</th>
                   <th className="py-3 px-4">Payment</th>
@@ -73,13 +72,15 @@ export default async function AdminOrdersPage() {
                 {rows.map((row) => {
                   return (
                     <tr key={row.id} className="hover:bg-zinc-50 transition-colors">
-                      <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-xs">{row.ref}</td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-zinc-900 font-mono text-xs">{row.ref}</div>
+                        <div className="text-zinc-500 text-xs">{formatDate(row.date)}</div>
+                      </td>
                       <td className="py-3.5 px-4 text-zinc-700 font-medium max-w-[160px] truncate"><Link href={`/admin/companies/${row.companyId}`} className="hover:text-amber-700 hover:underline">{row.companyName}</Link></td>
                       <td className="py-3.5 px-4 text-zinc-700 max-w-[220px]">
                         <div className="truncate">{row.firstProduct}</div>
                         {row.firstPlateRef && <div className="accession text-xs text-amber-700">{row.firstPlateRef}</div>}
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-500 text-xs">{formatDate(row.date)}</td>
                       <td className="py-3.5 px-4">
                         <OrderStatusSelect orderId={row.id} status={row.status} />
                       </td>
@@ -106,7 +107,7 @@ export default async function AdminOrdersPage() {
           </div>
 
           {/* Phones and small tablets: stacked records, status still editable */}
-          <ul className="md:hidden divide-y divide-zinc-200">
+          <ul className="xl:hidden divide-y divide-zinc-200">
             {rows.map((row) => (
               <li key={row.id} className="px-4 py-3.5 space-y-2">
                 <div className="flex items-center justify-between gap-3">

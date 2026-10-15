@@ -38,7 +38,7 @@
    # DEMO_MODE=true   # optional: skip login and show sample data (screenshots / tests; ignored on Vercel production)
    ```
 2. **Database** — run the files in `supabase/migrations/` in order in the Supabase SQL editor
-   (`000` → `009`). They are idempotent. `003` is the core security layer; `004` adds invitations,
+   (`000` → `010`). They are idempotent. `003` is the core security layer; `004` adds invitations,
    the private `artwork` storage bucket, proof approval, server-priced ordering and notifications.
 3. **First staff user** — sign up in the portal, then in the SQL editor:
    ```sql
@@ -88,6 +88,13 @@ anything still pending — Vercel Cron calls it daily (`vercel.json`), and a Sup
 `notifications` INSERT can call it instantly. Undelivered rows are claimed atomically (no duplicate
 emails), retried up to 3 times, and failures are kept in `notifications.email_error`. Email is a no-op
 until `EMAIL_FROM` and either the `SMTP_*` variables or `RESEND_API_KEY` are set.
+
+### Order documents
+Staff attach files to an order — delivery dockets, compliance certificates, signed quotes, quotes,
+specifications — from the **Documents** panel on the order page. Files go to a private `documents` bucket
+(`documents/<company_id>/<order_id>/…`); everyone at that company can view and download them through
+5-minute signed links, and is notified when one is added. Only staff can add or remove documents, and
+each add/remove is in the audit log (migration `010`).
 
 ### Invoices
 Each order has a printable page at `/invoice/<order id>` (order page → *Download Invoice PDF*; the
@@ -141,14 +148,20 @@ stays `/`); signed-in users still get their dashboard. The page sells the portal
   site's own hosts; demo mode can't switch on in a Vercel production deployment; the cron secret is
   compared in constant time.
 
+### Hosting regions
+The Supabase database is in Tokyo (`ap-northeast-1`), so `vercel.json` runs the server functions in Tokyo
+too (`hnd1`) — every page makes several database queries, and each one would otherwise cross the Pacific.
+GSS's customers are in Australia: before launch, consider moving both to Sydney (a new Supabase project in
+`ap-southeast-2` with the data migrated, and `"regions": ["syd1"]`).
+
 ### Tests, CI and monitoring
 - `npm run test:db` runs the migrations against an in-memory Postgres and checks company separation, privilege
   escalation guards, reorders, invitations, storage access, proof approval, server pricing and
   notifications, payment state, email delivery, product pricing, subscriptions, staff two-factor,
-  rate limits and the audit log (161 checks).
-- `npm run test:e2e` runs Playwright browser tests of the key flows on desktop and phone sizes, in demo
-  mode: landing page and sign-in, reorder from the catalogue to a placed order, card payment and tax
-  invoice, proof approval, staff reorder approval, admin pages and the audit log, and the security headers.
+  rate limits, the audit log and order documents (181 checks).
+- `npm run test:e2e` runs Playwright browser tests of the key flows on desktop, tablet (portrait and
+  landscape) and phone sizes, in demo mode: landing page and sign-in, reorder from the catalogue to a placed order, card payment and tax
+  invoice, order documents, proof approval, staff reorder approval, admin pages and the audit log, and the security headers.
 - **GitHub Actions** (`.github/workflows/ci.yml`) runs on every push and pull request: lint, type check,
   database tests, production build, browser tests (report uploaded on failure). No secrets needed.
 - **Error tracking** — `instrumentation.ts` reports every uncaught server error (pages, server actions,
@@ -167,12 +180,12 @@ stays `/`); signed-in users still get their dashboard. The page sells the portal
 | Roles; company admins manage their users | Admin / Procurement Manager / Finance / Viewer; invite, change role, deactivate (guarded in DB) |
 | Order history (products, qty, dates, artwork, specs, refs, status) | Order History + Order detail; plate refs link to proofs in the vault |
 | One-click reorder with new quantities | *Reorder This* → reorder request → staff approve → new order (priced in DB) |
-| Secure artwork / proofs / documents | Private storage bucket, per-company folders, signed URLs, proof approval + versioning |
+| Secure artwork / proofs / documents | Private storage buckets, per-company folders, signed URLs, proof approval + versioning; order documents (dockets, certificates, quotes) |
 | Admin dashboard | Admin → overview, companies, orders, reorder requests, artwork upload |
 | Order status workflow | Staff status changes → customer notifications |
 | Email notifications | Every notification + invitations, via Resend (see Notifications) |
-| Responsive | Mobile drawer nav, scrollable tables, print-friendly invoices |
-| Data separation between companies | Postgres RLS; `npm run test:db` proves it (161 checks) |
+| Responsive | Phone, tablet and desktop layouts (tested in CI at each size), print-friendly invoices |
+| Data separation between companies | Postgres RLS; `npm run test:db` proves it (181 checks) |
 | Security | Staff two-factor, audit log, rate limits, security headers (see Security) |
 | Testing and monitoring | DB tests + Playwright browser tests in GitHub Actions CI; Sentry error tracking |
 | Third-party integrations | Stripe card payments (Phase 2 item, done); Resend email |
@@ -184,7 +197,7 @@ stays `/`); signed-in users still get their dashboard. The page sells the portal
 
 Everything in code is done. These steps need your accounts, data or decisions:
 
-1. **Supabase** — run migrations `000` → `009` in the SQL editor; promote the first staff user (see Setup).
+1. **Supabase** — run migrations `000` → `010` in the SQL editor; promote the first staff user (see Setup).
    After `009`, staff rights need two-factor: each staff member signs in, opens **Account → Security** and
    sets up an authenticator app. Check **Authentication → Rate Limits** (sign-in / sign-up / reset attempts).
    Set **Authentication → SMTP** to your email provider so sign-up / password-reset emails come from your domain,

@@ -139,7 +139,7 @@ export default function TeamClient({
                   <th className="py-3 px-4">Member</th>
                   <th className="py-3 px-4">Role</th>
                   <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4">Joined</th>
+                  <th className="py-3 px-4 hidden xl:table-cell">Joined</th>
                   {canManage && <th className="py-3 px-4 text-right">Access</th>}
                 </tr>
               </thead>
@@ -185,7 +185,7 @@ export default function TeamClient({
                           {member.status}
                         </span>
                       </td>
-                      <td className="py-3.5 px-4 text-zinc-500 font-mono text-xs">{formatDate(member.lastLogin)}</td>
+                      <td className="py-3.5 px-4 text-zinc-500 font-mono text-xs hidden xl:table-cell">{formatDate(member.lastLogin)}</td>
                       {canManage && (
                         <td className="py-3.5 px-4 text-right">
                           {busy ? (

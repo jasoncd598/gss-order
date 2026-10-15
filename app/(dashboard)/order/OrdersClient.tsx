@@ -66,7 +66,7 @@ export default function OrdersClient({
             className="w-full pl-9 pr-4 py-2 bg-white border border-zinc-200 rounded text-xs focus:outline-none focus:ring-1 focus:ring-amber-400 text-zinc-800"
           />
         </div>
-        <div className="flex items-center space-x-2 overflow-x-auto pb-1">
+        <div className="flex items-center space-x-2 overflow-x-auto pb-1 max-w-full min-w-0">
           <Filter className="w-3.5 h-3.5 text-zinc-400 shrink-0" />
           {(['All', ...ALL_STATUSES] as const).map((s) => (
             <button
@@ -95,15 +95,13 @@ export default function OrdersClient({
         </div>
       ) : (
         <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="hidden md:block overflow-x-auto">
+          <div className="hidden xl:block overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-200 bg-zinc-50 text-zinc-500 font-semibold uppercase text-xs tracking-wider">
-                <th className="py-3 px-4">Order Ref</th>
+                <th className="py-3 px-4">Order Ref / Date</th>
                 <th className="py-3 px-4">Product / SKU</th>
-                <th className="py-3 px-4">Plate Ref</th>
                 <th className="py-3 px-4">Qty</th>
-                <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4 text-right">Total (AUD)</th>
                 <th className="py-3 px-4">Payment</th>
@@ -113,19 +111,20 @@ export default function OrdersClient({
             <tbody className="divide-y divide-zinc-100">
               {filtered.length === 0 ? (
                 <tr>
-                  <td colSpan={9} className="py-12 text-center text-zinc-400 text-xs">No orders match your search.</td>
+                  <td colSpan={7} className="py-12 text-center text-zinc-400 text-xs">No orders match your search.</td>
                 </tr>
               ) : (
                 filtered.map((order) => (
                   <tr key={order.id} className="hover:bg-zinc-50 transition-colors group">
-                    <td className="py-3.5 px-4 font-bold text-zinc-900 font-mono text-xs">{order.ref}</td>
+                    <td className="py-3.5 px-4">
+                      <div className="font-bold text-zinc-900 font-mono text-xs">{order.ref}</div>
+                      <div className="text-zinc-500 text-xs">{formatDate(order.date)}</div>
+                    </td>
                     <td className="py-3.5 px-4 max-w-[200px]">
                       <div className="font-medium text-zinc-800 truncate">{order.items[0]?.productName}</div>
-                      {order.items.length > 1 && <span className="text-zinc-400 text-xs">+{order.items.length - 1} more</span>}
+                      <div className="text-xs"><span className="accession text-amber-700">{order.items[0]?.plateRef}</span>{order.items.length > 1 && <span className="text-zinc-400"> · +{order.items.length - 1} more</span>}</div>
                     </td>
-                    <td className="py-3.5 px-4 accession text-amber-700 text-xs">{order.items[0]?.plateRef}</td>
                     <td className="py-3.5 px-4 text-zinc-700 font-mono text-xs">{order.items[0]?.quantity.toLocaleString()} units</td>
-                    <td className="py-3.5 px-4 text-zinc-500 text-xs">{formatDate(order.date)}</td>
                     <td className="py-3.5 px-4">
                       <span className={`px-2 py-0.5 rounded text-xs font-semibold border ${orderStatusStyles(order.status)}`}>
                         {order.status}
@@ -154,7 +153,7 @@ export default function OrdersClient({
           </div>
 
           {/* Phones and small tablets: each order as a stacked record */}
-          <ul className="md:hidden divide-y divide-zinc-200">
+          <ul className="xl:hidden divide-y divide-zinc-200">
             {filtered.length === 0 ? (
               <li className="py-10 text-center text-zinc-500 text-xs">No orders match your search.</li>
             ) : filtered.map((order) => (

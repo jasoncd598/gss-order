@@ -69,7 +69,7 @@ export default async function OverviewPage() {
               <span>View All</span><ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-          <div className="hidden sm:block overflow-x-auto">
+          <div className="hidden xl:block overflow-x-auto">
           <table className="w-full min-w-[640px] whitespace-nowrap text-left text-xs border-collapse">
             <thead>
               <tr className="border-b border-zinc-100 bg-zinc-50/50 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
@@ -106,7 +106,7 @@ export default async function OverviewPage() {
           </div>
 
           {/* Phones: each order as a stacked record */}
-          <ul className="sm:hidden divide-y divide-zinc-200">
+          <ul className="xl:hidden divide-y divide-zinc-200">
             {recent.map((order) => (
               <li key={order.id}>
                 <Link href={`/order/${order.id}`} className="block px-4 py-3.5 hover:bg-zinc-50">

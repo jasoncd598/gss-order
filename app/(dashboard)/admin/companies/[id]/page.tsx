@@ -80,9 +80,9 @@ export default async function CompanyDetailPage({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-        {/* Left */}
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-5">
+        {/* Left — side by side on tablets, a column on wide screens */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-1 gap-4 content-start">
           <div className="bg-white border border-zinc-200 rounded-lg p-4 shadow-sm">
             <h2 className="text-xs font-bold uppercase tracking-wider text-zinc-500 mb-3">Contact Details</h2>
             <div className="space-y-2 text-xs">
@@ -141,7 +141,7 @@ export default async function CompanyDetailPage({
         </div>
 
         {/* Right */}
-        <div className="md:col-span-2 space-y-4">
+        <div className="xl:col-span-2 space-y-4 min-w-0">
           {/* Recent Orders */}
           <div className="bg-white border border-zinc-200 rounded-lg shadow-sm overflow-hidden">
             <div className="px-5 py-3 border-b border-zinc-100 flex items-center space-x-2">
@@ -152,13 +152,12 @@ export default async function CompanyDetailPage({
               <div className="py-8 text-center text-zinc-400 text-xs">No orders yet.</div>
             ) : (
               <>
-              <div className="hidden sm:block overflow-x-auto">
-              <table className="w-full min-w-[640px] whitespace-nowrap text-xs">
+              <div className="hidden xl:block overflow-x-auto">
+              <table className="w-full whitespace-nowrap text-xs">
                 <thead>
                   <tr className="bg-zinc-50 border-b border-zinc-100 text-zinc-400 font-semibold uppercase text-xs tracking-wider">
-                    <th className="py-2.5 px-4 text-left">Ref</th>
+                    <th className="py-2.5 px-4 text-left">Ref / Date</th>
                     <th className="py-2.5 px-4 text-left">Product</th>
-                    <th className="py-2.5 px-4 text-left">Date</th>
                     <th className="py-2.5 px-4 text-left">Status</th>
                     <th className="py-2.5 px-4 text-right">Total</th>
                   </tr>
@@ -168,12 +167,12 @@ export default async function CompanyDetailPage({
                     <tr key={order.id} className="hover:bg-zinc-50">
                       <td className="py-3 px-4 font-mono font-bold text-zinc-900 text-xs">
                         <Link href={`/order/${order.id}`} className="hover:text-amber-700 hover:underline">{order.ref}</Link>
+                        <div className="font-sans font-normal text-zinc-500">{formatDate(order.date)}</div>
                       </td>
                       <td className="py-3 px-4 text-zinc-700 max-w-[200px]">
                         <div className="truncate">{order.items[0]?.productName ?? '—'}</div>
                         {order.items[0]?.plateRef && <div className="accession text-xs text-amber-700">{order.items[0].plateRef}</div>}
                       </td>
-                      <td className="py-3 px-4 text-zinc-500 text-xs">{formatDate(order.date)}</td>
                       <td className="py-3 px-4">
                         <span className={`px-1.5 py-0.5 rounded text-xs font-semibold border ${orderStatusStyles(order.status)}`}>
                           {order.status}
@@ -189,7 +188,7 @@ export default async function CompanyDetailPage({
               </div>
 
               {/* Phones: each order as a stacked record */}
-              <ul className="sm:hidden divide-y divide-zinc-200">
+              <ul className="xl:hidden divide-y divide-zinc-200">
                 {orders.map((order) => (
                   <li key={order.id}>
                     <Link href={`/order/${order.id}`} className="block px-4 py-3.5 hover:bg-zinc-50">
