@@ -30,6 +30,32 @@ test.describe('public site', () => {
     expect(res.headers()['x-frame-options']).toBe('DENY');
     expect(res.headers()['x-content-type-options']).toBe('nosniff');
     expect(res.headers()['content-security-policy']).toContain("frame-ancestors 'none'");
+    expect(res.headers()['content-security-policy-report-only']).toContain("script-src 'self'");
+  });
+
+  test('privacy policy and terms open and are linked from sign-up', async ({ page }) => {
+    await page.goto('/privacy');
+    await expect(page.getByRole('heading', { name: 'Privacy Policy' })).toBeVisible();
+    await expect(page.getByText(/stored and processed outside Australia/)).toBeVisible();
+    await page.goto('/terms');
+    await expect(page.getByRole('heading', { name: 'Terms of Service' })).toBeVisible();
+    await page.goto('/registration');
+    await page.getByPlaceholder('Acme Packaging Pty Ltd').fill('Test Co');
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.locator('a[href="/terms"]')).toHaveCount(1);
+    await expect(page.locator('a[href="/privacy"]')).toHaveCount(1);
+  });
+
+  test('pages load nothing the content policy would block', async ({ page }) => {
+    const violations: string[] = [];
+    page.on('console', (msg) => {
+      if (/Content Security Policy/i.test(msg.text())) violations.push(msg.text());
+    });
+    for (const path of ['/welcome', '/login', '/privacy', '/', '/catalog', '/order', '/account']) {
+      await page.goto(path);
+      await page.waitForLoadState('networkidle');
+    }
+    expect(violations).toEqual([]);
   });
 });
 

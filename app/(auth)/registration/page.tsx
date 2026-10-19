@@ -258,7 +258,7 @@ function Registration() {
               </div>
               <label className="flex items-start space-x-2 text-xs text-zinc-600 cursor-pointer">
                 <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)} className="mt-0.5 rounded border-zinc-600 bg-white text-amber-700" />
-                <span>I agree to the <span className="text-amber-700 underline">Terms of Service</span> and <span className="text-amber-700 underline">Privacy Policy</span></span>
+                <span>I agree to the <Link href="/terms" target="_blank" className="text-amber-700 underline">Terms of Service</Link> and <Link href="/privacy" target="_blank" className="text-amber-700 underline">Privacy Policy</Link></span>
               </label>
               <div className="flex space-x-3">
                 {!invite && <button type="button" onClick={() => setStep(1)} className="flex items-center space-x-1 border border-zinc-300 text-zinc-700 hover:bg-zinc-100 font-medium py-2.5 px-4 rounded-sm text-xs transition-colors">

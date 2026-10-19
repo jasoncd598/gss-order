@@ -215,9 +215,20 @@ Everything in code is done. These steps need your accounts, data or decisions:
    onto these tables (needs access to the base).
 7. **Monitoring** — create a free Sentry project (platform: Next.js) and add its DSN as `SENTRY_DSN` and
    `NEXT_PUBLIC_SENTRY_DSN` in Vercel. In GitHub, make the **CI** check required on `master` (Settings → Branches).
-8. **Backups** — open Supabase **Database → Backups** and confirm what your plan keeps. The Pro plan includes
-   daily backups (Point-in-Time Recovery is an add-on); on the Free plan, take your own regular dump
-   (`supabase db dump`) and store it somewhere private. Do a test restore into a spare project once.
+8. **Backups** — `.github/workflows/backup.yml` dumps the database every night, encrypts it and keeps
+   30 days of copies as workflow artifacts (Actions → Database backup). To switch it on, add two repository
+   secrets: `SUPABASE_DB_URL` (Supabase → **Connect** → *Session pooler* string, password filled in) and
+   `BACKUP_PASSPHRASE` (a long random phrase — store it in a password manager; lost means unreadable), then
+   run the workflow once by hand. It covers the database, including sign-in accounts, but not the files in
+   Storage (artwork, documents). The Supabase Pro plan adds its own daily backups.
+   To restore, download an artifact, then:
+   ```bash
+   gpg -d gss-db-YYYY-MM-DD.tar.gz.gpg | tar -xz        # asks for the passphrase
+   psql "$NEW_DB_URL" -v ON_ERROR_STOP=1 --single-transaction \
+     -f backup/roles.sql -f backup/schema.sql \
+     -c 'SET session_replication_role = replica' -f backup/data.sql
+   ```
+   Do a test restore into a spare Supabase project once.
 9. **Test pass** — place a Prepaid-company order and pay with `4242 4242 4242 4242`; confirm the order
    shows **Paid** and the emails arrive.
 
@@ -230,6 +241,7 @@ Everything in code is done. These steps need your accounts, data or decisions:
 | `/login` | Sign-in page with email/password and PIN option |
 | `/registration` | Two-step company registration form |
 | `/forgot-password` | Password reset with confirmation state |
+| `/privacy`, `/terms` | Privacy policy (incl. overseas storage) and terms of service, open to everyone |
 | `/` | Dashboard — KPI cards, quick actions, recent orders |
 | `/catalog` | Artwork & die-line catalog with instant reorder |
 | `/order` | Full order history with search and status filters |

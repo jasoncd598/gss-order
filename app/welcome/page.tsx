@@ -240,10 +240,12 @@ export default function LandingPage() {
               <span className="font-display text-lg text-label leading-none">GSS</span>
               <span>Trade ordering portal · prices in AUD incl. GST</span>
             </div>
-            <div className="flex items-center gap-6">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <Link href="/login" className="hover:text-white">Customer sign in</Link>
               {portalUrl && <a href={portalUrl} className="hover:text-white">Manage billing</a>}
               <a href="#pricing" className="hover:text-white">Pricing</a>
+              <Link href="/privacy" className="hover:text-white">Privacy</Link>
+              <Link href="/terms" className="hover:text-white">Terms</Link>
             </div>
           </div>
         </footer>

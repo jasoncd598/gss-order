@@ -33,8 +33,10 @@ export async function updateSession(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  const publicPaths = ['/login', '/registration', '/forgot-password', '/auth/callback', '/welcome'];
+  const publicPaths = ['/login', '/registration', '/forgot-password', '/auth/callback', '/welcome', '/privacy', '/terms'];
   const isPublic    = publicPaths.some((p) => pathname.startsWith(p));
+  // Public pages a signed-in user can still open (the rest are sign-in pages)
+  const openToAll   = ['/auth/callback', '/welcome', '/privacy', '/terms'].some((p) => pathname.startsWith(p));
 
   // 0. Signed-out visitors at the homepage see the landing page (URL stays "/")
   if (!user && pathname === '/') {
@@ -50,8 +52,8 @@ export async function updateSession(request: NextRequest) {
     return NextResponse.redirect(url);
   }
 
-  // 2. Authenticated on auth page → dashboard (the landing page stays viewable)
-  if (user && isPublic && !pathname.startsWith('/auth/callback') && !pathname.startsWith('/welcome')) {
+  // 2. Authenticated on auth page → dashboard (the landing and legal pages stay viewable)
+  if (user && isPublic && !openToAll) {
     const url = request.nextUrl.clone();
     url.pathname = '/';
     return NextResponse.redirect(url);
