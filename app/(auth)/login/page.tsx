@@ -1,18 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { Eye, EyeOff, Lock, AlertCircle } from 'lucide-react';
 import { createClient } from '../../lib/supabase/client';
 
+// Messages for ?error= codes set by other routes (e.g. /auth/callback)
+const LINK_ERRORS: Record<string, string> = {
+  auth_callback_failed: 'That link has expired or has already been used. Sign in, or request a new reset link.',
+};
+
 export default function LoginPage() {
+  // useSearchParams needs a Suspense boundary so the page shell can prerender
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-wall" />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
+  const linkError = LINK_ERRORS[useSearchParams().get('error') ?? ''] ?? '';
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail]               = useState('');
   const [password, setPassword]         = useState('');
   const [loading, setLoading]           = useState(false);
-  const [error, setError]               = useState('');
+  const [error, setError]               = useState(linkError);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
